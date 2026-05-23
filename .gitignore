@@ -10,6 +10,8 @@ bld/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+!src/**/Domain/[Ll]ogs/
+!src/**/Domain/[Ll]ogs/**
 
 # Visual Studio specific
 .vs/
