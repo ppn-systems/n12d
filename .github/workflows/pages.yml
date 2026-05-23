@@ -1,10 +1,19 @@
 name: Deploy Dashboard to GitHub Pages
 
 on:
-  push:
-    branches:
-      - master
-      - main
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled
+      - unlabeled
+      - closed
+    paths:
+      - .github/workflows/pages.yml
+      - src/Nalix.Dashboard/**
+      - src/Nalix.Observability.Contracts/**
+      - src/Nalix.Observability.sln
   workflow_dispatch:
 
 permissions:
@@ -19,11 +28,14 @@ concurrency:
 jobs:
   build:
     name: Build Dashboard
+    if: github.event_name == 'workflow_dispatch' || (contains(github.event.pull_request.labels.*.name, 'document') && (github.event.action != 'closed' || github.event.pull_request.merged))
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged && github.event.pull_request.base.ref || github.ref }}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -40,6 +52,7 @@ jobs:
         run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-restore --output artifacts/dashboard
 
       - name: Prepare GitHub Pages artifact
+        if: github.event_name == 'workflow_dispatch' || (github.event.action == 'closed' && github.event.pull_request.merged)
         shell: bash
         run: |
           set -euo pipefail
@@ -58,9 +71,11 @@ jobs:
           touch "${pages_root}/.nojekyll"
 
       - name: Configure GitHub Pages
+        if: github.event_name == 'workflow_dispatch' || (github.event.action == 'closed' && github.event.pull_request.merged)
         uses: actions/configure-pages@v5
 
       - name: Upload GitHub Pages artifact
+        if: github.event_name == 'workflow_dispatch' || (github.event.action == 'closed' && github.event.pull_request.merged)
         uses: actions/upload-pages-artifact@v3
         with:
           path: artifacts/dashboard/wwwroot
@@ -68,6 +83,7 @@ jobs:
   deploy:
     name: Deploy
     needs: build
+    if: github.event_name == 'workflow_dispatch' || (github.event.action == 'closed' && github.event.pull_request.merged)
     runs-on: ubuntu-latest
     environment:
       name: github-pages
