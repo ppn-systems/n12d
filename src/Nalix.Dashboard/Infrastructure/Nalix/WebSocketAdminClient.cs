@@ -170,7 +170,6 @@ internal sealed class WebSocketAdminClient : IAdminClient, IAsyncDisposable
             Address = host,
             Port = port,
             ConnectTimeoutMillis = cfg.RequestTimeoutMs,
-            ServerPublicKey = _options.ServerPublicKey,
             ReconnectEnabled = false,
             KeepAliveIntervalMillis = 0
         };

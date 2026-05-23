@@ -18,8 +18,7 @@ Development defaults live in `appsettings.Development.json`:
 {
   "AdminClient": {
     "BackendHost": "127.0.0.1",
-    "BackendPort": 57206,
-    "ServerPublicKey": "<server-public-key>"
+    "BackendPort": 57206
   }
 }
 ```
