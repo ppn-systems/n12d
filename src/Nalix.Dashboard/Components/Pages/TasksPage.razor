@@ -129,6 +129,30 @@
             </MetricSection>
         }
 
+        @if (report.TopRunningWorkers is { Count: > 0 } workers)
+        {
+            <MetricSection Title="Top Running Workers">
+                <MudTable Items="@workers" Dense="true" Hover="true" Striped="false" Class="metric-table">
+                    <HeaderContent>
+                        <MudTh>Name</MudTh>
+                        <MudTh>Group</MudTh>
+                        <MudTh>Started</MudTh>
+                        <MudTh>Progress</MudTh>
+                        <MudTh>Last Heartbeat</MudTh>
+                        <MudTh>Id</MudTh>
+                    </HeaderContent>
+                    <RowTemplate Context="w">
+                        <MudTd Class="metric-table__wide">@(w.Name ?? "-")</MudTd>
+                        <MudTd>@(w.Group ?? "-")</MudTd>
+                        <MudTd>@MetricFormat.DateTimeOrDash(w.StartedUtc)</MudTd>
+                        <MudTd>@MetricFormat.Percent(w.Progress)</MudTd>
+                        <MudTd>@MetricFormat.DateTimeOrDash(w.LastHeartbeatUtc)</MudTd>
+                        <MudTd>@(w.Id ?? "-")</MudTd>
+                    </RowTemplate>
+                </MudTable>
+            </MetricSection>
+        }
+
         @if (report.Recurring is { Count: > 0 } tasks)
         {
             <MetricSection Title="Recurring Tasks">
