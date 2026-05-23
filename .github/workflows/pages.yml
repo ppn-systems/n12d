@@ -37,7 +37,7 @@ jobs:
         run: dotnet build src/Nalix.Observability.sln --configuration Release --no-restore
 
       - name: Publish dashboard
-        run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-build --output artifacts/dashboard
+        run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-restore --output artifacts/dashboard
 
       - name: Prepare GitHub Pages artifact
         shell: bash
@@ -48,6 +48,11 @@ jobs:
           base_path="/"
 
           sed -i "s|<base href=\"/\" />|<base href=\"${base_path}\" />|g" "${pages_root}/index.html"
+          if grep -q "fingerprint" "${pages_root}/index.html"; then
+            echo "Blazor fingerprint placeholders were not replaced during publish." >&2
+            exit 1
+          fi
+
           cp "${pages_root}/index.html" "${pages_root}/404.html"
           echo "dash.ppn.io.vn" > "${pages_root}/CNAME"
           touch "${pages_root}/.nojekyll"
