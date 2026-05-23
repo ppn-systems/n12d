@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	
+	<ItemGroup>
+		<ProjectReference Include="..\Nalix.Observability.Contracts\Nalix.Observability.Contracts.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Nalix.Runtime" Version="12.5.0" />
+		<PackageReference Include="Nalix.Framework" Version="12.5.0" />
+		<PackageReference Include="Nalix.Environment" Version="12.5.0" />
+		<PackageReference Include="Nalix.Abstractions" Version="12.5.0" />
+	</ItemGroup>
+
+</Project>

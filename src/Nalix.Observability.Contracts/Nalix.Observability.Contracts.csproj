@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<Nullable>enable</Nullable>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<TargetFramework>net10.0</TargetFramework>
+		<RootNamespace>Nalix.Observability.Contracts</RootNamespace>
+		<OutputType>Library</OutputType>
+		<AssemblyName>Nalix.Observability.Contracts</AssemblyName>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Nalix.Codec" Version="12.5.0" />
+		<PackageReference Include="Nalix.Environment" Version="12.5.0" />
+		<PackageReference Include="Nalix.Abstractions" Version="12.5.0" />
+	</ItemGroup>
+
+</Project>
