@@ -1,0 +1,57 @@
+name: Release DLLs on Dependabot Merge
+
+on:
+  pull_request:
+    types: [closed]
+    paths:
+      - 'src/Nalix.Observability.Contracts/**'
+      - 'src/Nalix.Observability.Handlers/**'
+      - 'src/Nalix.Observability.sln'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build and Release DLLs
+    # Only run if PR is merged and author is dependabot
+    if: github.event.pull_request.merged == true && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore src/Nalix.Observability.sln
+
+      - name: Build Contracts
+        run: dotnet build src/Nalix.Observability.Contracts/Nalix.Observability.Contracts.csproj --configuration Release --no-restore -o ./output/contracts
+
+      - name: Build Handlers
+        run: dotnet build src/Nalix.Observability.Handlers/Nalix.Observability.Handlers.csproj --configuration Release --no-restore -o ./output/handlers
+
+      - name: Prepare Zip
+        run: |
+          mkdir -p release_assets
+          # Copy all related files for Contracts (.dll, .pdb, .xml, .deps.json)
+          cp output/contracts/Nalix.Observability.Contracts.* release_assets/ 2>/dev/null || true
+          # Copy all related files for Handlers (.dll, .pdb, .xml, .deps.json)
+          cp output/handlers/Nalix.Observability.Handlers.* release_assets/ 2>/dev/null || true
+          
+          cd release_assets
+          sudo apt-get update && sudo apt-get install -y zip
+          zip -r ../Nalix.Observability.dlls.zip ./*
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dependabot-update-${{ github.sha }}
+          name: Dependabot Update Release ${{ github.sha }}
+          body: "Automated release triggered by Dependabot update in PR #${{ github.event.pull_request.number }}."
+          files: Nalix.Observability.dlls.zip

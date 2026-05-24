@@ -28,7 +28,7 @@ concurrency:
 jobs:
   build:
     name: Build Dashboard
-    if: github.event_name == 'workflow_dispatch' || (contains(github.event.pull_request.labels.*.name, 'document') && (github.event.action != 'closed' || github.event.pull_request.merged))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'document') || github.event.pull_request.user.login == 'dependabot[bot]') && (github.event.action != 'closed' || github.event.pull_request.merged))
     runs-on: ubuntu-latest
 
     steps:
