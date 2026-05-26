@@ -55,6 +55,10 @@ public sealed class AdminSettings
 
     public int MaxLogEntries { get; set; } = 250;
 
+    public int RecordingIntervalSeconds { get; set; } = 3;
+
+    public int RecordingCapacityLimit { get; set; } = 10000;
+
     public int GetPollingInterval(string route)
     {
         if (this.PerPagePollingIntervalMs.TryGetValue(route, out int ms) && ms > 0)

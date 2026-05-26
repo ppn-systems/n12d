@@ -4,6 +4,7 @@
 @inject IAdminSettingsStore SettingsStore
 @inject IAdminClient Client
 @inject NavigationManager Nav
+@inject Nalix.Dashboard.Application.Services.MetricRecordingService RecordingService
 @implements IDisposable
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
@@ -37,6 +38,14 @@
                          Class="mr-1">
                     @(State.IsConnected ? "Connected" : "Disconnected")
                 </MudChip>
+
+                @if (RecordingService.IsRecording)
+                {
+                    <div class="d-inline-flex align-center mr-4" title="Recording in progress">
+                        <div class="rec-dot pulsing-red-dot mr-2"></div>
+                        <MudText Typo="Typo.caption" Color="Color.Error" Style="font-weight: bold; letter-spacing: 0.5px;">REC</MudText>
+                    </div>
+                }
 
                 @if (State.LastPingMilliseconds is { } ms)
                 {
@@ -175,6 +184,7 @@
     protected override void OnInitialized()
     {
         State.Changed += OnStateChanged;
+        RecordingService.Changed += OnStateChanged;
         Nav.LocationChanged += OnLocationChanged;
     }
 
@@ -220,6 +230,7 @@
     public void Dispose()
     {
         State.Changed -= OnStateChanged;
+        RecordingService.Changed -= OnStateChanged;
         Nav.LocationChanged -= OnLocationChanged;
     }
 }

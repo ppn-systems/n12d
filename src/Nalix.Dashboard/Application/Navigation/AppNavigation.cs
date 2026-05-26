@@ -30,6 +30,7 @@ public static class AppNavigation
             ]),
             new NavSection("System",
             [
+                new NavItem("Recordings",  "/recordings",  Icons.Material.Outlined.FiberManualRecord, PermissionLevel.SUPERVISOR),
                 new NavItem("Diagnostics", "/diagnostics", Icons.Material.Outlined.BugReport,  PermissionLevel.SUPERVISOR),
                 new NavItem("Settings",    "/settings",    Icons.Material.Outlined.Settings,   PermissionLevel.NONE)
             ])

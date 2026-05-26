@@ -277,3 +277,32 @@ h1:focus {
     opacity: 0.8;
 }
 
+/* Pulsing red dot for REC indicator */
+.rec-dot {
+    width: 8px;
+    height: 8px;
+    background-color: var(--mud-palette-error);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.pulsing-red-dot {
+    animation: rec-pulsing 1.5s ease-out infinite;
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+}
+
+@keyframes rec-pulsing {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+    }
+}
+
