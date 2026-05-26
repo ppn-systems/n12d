@@ -29,6 +29,8 @@ public sealed class AdminSettings
 
     public int RequestTimeoutMs { get; set; } = 5000;
 
+    public int MaxPingFailures { get; set; } = 5;
+
     public bool AutoReconnect { get; set; } = true;
 
     public int MaxReconnectAttempts { get; set; } = 10;

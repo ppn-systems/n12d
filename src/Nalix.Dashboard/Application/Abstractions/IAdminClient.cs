@@ -11,4 +11,6 @@ internal interface IAdminClient
     Task RefreshAllAsync(CancellationToken ct);
 
     Task PingAsync(CancellationToken ct);
+
+    Task ForceDisconnectAsync();
 }

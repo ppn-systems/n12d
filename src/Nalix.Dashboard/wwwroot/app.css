@@ -90,9 +90,14 @@ h1:focus {
 .metric-tile--hero {
     min-height: 124px;
     padding: 20px 24px;
-    background: rgba(244, 129, 32, 0.015) !important;
-    background: color-mix(in srgb, var(--mud-palette-secondary) 1.5%, transparent) !important;
+    background: rgba(244, 129, 32, 0.01) !important;
+    background: color-mix(in srgb, var(--mud-palette-secondary) 1%, transparent) !important;
     border-left: 4px solid var(--mud-palette-secondary) !important;
+}
+
+.metric-icon-orange {
+    color: var(--mud-palette-secondary) !important;
+    opacity: 0.9;
 }
 
 .metric-tile--compact {

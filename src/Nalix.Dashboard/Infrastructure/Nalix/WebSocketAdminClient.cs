@@ -80,8 +80,6 @@ internal sealed class WebSocketAdminClient : IAdminClient, IAsyncDisposable
         {
             _logger.LogWarning(ex, "Failed to refresh target={Target}", target);
             _state.Log("WARN", $"Failed to refresh target={target}: {ex.Message}");
-            _state.MarkDisconnected(ex.Message);
-            await this.ResetSessionAsync().ConfigureAwait(false);
             throw;
         }
         finally
@@ -128,8 +126,6 @@ internal sealed class WebSocketAdminClient : IAdminClient, IAsyncDisposable
         {
             _logger.LogWarning(ex, "Ping failed.");
             _state.Log("WARN", $"Ping failed: {ex.Message}");
-            _state.MarkDisconnected(ex.Message);
-            await this.ResetSessionAsync().ConfigureAwait(false);
             throw;
         }
         finally
@@ -294,6 +290,19 @@ internal sealed class WebSocketAdminClient : IAdminClient, IAsyncDisposable
         finally
         {
             session.Dispose();
+        }
+    }
+
+    public async Task ForceDisconnectAsync()
+    {
+        await _sync.WaitAsync().ConfigureAwait(false);
+        try
+        {
+            await this.ResetSessionAsync().ConfigureAwait(false);
+        }
+        finally
+        {
+            _ = _sync.Release();
         }
     }
 

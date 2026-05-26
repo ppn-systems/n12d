@@ -44,6 +44,10 @@
                                      Label="Request Timeout (ms)"
                                      Min="1000" Max="30000"
                                      Variant="Variant.Outlined" />
+                    <MudNumericField @bind-Value="_settings.MaxPingFailures"
+                                     Label="Max Ping Failures"
+                                     Min="1" Max="50"
+                                     Variant="Variant.Outlined" />
                 </MudStack>
             </MudPaper>
 
@@ -139,6 +143,7 @@
             PerPagePollingIntervalMs = new Dictionary<string, int>(_settings.PerPagePollingIntervalMs),
             PingIntervalMs = _settings.PingIntervalMs,
             RequestTimeoutMs = _settings.RequestTimeoutMs,
+            MaxPingFailures = _settings.MaxPingFailures,
             AutoReconnect = _settings.AutoReconnect,
             MaxReconnectAttempts = _settings.MaxReconnectAttempts,
             ReconnectBackoffMinMs = _settings.ReconnectBackoffMinMs,

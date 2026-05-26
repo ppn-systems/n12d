@@ -30,12 +30,12 @@ internal sealed class PingKeepAliveService : IAsyncDisposable
     private async Task RunPingLoopAsync(CancellationToken ct)
     {
         int consecutiveFailures = 0;
-        const int MaxFailures = 5;
 
         while (!ct.IsCancellationRequested)
         {
             Application.Settings.AdminSettings cfg = await _settings.LoadAsync(ct).ConfigureAwait(false);
             int intervalMs = Math.Max(1000, cfg.PingIntervalMs);
+            int maxFailures = Math.Max(1, cfg.MaxPingFailures);
 
             if (!_stateReader.HasApiKey)
             {
@@ -56,11 +56,19 @@ internal sealed class PingKeepAliveService : IAsyncDisposable
             catch (Exception ex) when (ExceptionClassifier.IsNonFatal(ex))
             {
                 consecutiveFailures++;
-                _stateWriter.Log("WARN", $"Ping failed ({consecutiveFailures}/{MaxFailures}): {ex.Message}");
-                if (consecutiveFailures >= MaxFailures)
+                _stateWriter.Log("WARN", $"Ping failed ({consecutiveFailures}/{maxFailures}): {ex.Message}");
+                if (consecutiveFailures >= maxFailures)
                 {
                     _stateWriter.MarkDisconnected(ex.Message);
                     consecutiveFailures = 0;
+                    try
+                    {
+                        await _client.ForceDisconnectAsync().ConfigureAwait(false);
+                    }
+                    catch (Exception discEx) when (ExceptionClassifier.IsNonFatal(discEx))
+                    {
+                        _stateWriter.Log("WARN", $"Force disconnect failed: {discEx.Message}");
+                    }
                 }
             }
 
