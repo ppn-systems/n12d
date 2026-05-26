@@ -82,3 +82,5 @@ analyzer/*.spec
 analyzer/report.html
 analyzer/report.md
 analyzer/test_output.html
+all_metrics_*/
+all_metrics_*.zip
