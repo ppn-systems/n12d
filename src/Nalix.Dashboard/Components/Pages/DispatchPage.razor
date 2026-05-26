@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Hub" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.AltRoute" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Dispatch</MudText>
         @if (IsStale)
         {
@@ -41,41 +41,56 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
             <MudItem xs="12" sm="6" md="3">
                 <MetricTile Label="Status"
                             Value="@(report.Running ? "Running" : "Stopped")"
                             ValueColor="@(report.Running ? Color.Success : Color.Error)"
-                            Detail="@($"Loops {MetricFormat.Count(report.DispatchLoops)}")" />
+                            Detail="@($"Loops {MetricFormat.Count(report.DispatchLoops)}")"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Total Packets" Value="@MetricFormat.Count(report.TotalPackets)" Detail="Processed by dispatch" />
+                <MetricTile Label="Total Packets" Value="@MetricFormat.Count(report.TotalPackets)" Detail="Processed by dispatch" Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Wake Signals" Value="@MetricFormat.Count(report.WakeSignals)" Detail="@($"Reads {MetricFormat.Count(report.WakeReads)}")" />
+                <MetricTile Label="Ready Connections" 
+                            Value="@($"{MetricFormat.Count(report.ReadyConnections)} / {MetricFormat.Count(report.TotalConnections)}")" 
+                            Detail="Ready / total"
+                            ValueColor="@(report.ReadyConnections < report.TotalConnections ? Color.Warning : Color.Success)"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Ready Connections" Value="@($"{MetricFormat.Count(report.ReadyConnections)} / {MetricFormat.Count(report.TotalConnections)}")" Detail="Ready / total" />
+                <MetricTile Label="Total Errors" 
+                            Value="@(report.PipelineMetrics is not null ? MetricFormat.Count(report.PipelineMetrics.TotalErrors) : "-")"
+                            ValueColor="@(report.PipelineMetrics is not null && report.PipelineMetrics.TotalErrors > 0 ? Color.Error : Color.Success)"
+                            Detail="Pipeline execution failures"
+                            Hero="true" />
             </MudItem>
         </MudGrid>
 
-        @if (report.PipelineMetrics is { } pipe)
+        <MudGrid Spacing="2" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6" md="3">
+                <MetricTile Label="Wake Signals" Value="@MetricFormat.Count(report.WakeSignals)" Detail="@($"Reads {MetricFormat.Count(report.WakeReads)}")" />
+            </MudItem>
+            @if (report.PipelineMetrics is { } pipeInfo)
+            {
+                <MudItem xs="12" sm="6" md="3">
+                    <MetricTile Label="Active Executions" Value="@MetricFormat.Count(pipeInfo.ActiveExecutions)" ValueColor="@(pipeInfo.ActiveExecutions > 0 ? Color.Success : Color.Default)" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MetricTile Label="Total Executions" Value="@MetricFormat.Count(pipeInfo.TotalExecutions)" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MetricTile Label="Average Time" Value="@($"{pipeInfo.AverageTimeMs:F4} ms")" />
+                </MudItem>
+            }
+        </MudGrid>
+
+        @if (report.PipelineMetrics is { } pipeErrors && pipeErrors.DeserializationErrors > 0)
         {
-            <MudGrid Spacing="3" Class="mb-4">
-                <MudItem xs="12" sm="6" md="4">
-                    <MetricTile Label="Active Executions" Value="@MetricFormat.Count(pipe.ActiveExecutions)" />
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4">
-                    <MetricTile Label="Total Executions" Value="@MetricFormat.Count(pipe.TotalExecutions)" />
-                </MudItem>
-                <MudItem xs="12" sm="6" md="4">
-                    <MetricTile Label="Average Time" Value="@($"{pipe.AverageTimeMs:F4} ms")" />
-                </MudItem>
-                <MudItem xs="12" sm="6" md="6">
-                    <MetricTile Label="Total Errors" Value="@MetricFormat.Count(pipe.TotalErrors)" />
-                </MudItem>
-                <MudItem xs="12" sm="6" md="6">
-                    <MetricTile Label="Deserialization Errors" Value="@MetricFormat.Count(pipe.DeserializationErrors)" />
+            <MudGrid Spacing="2" Class="mb-4 metrics-grid">
+                <MudItem xs="12">
+                    <MetricTile Label="Deserialization Errors" Value="@MetricFormat.Count(pipeErrors.DeserializationErrors)" ValueColor="Color.Error" />
                 </MudItem>
             </MudGrid>
         }

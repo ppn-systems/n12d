@@ -59,7 +59,7 @@ public sealed record RunningWorkerEntry(
     string? Name,
     string? Group,
     string? StartedUtc,
-    double Progress,
+    long Progress,
     string? LastHeartbeatUtc);
 
 public sealed record WorkerGroupEntry(int Running, int Total, string? Concurrency);

@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.HourglassEmpty" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Token Bucket Limiter</MudText>
         @if (IsStale)
         {
@@ -41,17 +41,27 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
-            <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Tracked Endpoints" Value="@($"{MetricFormat.Count(report.TrackedEndpoints)} / {MetricFormat.Count(report.MaxTrackedEndpoints)}")" Detail="Active rate limit states" />
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Tracked Endpoints" 
+                            Value="@($"{MetricFormat.Count(report.TrackedEndpoints)} / {MetricFormat.Count(report.MaxTrackedEndpoints)}")" 
+                            Detail="Active rate limit states"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Blocked Endpoints" Value="@MetricFormat.Count(report.HardBlockedCount)" ValueColor="@(report.HardBlockedCount > 0 ? Color.Error : Color.Default)" Detail="Currently in lockout" />
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Blocked Endpoints" 
+                            Value="@MetricFormat.Count(report.HardBlockedCount)" 
+                            ValueColor="@(report.HardBlockedCount > 0 ? Color.Error : Color.Success)" 
+                            Detail="Currently in lockout"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
                 <MetricTile Label="Default Capacity" Value="@report.CapacityTokens.ToString("N0")" Detail="Tokens per bucket" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="12" sm="6">
                 <MetricTile Label="Default Refill" Value="@($"{report.RefillPerSecond.ToString("N0")}/s")" Detail="Refill rate" />
             </MudItem>
         </MudGrid>

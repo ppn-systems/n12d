@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Memory" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Memory" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Buffers</MudText>
         @if (IsStale)
         {
@@ -41,27 +41,41 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Hit Rate" Value="@MetricFormat.PercentRatio(report.HitRate)" Detail="@($"Hits {MetricFormat.Count(report.TotalHits)}")" />
+                <MetricTile Label="Hit Rate" 
+                            Value="@MetricFormat.PercentRatio(report.HitRate)" 
+                            Detail="@($"Hits {MetricFormat.Count(report.TotalHits)}")"
+                            ValueColor="@(report.HitRate >= 0.95 ? Color.Success : (report.HitRate >= 0.85 ? Color.Warning : Color.Error))"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Misses" Value="@MetricFormat.Count(report.TotalMisses)" Detail="@($"Fallback {MetricFormat.Count(report.FallbackCount)}")" />
+                <MetricTile Label="Misses" 
+                            Value="@MetricFormat.Count(report.TotalMisses)" 
+                            Detail="@($"Fallback {MetricFormat.Count(report.FallbackCount)}")"
+                            ValueColor="@(report.FallbackCount > 100 ? Color.Error : (report.FallbackCount > 0 ? Color.Warning : Color.Success))"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Throughput" Value="@($"{MetricFormat.Number(report.ThroughputMBps, 2)} MB/s")" Detail="@MetricFormat.Bytes(report.PeakMemoryUsageBytes)" />
+                <MetricTile Label="Throughput" 
+                            Value="@($"{MetricFormat.Number(report.ThroughputMBps, 2)} MB/s")" 
+                            Detail="@MetricFormat.Bytes(report.PeakMemoryUsageBytes)"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Pool Count" Value="@MetricFormat.Count(report.PoolCount)" Detail="@($"{MetricFormat.Count(report.MinBufferSize)}-{MetricFormat.Count(report.MaxBufferSize)} bytes")" />
+                <MetricTile Label="Pool Count" 
+                            Value="@MetricFormat.Count(report.PoolCount)" 
+                            Detail="@($"{MetricFormat.Count(report.MinBufferSize)}-{MetricFormat.Count(report.MaxBufferSize)} bytes")"
+                            Hero="true" />
             </MudItem>
         </MudGrid>
 
-        <MudGrid Spacing="2" Class="mb-4">
+        <MudGrid Spacing="2" Class="mb-4 metrics-grid">
             <MudItem xs="12" sm="6" md="3">
                 <MetricTile Label="Configured Buffers" Value="@MetricFormat.Count(report.TotalBuffersConfigured)" Detail="Configured total" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Trimming" Value="@(report.EnableTrimming ? "Enabled" : "Disabled")" Detail="@($"{report.TrimIntervalMinutes}m / {report.DeepTrimIntervalMinutes}m")" />
+                <MetricTile Label="Trimming" Value="@(report.EnableTrimming ? "Enabled" : "Disabled")" Detail="@($"{report.TrimIntervalMinutes}m / {report.DeepTrimIntervalMinutes}m")" ValueColor="@(report.EnableTrimming ? Color.Success : Color.Default)" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
                 <MetricTile Label="Bucket Cache" Value="@MetricFormat.Count(report.BucketCacheHits)" Detail="@($"Misses {MetricFormat.Count(report.BucketCacheMisses)}")" />
