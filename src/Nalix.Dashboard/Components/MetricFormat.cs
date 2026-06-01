@@ -45,9 +45,19 @@ public static class MetricFormat
     }
 
     public static string DateTimeOrDash(string? value)
-        => string.IsNullOrWhiteSpace(value) || value.StartsWith("0001-", StringComparison.Ordinal)
-            ? "-"
-            : value;
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.StartsWith("0001-", StringComparison.Ordinal))
+        {
+            return "-";
+        }
+
+        if (DateTimeOffset.TryParse(value, out var dt))
+        {
+            return dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        }
+
+        return value;
+    }
 
     public static string TypeName(string? value)
     {

@@ -9,7 +9,7 @@
 
 <MudContainer MaxWidth="MaxWidth.Medium" Class="py-4">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Settings" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Settings" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Settings</MudText>
     </MudStack>
 
@@ -44,6 +44,10 @@
                                      Label="Request Timeout (ms)"
                                      Min="1000" Max="30000"
                                      Variant="Variant.Outlined" />
+                    <MudNumericField @bind-Value="_settings.MaxPingFailures"
+                                     Label="Max Ping Failures"
+                                     Min="1" Max="50"
+                                     Variant="Variant.Outlined" />
                 </MudStack>
             </MudPaper>
 
@@ -70,6 +74,20 @@
                     <MudNumericField @bind-Value="_settings.MaxLogEntries"
                                      Label="Max Log Entries"
                                      Min="50" Max="2000"
+                                     Variant="Variant.Outlined" />
+                </MudStack>
+            </MudPaper>
+
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.subtitle1" GutterBottom="true">Metrics Recording</MudText>
+                <MudStack Spacing="3">
+                    <MudNumericField @bind-Value="_settings.RecordingIntervalSeconds"
+                                     Label="Recording Interval (seconds)"
+                                     Min="1" Max="300"
+                                     Variant="Variant.Outlined" />
+                    <MudNumericField @bind-Value="_settings.RecordingCapacityLimit"
+                                     Label="Max Recorded Samples (Capacity)"
+                                     Min="100" Max="50000"
                                      Variant="Variant.Outlined" />
                 </MudStack>
             </MudPaper>
@@ -139,6 +157,7 @@
             PerPagePollingIntervalMs = new Dictionary<string, int>(_settings.PerPagePollingIntervalMs),
             PingIntervalMs = _settings.PingIntervalMs,
             RequestTimeoutMs = _settings.RequestTimeoutMs,
+            MaxPingFailures = _settings.MaxPingFailures,
             AutoReconnect = _settings.AutoReconnect,
             MaxReconnectAttempts = _settings.MaxReconnectAttempts,
             ReconnectBackoffMinMs = _settings.ReconnectBackoffMinMs,
@@ -150,7 +169,9 @@
             CompactTableDensity = _settings.CompactTableDensity,
             ChartTimeWindowSeconds = _settings.ChartTimeWindowSeconds,
             MaxChartSamples = _settings.MaxChartSamples,
-            MaxLogEntries = _settings.MaxLogEntries
+            MaxLogEntries = _settings.MaxLogEntries,
+            RecordingIntervalSeconds = _settings.RecordingIntervalSeconds,
+            RecordingCapacityLimit = _settings.RecordingCapacityLimit
         };
     }
 

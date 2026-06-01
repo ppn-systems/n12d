@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Speed" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Speed" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Policy Rate Limiter</MudText>
         @if (IsStale)
         {
@@ -41,15 +41,26 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
-            <MudItem xs="12" sm="6" md="4">
-                <MetricTile Label="Evaluations" Value="@MetricFormat.Count(report.CheckCounter)" Detail="Total rate limit checks" />
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Evaluations" 
+                            Value="@MetricFormat.Count(report.CheckCounter)" 
+                            Detail="Total rate limit checks"
+                            ValueColor="@(report.CheckCounter > 0 ? Color.Success : Color.Default)"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="4">
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Engine Blocked" 
+                            Value="@MetricFormat.Count(report.SharedEngine?.HardBlockedCount ?? 0)" 
+                            Detail="Lockout endpoints"
+                            ValueColor="@((report.SharedEngine?.HardBlockedCount ?? 0) > 0 ? Color.Warning : Color.Success)"
+                            Hero="true" />
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12">
                 <MetricTile Label="Engine Tracked Endpoints" Value="@MetricFormat.Count(report.SharedEngine?.TrackedEndpoints ?? 0)" Detail="Active IP/op limits" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="4">
-                <MetricTile Label="Engine Blocked" Value="@MetricFormat.Count(report.SharedEngine?.HardBlockedCount ?? 0)" Detail="Lockout endpoints" />
             </MudItem>
         </MudGrid>
 

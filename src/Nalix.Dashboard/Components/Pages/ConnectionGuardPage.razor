@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Shield" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Shield" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Connection Guard</MudText>
         @if (IsStale)
         {
@@ -41,24 +41,29 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
-            <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Tracked Endpoints" Value="@MetricFormat.Count(report.TrackedEndpoints)" Detail="@($"Concurrent {MetricFormat.Count(report.TotalConcurrent)}")" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Total Attempts" Value="@MetricFormat.Count(report.TotalAttempts)" Detail="@($"Limit {MetricFormat.Count(report.MaxPerEndpoint)} / endpoint")" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
                 <MetricTile Label="Rejections"
                             Value="@MetricFormat.Count(report.TotalRejections)"
-                            ValueColor="@(report.TotalRejections > 0 ? Color.Warning : Color.Default)"
-                            Detail="@($"Cleaned {MetricFormat.Count(report.TotalCleaned)}")" />
+                            ValueColor="@(report.TotalRejections > 0 ? Color.Error : Color.Success)"
+                            Detail="@($"Cleaned {MetricFormat.Count(report.TotalCleaned)}")"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="12" sm="6">
                 <MetricTile Label="Rejection Rate"
                             Value="@MetricFormat.Percent(report.RejectionRate, 2)"
-                            ValueColor="@(report.RejectionRate > 10 ? Color.Error : Color.Default)"
-                            Detail="@($"Idle after {MetricFormat.Seconds(report.InactivityThresholdSeconds)}")" />
+                            ValueColor="@(report.RejectionRate > 5.0 ? Color.Error : (report.RejectionRate > 1.0 ? Color.Warning : (report.RejectionRate > 0 ? Color.Success : Color.Default)))"
+                            Detail="@($"Idle after {MetricFormat.Seconds(report.InactivityThresholdSeconds)}")"
+                            Hero="true" />
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Tracked Endpoints" Value="@MetricFormat.Count(report.TrackedEndpoints)" Detail="@($"Concurrent {MetricFormat.Count(report.TotalConcurrent)}")" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Total Attempts" Value="@MetricFormat.Count(report.TotalAttempts)" Detail="@($"Limit {MetricFormat.Count(report.MaxPerEndpoint)} / endpoint")" />
             </MudItem>
         </MudGrid>
 

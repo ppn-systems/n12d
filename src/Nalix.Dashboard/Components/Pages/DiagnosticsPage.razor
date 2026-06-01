@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.BugReport" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.BugReport" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Diagnostics</MudText>
         <MudSpacer />
         <MudText Typo="Typo.caption" Color="Color.Secondary">@State.Logs.Count entries</MudText>
@@ -26,22 +26,27 @@
             <MetricTile Label="Connection"
                         Value="@(State.IsConnected ? "Connected" : "Disconnected")"
                         ValueColor="@(State.IsConnected ? Color.Success : Color.Error)"
-                        Detail="WebSocket session" />
+                        Detail="WebSocket session"
+                        Hero="true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MetricTile Label="Ping"
                         Value="@(State.LastPingMilliseconds.HasValue ? $"{State.LastPingMilliseconds:F1} ms" : "-")"
-                        Detail="@PingDetail" />
+                        ValueColor="@(State.LastPingMilliseconds.HasValue ? (State.LastPingMilliseconds.Value > 100 ? Color.Error : (State.LastPingMilliseconds.Value > 25 ? Color.Warning : Color.Success)) : Color.Default)"
+                        Detail="@PingDetail"
+                        Hero="true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MetricTile Label="Reports Cached"
                         Value="@($"{State.Reports.Count} / 13")"
-                        Detail="@LatestReportDetail" />
+                        Detail="@LatestReportDetail"
+                        Hero="true" />
         </MudItem>
         <MudItem xs="12" sm="6" md="3">
             <MetricTile Label="Log Entries"
                         Value="@MetricFormat.Count(State.Logs.Count)"
-                        Detail="Activity rows" />
+                        Detail="Activity rows"
+                        Hero="true" />
         </MudItem>
     </MudGrid>
 

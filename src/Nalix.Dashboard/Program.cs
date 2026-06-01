@@ -39,6 +39,7 @@ internal class Program
         _ = builder.Services.AddSingleton<IAdminClient, WebSocketAdminClient>();
         _ = builder.Services.AddSingleton<IReportPollingController, ReportPollingController>();
         _ = builder.Services.AddSingleton<PingKeepAliveService>();
+        _ = builder.Services.AddSingleton<MetricRecordingService>();
 
         _ = builder.Services.AddSingleton<IReportParser, DispatchReportParser>();
         _ = builder.Services.AddSingleton<IReportParser, TasksReportParser>();

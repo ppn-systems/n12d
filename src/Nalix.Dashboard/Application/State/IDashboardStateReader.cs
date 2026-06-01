@@ -8,6 +8,7 @@ namespace Nalix.Dashboard.Application.State;
 internal interface IDashboardStateReader
 {
     event Action? Changed;
+    event Action<DashboardReportSnapshot>? ReportUpdated;
 
     bool IsConnected { get; }
 

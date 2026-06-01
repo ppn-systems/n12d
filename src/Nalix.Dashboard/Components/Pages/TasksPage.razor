@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Task" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Checklist" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Tasks</MudText>
         @if (IsStale)
         {
@@ -41,27 +41,40 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Workers Running" Value="@($"{MetricFormat.Count(report.WorkersRunning)} / {MetricFormat.Count(report.WorkersTotal)}")" Detail="@($"Peak {MetricFormat.Count(report.PeakRunningWorkerCount)}")" />
+                <MetricTile Label="Workers Running" 
+                            Value="@($"{MetricFormat.Count(report.WorkersRunning)} / {MetricFormat.Count(report.WorkersTotal)}")" 
+                            Detail="@($"Peak {MetricFormat.Count(report.PeakRunningWorkerCount)}")"
+                            ValueColor="@(report.CurrentConcurrencyLimit <= 0 ? Color.Default : ((double)report.WorkersRunning / report.CurrentConcurrencyLimit >= 1.0 ? Color.Error : ((double)report.WorkersRunning / report.CurrentConcurrencyLimit >= 0.9 ? Color.Warning : (report.WorkersRunning == 0 ? Color.Default : Color.Success))))"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Recurring Tasks" Value="@MetricFormat.Count(report.RecurringCount)" Detail="@($"Runs {MetricFormat.Count(report.RecurringExecutionCount)}")" />
+                <MetricTile Label="Avg Execution" 
+                            Value="@MetricFormat.Milliseconds(report.AverageWorkerExecutionTimeMs)" 
+                            Detail="@($"P95 {MetricFormat.Milliseconds(report.P95WorkerExecutionTimeMs)}")"
+                            ValueColor="@(report.AverageWorkerExecutionTimeMs > 2000 ? Color.Error : (report.AverageWorkerExecutionTimeMs > 500 ? Color.Warning : Color.Success))"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Avg Execution" Value="@MetricFormat.Milliseconds(report.AverageWorkerExecutionTimeMs)" Detail="@($"P95 {MetricFormat.Milliseconds(report.P95WorkerExecutionTimeMs)}")" />
+                <MetricTile Label="Concurrency Limit" 
+                            Value="@MetricFormat.Count(report.CurrentConcurrencyLimit)" 
+                            Detail="@($"Max workers {MetricFormat.Count(report.MaxWorkers)}")"
+                            ValueColor="@(report.CurrentConcurrencyLimit >= report.MaxWorkers ? Color.Warning : Color.Success)"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
                 <MetricTile Label="Worker Errors"
                             Value="@MetricFormat.Count(report.WorkerErrorCount)"
-                            ValueColor="@(report.WorkerErrorCount > 0 ? Color.Error : Color.Default)"
-                            Detail="@($"Recurring {MetricFormat.Count(report.RecurringErrorCount)}")" />
+                            ValueColor="@(report.WorkerErrorCount > 0 ? Color.Error : Color.Success)"
+                            Detail="@($"Recurring {MetricFormat.Count(report.RecurringErrorCount)}")"
+                            Hero="true" />
             </MudItem>
         </MudGrid>
 
         @if (report.Memory is { } mem)
         {
-            <MudGrid Spacing="2" Class="mb-4">
+            <MudGrid Spacing="2" Class="mb-4 metrics-grid">
                 <MudItem xs="12" sm="4">
                     <MetricTile Label="Working Set" Value="@($"{MetricFormat.Number(mem.WorkingSetMB)} MB")" />
                 </MudItem>
@@ -76,7 +89,7 @@
 
         @if (report.Process is { } proc)
         {
-            <MudGrid Spacing="2" Class="mb-4">
+            <MudGrid Spacing="2" Class="mb-4 metrics-grid">
                 <MudItem xs="12" sm="6" md="3">
                     <MetricTile Label="Threads" Value="@MetricFormat.Count(proc.Threads)" Detail="@($"Running {MetricFormat.Count(proc.ThreadsRunning)}")" />
                 </MudItem>
@@ -94,60 +107,67 @@
             </MudGrid>
         }
 
-        <MudGrid Spacing="2" Class="mb-4">
+        <MudGrid Spacing="2" Class="mb-4 metrics-grid">
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Concurrency Limit" Value="@MetricFormat.Count(report.CurrentConcurrencyLimit)" Detail="@($"Max workers {MetricFormat.Count(report.MaxWorkers)}")" />
+                <MetricTile Label="Recurring Tasks" Value="@MetricFormat.Count(report.RecurringCount)" Detail="@($"Runs {MetricFormat.Count(report.RecurringExecutionCount)}")" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Wait Time" Value="@MetricFormat.Milliseconds(report.AverageWorkerWaitTimeMs)" Detail="@($"P99 {MetricFormat.Milliseconds(report.P99WorkerExecutionTimeMs)}")" />
+                <MetricTile Label="Wait Time" 
+                            Value="@MetricFormat.Milliseconds(report.AverageWorkerWaitTimeMs)" 
+                            Detail="@($"P99 {MetricFormat.Milliseconds(report.P99WorkerExecutionTimeMs)}")"
+                            ValueColor="@(report.AverageWorkerWaitTimeMs > 1000 ? Color.Error : (report.AverageWorkerWaitTimeMs > 200 ? Color.Warning : Color.Success))" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
                 <MetricTile Label="CPU Thresholds" Value="@($"{MetricFormat.Number(report.LowCpuThreshold)} / {MetricFormat.Number(report.HighCpuThreshold)}")" Detail="Low / high" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Adjustment" Value="@(report.DynamicAdjustmentEnabled ? "Enabled" : "Disabled")" Detail="@($"{MetricFormat.Seconds(report.ObservingIntervalSeconds)} observe")" />
+                <MetricTile Label="Adjustment" 
+                            Value="@(report.DynamicAdjustmentEnabled ? "Enabled" : "Disabled")" 
+                            Detail="@($"{MetricFormat.Seconds(report.ObservingIntervalSeconds)} observe")"
+                            ValueColor="@(report.DynamicAdjustmentEnabled ? Color.Success : Color.Default)" />
             </MudItem>
         </MudGrid>
-
-        @if (report.WorkersByGroup is { Count: > 0 } groups)
-        {
-            <MetricSection Title="Workers by Group">
-                <MudTable Items="@groups" Dense="true" Hover="true" Striped="false" Class="metric-table">
-                    <HeaderContent>
-                        <MudTh>Group</MudTh>
-                        <MudTh>Running</MudTh>
-                        <MudTh>Total</MudTh>
-                        <MudTh>Concurrency</MudTh>
-                    </HeaderContent>
-                    <RowTemplate Context="g">
-                        <MudTd Class="metric-table__wide">@g.Key</MudTd>
-                        <MudTd>@MetricFormat.Count(g.Value.Running)</MudTd>
-                        <MudTd>@MetricFormat.Count(g.Value.Total)</MudTd>
-                        <MudTd>@(g.Value.Concurrency ?? "-")</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MetricSection>
-        }
 
         @if (report.TopRunningWorkers is { Count: > 0 } workers)
         {
             <MetricSection Title="Top Running Workers">
-                <MudTable Items="@workers" Dense="true" Hover="true" Striped="false" Class="metric-table">
+                <MudTable Items="@workers" Dense="true" Hover="true" Striped="false" Class="metric-table metric-table-workers"
+                          GroupBy="@_workerGroupDefinition">
                     <HeaderContent>
                         <MudTh>Name</MudTh>
-                        <MudTh>Group</MudTh>
-                        <MudTh>Started</MudTh>
-                        <MudTh>Progress</MudTh>
-                        <MudTh>Last Heartbeat</MudTh>
-                        <MudTh>Id</MudTh>
+                        <MudTh Style="width: 200px;">Id</MudTh>
+                        <MudTh Style="width: 220px;">Started</MudTh>
+                        <MudTh Style="width: 220px;">Heartbeat</MudTh>
+                        <MudTh Style="width: 200px;">Progress</MudTh>
                     </HeaderContent>
+                    <GroupHeaderTemplate>
+                        @{
+                            var groupName = context.Key as string ?? "Unknown";
+                            Nalix.Dashboard.Domain.Reports.Tasks.WorkerGroupEntry? groupEntry = null;
+                            report?.WorkersByGroup?.TryGetValue(groupName, out groupEntry);
+                        }
+                        <MudTd Class="mud-table-cell-custom-group" colspan="5">
+                            <strong>@(string.IsNullOrWhiteSpace(context.GroupName) ? "Group" : context.GroupName):</strong> @groupName
+                            @if (groupEntry is not null)
+                            {
+                                <span style="font-weight: normal; opacity: 0.85; margin-left: 8px;">
+                                    (Running: @groupEntry.Running/@groupEntry.Total@(string.IsNullOrWhiteSpace(groupEntry.Concurrency) || groupEntry.Concurrency == "-" ? "" : $", Concurrency: {groupEntry.Concurrency}"))
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="font-weight: normal; opacity: 0.85; margin-left: 8px;">
+                                    (@context.Items.Count() workers)
+                                </span>
+                            }
+                        </MudTd>
+                    </GroupHeaderTemplate>
                     <RowTemplate Context="w">
                         <MudTd Class="metric-table__wide">@(w.Name ?? "-")</MudTd>
-                        <MudTd>@(w.Group ?? "-")</MudTd>
-                        <MudTd>@MetricFormat.DateTimeOrDash(w.StartedUtc)</MudTd>
-                        <MudTd>@MetricFormat.Percent(w.Progress)</MudTd>
-                        <MudTd>@MetricFormat.DateTimeOrDash(w.LastHeartbeatUtc)</MudTd>
                         <MudTd>@(w.Id ?? "-")</MudTd>
+                        <MudTd>@MetricFormat.DateTimeOrDash(w.StartedUtc)</MudTd>
+                        <MudTd>@MetricFormat.DateTimeOrDash(w.LastHeartbeatUtc)</MudTd>
+                        <MudTd>@MetricFormat.Count(w.Progress)</MudTd>
                     </RowTemplate>
                 </MudTable>
             </MetricSection>
@@ -188,4 +208,13 @@
 @code {
     protected override RuntimeObservationTarget Target => RuntimeObservationTarget.TASKS;
     protected override string Route => "/metrics/tasks";
+
+    private TableGroupDefinition<Nalix.Dashboard.Domain.Reports.Tasks.RunningWorkerEntry> _workerGroupDefinition = new()
+    {
+        GroupName = "Group",
+        Indentation = true,
+        Expandable = true,
+        IsInitiallyExpanded = false,
+        Selector = (e) => e.Group ?? "Unknown"
+    };
 }

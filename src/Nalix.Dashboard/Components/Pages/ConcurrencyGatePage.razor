@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Lock" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Lock" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Concurrency Gate</MudText>
         @if (IsStale)
         {
@@ -41,20 +41,28 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
-            <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Rejection Rate" Value="@($"{report.RejectionRate:F2}%")" Detail="@($"Rejected {MetricFormat.Count(report.TotalRejected)}")" />
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Rejection Rate" 
+                            Value="@($"{report.RejectionRate:F2}%")" 
+                            Detail="@($"Rejected {MetricFormat.Count(report.TotalRejected)}")"
+                            ValueColor="@(report.RejectionRate > 5.0 ? Color.Error : (report.RejectionRate > 1.0 ? Color.Warning : (report.RejectionRate > 0 ? Color.Success : Color.Default)))"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="12" sm="6">
                 <MetricTile Label="Circuit Breaker" 
                             Value="@(report.CircuitBreaker?.IsOpen == true ? "OPEN" : "Closed")" 
                             ValueColor="@(report.CircuitBreaker?.IsOpen == true ? Color.Error : Color.Success)"
-                            Detail="@($"Trips: {MetricFormat.Count(report.CircuitBreaker?.Trips ?? 0)}")" />
+                            Detail="@($"Trips: {MetricFormat.Count(report.CircuitBreaker?.Trips ?? 0)}")"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
                 <MetricTile Label="Tracked Opcodes" Value="@MetricFormat.Count(report.TrackedOpcodes)" Detail="@($"Cleaned {MetricFormat.Count(report.TotalCleaned)}")" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="12" sm="6">
                 <MetricTile Label="Queued / Acquired" Value="@($"{MetricFormat.Count(report.TotalQueued)} / {MetricFormat.Count(report.TotalAcquired)}")" Detail="Total operations" />
             </MudItem>
         </MudGrid>

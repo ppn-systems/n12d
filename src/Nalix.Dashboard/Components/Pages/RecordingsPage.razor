@@ -1,0 +1,590 @@
+@namespace Nalix.Dashboard.Components.Pages
+@page "/recordings"
+@inject Nalix.Dashboard.Application.Services.MetricRecordingService RecordingService
+@inject IDashboardStateReader State
+@inject IAdminSettingsStore SettingsStore
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject Nalix.Dashboard.Application.Abstractions.IAdminClient Client
+@implements IDisposable
+
+<PageTitle>Metrics Recording — Nalix</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="py-4">
+    <!-- Header -->
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-5" Spacing="2">
+        <div class="d-flex align-center justify-center rounded-lg pa-2" style="background-color: var(--mud-palette-surface); border: 1px solid var(--mud-palette-divider);">
+            <MudIcon Icon="@Icons.Material.Outlined.FiberManualRecord" Class="@(RecordingService.IsRecording ? "rec-icon-active pulsing" : "rec-icon-inactive")" Style="font-size: 1.8rem;" />
+        </div>
+        <MudStack Spacing="0">
+            <MudText Typo="Typo.h5" Style="font-weight: 700;">Metrics Recording Hub</MudText>
+            <MudText Typo="Typo.caption" Class="mud-text-secondary">Capture live server telemetry snapshots for offline Python analysis</MudText>
+        </MudStack>
+    </MudStack>
+
+    <MudGrid Spacing="3">
+        <!-- Cấu hình và Trình điều khiển ghi -->
+        <MudItem xs="12" lg="4">
+            <MudPaper Class="pa-5" Outlined="true" Style="background-color: var(--mud-palette-surface); border-radius: 12px; height: 100%;">
+                <div class="d-flex align-center justify-space-between mb-4">
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Recording Panel</MudText>
+                    @if (RecordingService.IsRecording)
+                    {
+                        <span class="recording-badge">🔴 LIVE</span>
+                    }
+                    else
+                    {
+                        <span class="idle-badge">IDLE</span>
+                    }
+                </div>
+                <MudDivider Class="mb-4" />
+
+                @if (!RecordingService.IsRecording)
+                {
+                    <MudText Typo="Typo.body2" Class="mud-text-secondary mb-4">
+                        Select which telemetry systems you want to record, then click start.
+                    </MudText>
+
+                    <div class="d-flex align-center justify-space-between mb-2">
+                        <MudText Typo="Typo.subtitle2" Style="font-weight: 600;">1. Telemetry Targets</MudText>
+                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="ToggleSelectAll" Style="text-transform: none; font-size: 0.75rem; padding: 0;">
+                            @(_selectedMap.Values.All(v => v) ? "Deselect All" : "Select All")
+                        </MudButton>
+                    </div>
+                    <MudStack Spacing="1" Class="mb-4 pa-3 border-box" Style="max-height: 280px; overflow-y: auto; background-color: var(--mud-palette-background-grey); border-radius: 8px; border: 1px solid var(--mud-palette-divider);">
+                        <MudGrid Spacing="0">
+                            @foreach (var target in _availableTargets)
+                            {
+                                <MudItem xs="12" sm="6" lg="12">
+                                    <div class="d-flex align-center py-1">
+                                        <MudCheckBox @bind-Value="_selectedMap[target]" 
+                                                     Color="Color.Error" 
+                                                     Dense="true">
+                                            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2" Class="ml-1">
+                                                <MudIcon Icon="@GetIcon(target)" Size="Size.Small" Class="mud-text-secondary" />
+                                                <MudText Typo="Typo.body2" Style="font-size: 0.85rem;">@GetFriendlyName(target)</MudText>
+                                            </MudStack>
+                                        </MudCheckBox>
+                                    </div>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudStack>
+
+                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: 600;">2. Parameters Preview</MudText>
+                    <MudStack Spacing="2" Class="mb-5 pa-3" Style="background-color: var(--mud-palette-background-grey); border-radius: 8px; border: 1px solid var(--mud-palette-divider);">
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">Sampling Rate</MudText>
+                            <MudText Typo="Typo.caption" Style="font-weight: 600;">Every @_settings.RecordingIntervalSeconds seconds</MudText>
+                        </div>
+                        <div class="d-flex justify-space-between">
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">RAM Buffer Size</MudText>
+                            <MudText Typo="Typo.caption" Style="font-weight: 600;">@MetricFormat.Count(_settings.RecordingCapacityLimit) samples</MudText>
+                        </div>
+                    </MudStack>
+
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Error" 
+                               StartIcon="@Icons.Material.Filled.FiberManualRecord" 
+                               FullWidth="true"
+                               OnClick="StartRecording"
+                               Style="border-radius: 8px;"
+                               Class="py-3 font-weight-bold">
+                        Start Session
+                    </MudButton>
+                }
+                else
+                {
+                    <div class="d-flex flex-column align-center py-6 mb-4 rounded-lg" style="background-color: var(--mud-palette-background-grey); border: 1px solid var(--mud-palette-divider);">
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary uppercase mb-1" Style="letter-spacing: 1px; font-weight: bold;">Session Duration</MudText>
+                        <div class="digital-clock">
+                            @GetDurationString()
+                        </div>
+                        <div class="d-flex align-center mt-2">
+                            <span class="pulsing-red-dot mr-2" style="width: 8px; height: 8px; background-color: var(--mud-palette-error); border-radius: 50%;"></span>
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">Recording @RecordingService.SelectedTargets.Count active targets</MudText>
+                        </div>
+                    </div>
+
+                    <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: 600;">Active Targets</MudText>
+                    <MudStack Spacing="1" Class="mb-5 pa-2" Style="max-height: 200px; overflow-y: auto;">
+                        @foreach (var target in RecordingService.SelectedTargets)
+                        {
+                            <div class="d-flex align-center justify-space-between py-1 px-2 rounded" style="background-color: var(--mud-palette-background-grey); margin-bottom: 4px;">
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="2">
+                                    <MudIcon Icon="@GetIcon(target)" Size="Size.Small" Color="Color.Error" />
+                                    <MudText Typo="Typo.body2" Style="font-size: 0.85rem;">@GetFriendlyName(target)</MudText>
+                                </MudStack>
+                                <MudChip T="string" Color="Color.Error" Size="Size.Small" Variant="Variant.Text">
+                                    @MetricFormat.Count(RecordingService.GetRecordedCount(target)) samples
+                                </MudChip>
+                            </div>
+                        }
+                    </MudStack>
+
+                    <MudButton Variant="Variant.Filled" 
+                               Color="Color.Dark" 
+                               StartIcon="@Icons.Material.Filled.Stop" 
+                               FullWidth="true"
+                               OnClick="StopRecording"
+                               Style="border-radius: 8px;"
+                               Class="py-3 font-weight-bold">
+                        Stop Recording
+                    </MudButton>
+                }
+            </MudPaper>
+        </MudItem>
+
+        <!-- Thống kê và Xuất File -->
+        <MudItem xs="12" lg="8">
+            <MudPaper Class="pa-5" Outlined="true" Style="background-color: var(--mud-palette-surface); border-radius: 12px; height: 100%;">
+                <div class="d-flex align-center justify-space-between mb-4">
+                    <MudText Typo="Typo.subtitle1" Style="font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Recorded Repositories</MudText>
+                    @if (HasAnyData())
+                    {
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Primary" 
+                                       Size="Size.Small" 
+                                       StartIcon="@Icons.Material.Filled.TableChart"
+                                       OnClick="ExportAllCsvAsync"
+                                       Style="text-transform: none; border-radius: 6px; font-weight: 600;">
+                                All CSV (ZIP)
+                            </MudButton>
+                            <MudButton Variant="Variant.Filled" 
+                                       Color="Color.Success" 
+                                       Size="Size.Small" 
+                                       StartIcon="@Icons.Material.Filled.FolderZip"
+                                       OnClick="ExportAllJsonAsync"
+                                       Style="text-transform: none; border-radius: 6px; font-weight: 600;">
+                                All JSON (ZIP)
+                            </MudButton>
+                            <MudButton Variant="Variant.Text" 
+                                       Color="Color.Error" 
+                                       Size="Size.Small" 
+                                       StartIcon="@Icons.Material.Filled.DeleteOutline"
+                                       OnClick="ClearData">
+                                Clear Cache
+                            </MudButton>
+                        </MudStack>
+                    }
+                </div>
+                <MudDivider Class="mb-4" />
+
+                @if (!HasAnyData())
+                {
+                    <div class="d-flex flex-column align-center justify-center py-8 text-center" style="min-height: 350px;">
+                        <div class="rounded-circle pa-4 mb-3" style="background-color: var(--mud-palette-background-grey); display: inline-block;">
+                            <MudIcon Icon="@Icons.Material.Outlined.Analytics" Style="font-size: 3.5rem;" Class="mud-text-secondary" />
+                        </div>
+                        <MudText Typo="Typo.h6" Style="font-weight: 600;" Class="mb-1">No telemetries captured yet</MudText>
+                        <MudText Typo="Typo.body2" Class="mud-text-secondary" Style="max-width: 320px;">
+                            Configure the targets in the left panel and click <b>Start Session</b>. The recorder will run background updates dynamically.
+                        </MudText>
+                    </div>
+                }
+                else
+                {
+                    <MudTable Items="GetRecordedTargets()" Dense="true" Hover="true" Elevation="0" Class="metric-table">
+                        <HeaderContent>
+                            <MudTh Style="font-weight: 700;">Telemetry Source</MudTh>
+                            <MudTh Style="font-weight: 700; text-align: right;">Captured Frames</MudTh>
+                            <MudTh Style="font-weight: 700; text-align: right;">Export Formats</MudTh>
+                        </HeaderContent>
+                        <RowTemplate Context="row">
+                            <MudTd>
+                                <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="3">
+                                    <div class="d-flex align-center justify-center rounded pa-2" style="background-color: var(--mud-palette-background-grey);">
+                                        <MudIcon Icon="@GetIcon(row)" Size="Size.Medium" Class="metric-icon-orange" />
+                                    </div>
+                                    <MudStack Spacing="0">
+                                        <MudText Typo="Typo.body2" Style="font-weight: 600;">@GetFriendlyName(row)</MudText>
+                                        <MudText Typo="Typo.caption" Class="mud-text-secondary">@row.ToString()</MudText>
+                                    </MudStack>
+                                </MudStack>
+                            </MudTd>
+                            <MudTd Style="text-align: right; vertical-align: middle;">
+                                <span class="samples-count-badge">
+                                    @MetricFormat.Count(RecordingService.GetRecordedCount(row))
+                                </span>
+                            </MudTd>
+                            <MudTd Style="text-align: right; vertical-align: middle;">
+                                <MudStack Row="true" Spacing="2" Justify="Justify.FlexEnd" Style="display: inline-flex;">
+                                    <MudButton Size="Size.Small" 
+                                               Variant="Variant.Filled" 
+                                               Color="Color.Primary" 
+                                               StartIcon="@Icons.Material.Filled.TableChart"
+                                               OnClick="() => ExportCsvAsync(row)"
+                                               Style="text-transform: none; border-radius: 6px; font-weight: 600;">
+                                        CSV (Flat)
+                                    </MudButton>
+                                    <MudButton Size="Size.Small" 
+                                               Variant="Variant.Filled" 
+                                               Color="Color.Success" 
+                                               StartIcon="@Icons.Material.Filled.FolderZip"
+                                               OnClick="() => ExportZipAsync(row)"
+                                               Style="text-transform: none; border-radius: 6px; font-weight: 600;">
+                                        JSON (ZIP)
+                                    </MudButton>
+                                </MudStack>
+                            </MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+
+<style>
+    .rec-icon-active {
+        color: var(--mud-palette-error);
+    }
+    .rec-icon-inactive {
+        color: var(--mud-palette-text-secondary);
+        opacity: 0.5;
+    }
+    .recording-badge {
+        background-color: rgba(220, 38, 38, 0.1);
+        color: var(--mud-palette-error);
+        font-weight: bold;
+        font-size: 0.72rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        letter-spacing: 0.5px;
+        border: 1px solid rgba(220, 38, 38, 0.2);
+    }
+    .idle-badge {
+        background-color: var(--mud-palette-background-grey);
+        color: var(--mud-palette-text-secondary);
+        font-weight: bold;
+        font-size: 0.72rem;
+        padding: 2px 8px;
+        border-radius: 12px;
+        letter-spacing: 0.5px;
+        border: 1px solid var(--mud-palette-divider);
+    }
+    .digital-clock {
+        font-family: 'Consolas', 'Courier New', monospace;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: var(--mud-palette-text-primary);
+        letter-spacing: 1px;
+        line-height: 1.1;
+    }
+    .samples-count-badge {
+        background-color: var(--mud-palette-background-grey);
+        color: var(--mud-palette-text-primary);
+        font-weight: 700;
+        font-family: monospace;
+        font-size: 0.9rem;
+        padding: 4px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--mud-palette-divider);
+        display: inline-block;
+    }
+    .pulsing {
+        animation: rec-pulsing-icon 1.5s infinite;
+    }
+    @@keyframes rec-pulsing-icon {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.4; transform: scale(0.92); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+</style>
+
+@code {
+    private AdminSettings _settings = new();
+    private readonly Dictionary<RuntimeObservationTarget, bool> _selectedMap = [];
+    private System.Threading.Timer? _uiTimer;
+
+    private static readonly RuntimeObservationTarget[] _availableTargets =
+    [
+        RuntimeObservationTarget.DISPATCH,
+        RuntimeObservationTarget.TASKS,
+        RuntimeObservationTarget.BUFFERS,
+        RuntimeObservationTarget.CONNECTIONS,
+        RuntimeObservationTarget.INSTANCES,
+        RuntimeObservationTarget.OBJECT_POOLS,
+        RuntimeObservationTarget.CONNECTION_GUARD,
+        RuntimeObservationTarget.CONCURRENCY_GATE,
+        RuntimeObservationTarget.POLICY_RATE_LIMITER,
+        RuntimeObservationTarget.TOKEN_BUCKET_LIMITER,
+        RuntimeObservationTarget.SESSIONS,
+        RuntimeObservationTarget.LISTENER,
+        RuntimeObservationTarget.PROTOCOL
+    ];
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (!State.HasApiKey)
+        {
+            string? savedKey = await SettingsStore.GetApiKeyAsync().ConfigureAwait(false);
+            if (!string.IsNullOrWhiteSpace(savedKey))
+            {
+                await Client.SetApiKeyAsync(savedKey).ConfigureAwait(false);
+            }
+            else
+            {
+                Nav.NavigateTo("/login");
+                return;
+            }
+        }
+
+        _settings = await SettingsStore.LoadAsync().ConfigureAwait(false);
+
+        // Initialize target map selection
+        foreach (var target in _availableTargets)
+        {
+            _selectedMap[target] = RecordingService.SelectedTargets.Contains(target);
+        }
+
+        RecordingService.Changed += OnRecordingServiceChanged;
+        if (RecordingService.IsRecording)
+        {
+            StartUiTimer();
+        }
+    }
+
+    private void OnRecordingServiceChanged()
+    {
+        if (RecordingService.IsRecording)
+        {
+            StartUiTimer();
+        }
+        else
+        {
+            StopUiTimer();
+        }
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void StartUiTimer()
+    {
+        if (_uiTimer == null)
+        {
+            _uiTimer = new System.Threading.Timer(_ => InvokeAsync(StateHasChanged), null, 1000, 1000);
+        }
+    }
+
+    private void StopUiTimer()
+    {
+        _uiTimer?.Dispose();
+        _uiTimer = null;
+    }
+
+    private void ToggleSelectAll()
+    {
+        bool allSelected = _selectedMap.Values.All(v => v);
+        foreach (var target in _availableTargets)
+        {
+            _selectedMap[target] = !allSelected;
+        }
+    }
+
+    private void StartRecording()
+    {
+        var selected = _selectedMap.Where(kvp => kvp.Value).Select(kvp => kvp.Key).ToList();
+        if (selected.Count == 0)
+        {
+            Snackbar.Add("Please select at least one telemetry target to record.", Severity.Warning);
+            return;
+        }
+
+        RecordingService.Start(selected, _settings.RecordingIntervalSeconds, _settings.RecordingCapacityLimit);
+        Snackbar.Add($"Started recording session for {selected.Count} systems.", Severity.Success);
+    }
+
+    private void StopRecording()
+    {
+        RecordingService.Stop();
+        Snackbar.Add("Session stopped. Recorded telemetry is cached.", Severity.Info);
+    }
+
+    private void ClearData()
+    {
+        RecordingService.Clear();
+        Snackbar.Add("Recording cache cleared.", Severity.Success);
+    }
+
+    private bool HasAnyData()
+    {
+        return _availableTargets.Any(t => RecordingService.GetRecordedCount(t) > 0);
+    }
+
+    private IEnumerable<RuntimeObservationTarget> GetRecordedTargets()
+    {
+        return _availableTargets.Where(t => RecordingService.GetRecordedCount(t) > 0);
+    }
+
+    private string GetDurationString()
+    {
+        if (RecordingService.StartTime is not { } start)
+        {
+            return "00:00:00";
+        }
+        var diff = DateTimeOffset.Now - start;
+        return $"{(int)diff.TotalHours:D2}:{diff.Minutes:D2}:{diff.Seconds:D2}";
+    }
+
+    private async Task ExportCsvAsync(RuntimeObservationTarget target)
+    {
+        var snapshots = RecordingService.GetSnapshots(target);
+        if (snapshots.Count == 0)
+        {
+            Snackbar.Add("No recorded samples for this target.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            byte[] csvBytes = Nalix.Dashboard.Application.Services.RecordingExporter.ExportToCsv(target, snapshots);
+            string fileName = $"{target.ToString().ToLowerInvariant()}_metrics_{DateTimeOffset.Now:yyyyMMdd_HHmmss}.csv";
+            await JS.InvokeVoidAsync("downloadHelper.downloadFile", fileName, "text/csv;charset=utf-8", csvBytes).ConfigureAwait(false);
+            Snackbar.Add($"Exported {snapshots.Count} samples of {GetFriendlyName(target)} to CSV.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ExportZipAsync(RuntimeObservationTarget target)
+    {
+        var snapshots = RecordingService.GetSnapshots(target);
+        if (snapshots.Count == 0)
+        {
+            Snackbar.Add("No recorded samples for this target.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            byte[] zipBytes = Nalix.Dashboard.Application.Services.RecordingExporter.ExportToZipJson(target, snapshots);
+            string fileName = $"{target.ToString().ToLowerInvariant()}_metrics_{DateTimeOffset.Now:yyyyMMdd_HHmmss}.zip";
+            await JS.InvokeVoidAsync("downloadHelper.downloadFile", fileName, "application/zip", zipBytes).ConfigureAwait(false);
+            Snackbar.Add($"Exported {snapshots.Count} samples of {GetFriendlyName(target)} to ZIP.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ExportAllCsvAsync()
+    {
+        var recordedData = new Dictionary<RuntimeObservationTarget, IReadOnlyList<Nalix.Dashboard.Application.Services.RecordedSnapshot>>();
+        int totalSamples = 0;
+
+        foreach (var target in _availableTargets)
+        {
+            var snapshots = RecordingService.GetSnapshots(target);
+            if (snapshots.Count > 0)
+            {
+                recordedData[target] = snapshots;
+                totalSamples += snapshots.Count;
+            }
+        }
+
+        if (totalSamples == 0)
+        {
+            Snackbar.Add("No recorded samples available to download.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            byte[] zipBytes = Nalix.Dashboard.Application.Services.RecordingExporter.ExportAllToZipCsv(recordedData);
+            string fileName = $"all_metrics_csv_{DateTimeOffset.Now:yyyyMMdd_HHmmss}.zip";
+            await JS.InvokeVoidAsync("downloadHelper.downloadFile", fileName, "application/zip", zipBytes).ConfigureAwait(false);
+            Snackbar.Add($"Exported all metrics CSVs ({totalSamples} samples across {recordedData.Count} targets) to ZIP.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task ExportAllJsonAsync()
+    {
+        var recordedData = new Dictionary<RuntimeObservationTarget, IReadOnlyList<Nalix.Dashboard.Application.Services.RecordedSnapshot>>();
+        int totalSamples = 0;
+
+        foreach (var target in _availableTargets)
+        {
+            var snapshots = RecordingService.GetSnapshots(target);
+            if (snapshots.Count > 0)
+            {
+                recordedData[target] = snapshots;
+                totalSamples += snapshots.Count;
+            }
+        }
+
+        if (totalSamples == 0)
+        {
+            Snackbar.Add("No recorded samples available to download.", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            byte[] zipBytes = Nalix.Dashboard.Application.Services.RecordingExporter.ExportAllToZipJson(recordedData);
+            string fileName = $"all_metrics_json_{DateTimeOffset.Now:yyyyMMdd_HHmmss}.zip";
+            await JS.InvokeVoidAsync("downloadHelper.downloadFile", fileName, "application/zip", zipBytes).ConfigureAwait(false);
+            Snackbar.Add($"Exported all metrics JSONs ({totalSamples} samples across {recordedData.Count} targets) to ZIP.", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Export failed: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private static string GetFriendlyName(RuntimeObservationTarget target)
+    {
+        return target switch
+        {
+            RuntimeObservationTarget.DISPATCH => "Packet Dispatch",
+            RuntimeObservationTarget.TASKS => "Task Scheduler",
+            RuntimeObservationTarget.BUFFERS => "Buffer Pool",
+            RuntimeObservationTarget.CONNECTIONS => "Active Connections",
+            RuntimeObservationTarget.INSTANCES => "Dependency Instances",
+            RuntimeObservationTarget.OBJECT_POOLS => "Object Pools",
+            RuntimeObservationTarget.CONNECTION_GUARD => "Connection Guard",
+            RuntimeObservationTarget.CONCURRENCY_GATE => "Concurrency Gate",
+            RuntimeObservationTarget.POLICY_RATE_LIMITER => "Policy Rate Limiter",
+            RuntimeObservationTarget.TOKEN_BUCKET_LIMITER => "Token Bucket Limiter",
+            RuntimeObservationTarget.SESSIONS => "Active Sessions",
+            RuntimeObservationTarget.LISTENER => "Listener Transport",
+            RuntimeObservationTarget.PROTOCOL => "Protocol Transport",
+            _ => target.ToString()
+        };
+    }
+
+    private static string GetIcon(RuntimeObservationTarget target)
+    {
+        return target switch
+        {
+            RuntimeObservationTarget.DISPATCH => Icons.Material.Outlined.AltRoute,
+            RuntimeObservationTarget.TASKS => Icons.Material.Outlined.Checklist,
+            RuntimeObservationTarget.BUFFERS => Icons.Material.Outlined.Memory,
+            RuntimeObservationTarget.CONNECTIONS => Icons.Material.Outlined.Cable,
+            RuntimeObservationTarget.INSTANCES => Icons.Material.Outlined.Layers,
+            RuntimeObservationTarget.OBJECT_POOLS => Icons.Material.Outlined.Autorenew,
+            RuntimeObservationTarget.CONNECTION_GUARD => Icons.Material.Outlined.Shield,
+            RuntimeObservationTarget.CONCURRENCY_GATE => Icons.Material.Outlined.Lock,
+            RuntimeObservationTarget.POLICY_RATE_LIMITER => Icons.Material.Outlined.Speed,
+            RuntimeObservationTarget.TOKEN_BUCKET_LIMITER => Icons.Material.Outlined.HourglassEmpty,
+            RuntimeObservationTarget.SESSIONS => Icons.Material.Outlined.Fingerprint,
+            RuntimeObservationTarget.LISTENER => Icons.Material.Outlined.Sensors,
+            RuntimeObservationTarget.PROTOCOL => Icons.Material.Outlined.CompareArrows,
+            _ => Icons.Material.Outlined.Analytics
+        };
+    }
+
+    public void Dispose()
+    {
+        RecordingService.Changed -= OnRecordingServiceChanged;
+        StopUiTimer();
+    }
+}

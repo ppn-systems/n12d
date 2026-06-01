@@ -15,6 +15,7 @@ internal sealed class DashboardState : IDashboardStateReader, IDashboardStateWri
     private const int MaxPingSamples = 120;
 
     public event Action? Changed;
+    public event Action<DashboardReportSnapshot>? ReportUpdated;
 
     public bool IsConnected { get; private set; }
 
@@ -138,6 +139,7 @@ internal sealed class DashboardState : IDashboardStateReader, IDashboardStateWri
         }
 
         this.NotifyChanged();
+        this.ReportUpdated?.Invoke(report);
     }
 
     private void NotifyChanged() => Changed?.Invoke();

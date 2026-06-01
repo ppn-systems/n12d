@@ -29,6 +29,8 @@ public sealed class AdminSettings
 
     public int RequestTimeoutMs { get; set; } = 5000;
 
+    public int MaxPingFailures { get; set; } = 5;
+
     public bool AutoReconnect { get; set; } = true;
 
     public int MaxReconnectAttempts { get; set; } = 10;
@@ -52,6 +54,10 @@ public sealed class AdminSettings
     public int MaxChartSamples { get; set; } = 120;
 
     public int MaxLogEntries { get; set; } = 250;
+
+    public int RecordingIntervalSeconds { get; set; } = 3;
+
+    public int RecordingCapacityLimit { get; set; } = 10000;
 
     public int GetPollingInterval(string route)
     {

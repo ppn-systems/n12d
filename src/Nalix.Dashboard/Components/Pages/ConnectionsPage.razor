@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.Cable" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Cable" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Connections</MudText>
         @if (IsStale)
         {
@@ -41,27 +41,40 @@
     }
     else
     {
-        <MudGrid Spacing="3">
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Total Connections" Value="@MetricFormat.Count(report.TotalConnections)" Detail="Across all shards" />
+                <MetricTile Label="Total Connections" 
+                            Value="@MetricFormat.Count(report.TotalConnections)" 
+                            Detail="Across all shards"
+                            ValueColor="@(report.TotalConnections > 0 ? Color.Success : Color.Default)"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Shard Count" Value="@MetricFormat.Count(report.ShardCount)" Detail="Connection hub shards" />
+                <MetricTile Label="Ingress Throughput" 
+                            Value="@($"{MetricFormat.Bytes(report.IngressBytesPerSecond)}/s")"
+                            ValueColor="@(report.IngressBytesPerSecond > 0 ? Color.Success : Color.Default)"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Bytes Sent" Value="@MetricFormat.Bytes(report.TotalBytesSent)" />
+                <MetricTile Label="Egress Throughput" 
+                            Value="@($"{MetricFormat.Bytes(report.EgressBytesPerSecond)}/s")"
+                            ValueColor="@(report.EgressBytesPerSecond > 0 ? Color.Success : Color.Default)"
+                            Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Bytes Received" Value="@MetricFormat.Bytes(report.TotalBytesReceived)" />
+                <MetricTile Label="Shard Count" 
+                            Value="@MetricFormat.Count(report.ShardCount)" 
+                            Detail="Connection hub shards"
+                            Hero="true" />
             </MudItem>
         </MudGrid>
 
-        <MudGrid Spacing="3" Class="mt-1">
-            <MudItem xs="12" sm="6" md="6">
-                <MetricTile Label="Ingress Throughput" Value="@($"{MetricFormat.Bytes(report.IngressBytesPerSecond)}/s")" />
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Bytes Sent" Value="@MetricFormat.Bytes(report.TotalBytesSent)" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="6">
-                <MetricTile Label="Egress Throughput" Value="@($"{MetricFormat.Bytes(report.EgressBytesPerSecond)}/s")" />
+            <MudItem xs="12" sm="6">
+                <MetricTile Label="Bytes Received" Value="@MetricFormat.Bytes(report.TotalBytesReceived)" />
             </MudItem>
         </MudGrid>
     }

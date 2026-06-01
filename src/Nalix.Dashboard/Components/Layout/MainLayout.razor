@@ -4,6 +4,7 @@
 @inject IAdminSettingsStore SettingsStore
 @inject IAdminClient Client
 @inject NavigationManager Nav
+@inject Nalix.Dashboard.Application.Services.MetricRecordingService RecordingService
 @implements IDisposable
 
 <MudThemeProvider Theme="_theme" @bind-IsDarkMode="_isDarkMode" />
@@ -37,6 +38,14 @@
                          Class="mr-1">
                     @(State.IsConnected ? "Connected" : "Disconnected")
                 </MudChip>
+
+                @if (RecordingService.IsRecording)
+                {
+                    <div class="d-inline-flex align-center mr-4" title="Recording in progress">
+                        <div class="rec-dot pulsing-red-dot mr-2"></div>
+                        <MudText Typo="Typo.caption" Color="Color.Error" Style="font-weight: bold; letter-spacing: 0.5px;">REC</MudText>
+                    </div>
+                }
 
                 @if (State.LastPingMilliseconds is { } ms)
                 {
@@ -116,45 +125,45 @@
     {
         PaletteLight = new PaletteLight
         {
-            Primary = "#1E6FD9",
-            Secondary = "#6366F1",
-            Tertiary = "#8B5CF6",
+            Primary = "#4338CA",
+            Secondary = "#F48120",
+            Tertiary = "#404041",
             Success = "#16A34A",
-            Warning = "#CA8A04",
+            Warning = "#D97706",
             Error = "#DC2626",
             Info = "#3B82F6",
-            Background = "#F1F5F9",
+            Background = "#F3F3F3",
             Surface = "#FFFFFF",
-            AppbarBackground = "#F1F5F9",
-            AppbarText = "#1E293B",
+            AppbarBackground = "#FFFFFF",
+            AppbarText = "#111111",
             DrawerBackground = "#FFFFFF",
-            TextPrimary = "#1E293B",
-            TextSecondary = "#64748B",
-            Divider = "#E2E8F0",
-            TableLines = "#E2E8F0",
-            LinesDefault = "#E2E8F0",
-            ActionDefault = "#64748B"
+            TextPrimary = "#111111",
+            TextSecondary = "#555555",
+            Divider = "#EAEAEA",
+            TableLines = "#EAEAEA",
+            LinesDefault = "#EAEAEA",
+            ActionDefault = "#555555"
         },
         PaletteDark = new PaletteDark
         {
-            Primary = "#60A5FA",
-            Secondary = "#818CF8",
-            Tertiary = "#A78BFA",
+            Primary = "#6366F1",
+            Secondary = "#F48120",
+            Tertiary = "#888888",
             Success = "#4ADE80",
-            Warning = "#FBBF24",
+            Warning = "#F59E0B",
             Error = "#F87171",
             Info = "#60A5FA",
-            Background = "#0F172A",
-            Surface = "#1E293B",
-            AppbarBackground = "#0F172A",
-            AppbarText = "#F1F5F9",
-            DrawerBackground = "#1E293B",
-            TextPrimary = "#F1F5F9",
-            TextSecondary = "#94A3B8",
-            Divider = "#334155",
-            TableLines = "#334155",
-            LinesDefault = "#334155",
-            ActionDefault = "#94A3B8"
+            Background = "#111111",
+            Surface = "#1A1A1A",
+            AppbarBackground = "#1A1A1A",
+            AppbarText = "#F3F3F3",
+            DrawerBackground = "#1A1A1A",
+            TextPrimary = "#F3F3F3",
+            TextSecondary = "#A1A1AA",
+            Divider = "#333333",
+            TableLines = "#333333",
+            LinesDefault = "#333333",
+            ActionDefault = "#A1A1AA"
         },
         LayoutProperties = new LayoutProperties
         {
@@ -175,6 +184,7 @@
     protected override void OnInitialized()
     {
         State.Changed += OnStateChanged;
+        RecordingService.Changed += OnStateChanged;
         Nav.LocationChanged += OnLocationChanged;
     }
 
@@ -220,6 +230,7 @@
     public void Dispose()
     {
         State.Changed -= OnStateChanged;
+        RecordingService.Changed -= OnStateChanged;
         Nav.LocationChanged -= OnLocationChanged;
     }
 }

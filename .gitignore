@@ -62,3 +62,25 @@ scratch/
 .nuget/
 compare_test/
 build_errors*.txt
+
+# Python & Telemetry Analyzer specific ignores
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+
+# PyInstaller build artifacts
+analyzer/build/
+analyzer/dist/
+analyzer/*.spec
+
+# Local Telemetry Reports
+analyzer/report.html
+analyzer/report.md
+analyzer/test_output.html
+all_metrics_*/
+all_metrics_*.zip

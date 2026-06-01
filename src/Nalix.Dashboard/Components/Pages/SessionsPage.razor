@@ -11,7 +11,7 @@
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="metrics-page">
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="metrics-toolbar" Spacing="2">
-        <MudIcon Icon="@Icons.Material.Outlined.VpnKey" Color="Color.Primary" />
+        <MudIcon Icon="@Icons.Material.Outlined.Fingerprint" Class="metric-icon-orange" />
         <MudText Typo="Typo.h5">Sessions</MudText>
         @if (IsStale)
         {
@@ -41,22 +41,33 @@
     }
     else
     {
-        <MudGrid Spacing="3" Class="mb-4">
-            <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Active Sessions" Value="@MetricFormat.Count(report.Store?.ActiveSessions ?? 0)" Detail="@($"Backend: {report.StoreType ?? "None"}")" />
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="4">
+                <MetricTile Label="Active Sessions" 
+                            Value="@MetricFormat.Count(report.Store?.ActiveSessions ?? 0)" 
+                            Detail="@($"Backend: {report.StoreType ?? "None"}")"
+                            ValueColor="@((report.Store?.ActiveSessions ?? 0) > 0 ? Color.Success : Color.Default)"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Total Stored" Value="@MetricFormat.Count(report.Store?.TotalStored ?? 0)" Detail="@($"Expired: {MetricFormat.Count(report.Store?.TotalExpired ?? 0)}")" />
-            </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="12" sm="4">
                 <MetricTile Label="Store Success" 
                             Value="@($"{MetricFormat.Count(report.TotalStoresSucceeded)} / {MetricFormat.Count(report.TotalStoresAttempted)}")" 
-                            Detail="@($"Failed: {MetricFormat.Count(report.TotalStoresFailed)}")" />
+                            Detail="@($"Failed: {MetricFormat.Count(report.TotalStoresFailed)}")"
+                            ValueColor="@(report.TotalStoresFailed > 0 ? Color.Warning : Color.Success)"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6" md="3">
+            <MudItem xs="12" sm="4">
                 <MetricTile Label="Consume Success" 
                             Value="@($"{MetricFormat.Count(report.TotalConsumesSucceeded)} / {MetricFormat.Count(report.TotalConsumesAttempted)}")" 
-                            Detail="@($"Failed: {MetricFormat.Count(report.TotalConsumesFailed)}")" />
+                            Detail="@($"Failed: {MetricFormat.Count(report.TotalConsumesFailed)}")"
+                            ValueColor="@(report.TotalConsumesFailed > 0 ? Color.Warning : Color.Success)"
+                            Hero="true" />
+            </MudItem>
+        </MudGrid>
+
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12">
+                <MetricTile Label="Total Stored" Value="@MetricFormat.Count(report.Store?.TotalStored ?? 0)" Detail="@($"Expired: {MetricFormat.Count(report.Store?.TotalExpired ?? 0)}")" />
             </MudItem>
         </MudGrid>
 
