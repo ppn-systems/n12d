@@ -1,19 +1,27 @@
-# 📊 Nalix Observability Suite (`n12d` / `nalixdashboard`)
+# Nalix Observability
 
 [![GitHub repository](https://img.shields.io/badge/GitHub-ppn--systems%2Fn12d-blue?logo=github)](https://github.com/ppn-systems/n12d)
+[![.NET](https://img.shields.io/badge/.NET-10.0-blueviolet?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
+[![LICENSE](https://img.shields.io/github/license/ppn-systems/nalix?style=flat-square)](License)
+
 [![Nalix Observability](docs/media/overview.png)](docs/media/overview.png)
 
-A high-performance, real-time telemetry observation and post-mortem diagnostics ecosystem designed for **Nalix** applications. It tracks resource usage, message dispatch queues, active object pools, background tasks, and provides statistical models to pinpoint performance bottlenecks and resource leaks.
+Small observability bundle for Nalix apps:
+
+- `Nalix.Observability.Contracts`: packets shared by backend and clients.
+- `Nalix.Observability.Handlers`: backend handlers that expose access and runtime reports.
+- `Nalix.Dashboard`: Blazor WebAssembly dashboard for reading reports over WebSocket.
 
 ---
 
 ## 🗺️ Documentation Index
 
 To help you get the most out of Nalix Observability, we have structured our documentation into three core guides:
+
 * **📐 [Architecture & System Design](docs/ARCHITECTURE.md):** Learn how the telemetry events are defined, collected, transmitted via WebSockets, and analyzed.
 * **🖥️ [Dashboard User Guide](docs/DASHBOARD_GUIDE.md):** A visual tour of the Blazor WebAssembly UI, detailing how to interpret metrics (Dispatch, Buffers, Object Pools, Tasks, etc.).
 * **📈 [Telemetry Diagnostics Analyzer (Python)](analyzer/README.md):** Offline diagnostics engine utilizing rolling Z-scores and linear regressions to automate regression checks and pinpoint leaks.
-
+* **📜 [Analyzer Developer Guidelines](analyzer/DEVELOPMENT.md):** Development rules covering column contracts, rolling Z-score math safeguards, and parsing arity cleanups.
 ---
 
 ## 📦 Project Ecosystem
@@ -37,16 +45,14 @@ This repository relies on Nalix core package dependencies from NuGet, version `1
 
 ### 1. Build C# Solution
 
-Restore dependencies and build the core packages:
-
 ```powershell
 dotnet restore src\Nalix.Observability.sln
 dotnet build src\Nalix.Observability.sln
 ```
 
-### 2. Instrumentation: Backend Setup
+## Example Use
 
-Expose telemetry endpoints from your Nalix server by registering the observability handlers and binding a WebSocket server:
+Backend setup:
 
 ```csharp
 using Nalix.Hosting;
@@ -62,27 +68,18 @@ NetworkApplication host = NetworkApplication.CreateBuilder()
     .Build();
 ```
 
-### 3. Launch the Live Dashboard
-
-Run the Blazor WebAssembly Dashboard locally:
+Dashboard:
 
 ```powershell
 dotnet run --project .\src\Nalix.Dashboard\Nalix.Dashboard.csproj
 ```
 
-1. Open the URL shown in your terminal (typically `http://localhost:5000` or similar).
-2. Enter your **64-character observability key** configured on the backend.
-3. Direct the dashboard to the backend host (e.g., `ws://localhost:57207/ws/`) to start streaming real-time statistics.
+Open the shown URL, enter the 64-character observability key, then point the dashboard to the backend host, port, and WebSocket path.
 
 ---
 
-## 📊 Offline Analytics & Troubleshooting
+## 🛠️ Developer Resources
 
-When diagnosing production issues retrospectively, you can import telemetry CSV files exported from the dashboard into the offline analyzer:
+If you are extending or modifying the Nalix Diagnostics Engine:
 
-```powershell
-# Run using standalone executable (No Python environment needed)
-.\analyzer\dist\Nalix.Analyzer.exe --dir path\to\exported_csv_folder --format all
-```
-
-*For more information on setting up and running the Python-based diagnostics engine, refer to the [Nalix Telemetry Analyzer README](analyzer/README.md).*
+* Please review the **[Development Rules & Guidelines](analyzer/DEVELOPMENT.md)** to understand our strict column renaming contracts, rolling Z-score shifted window rules, $p$-value statistical thresholds, and type pool name formatting conventions.
