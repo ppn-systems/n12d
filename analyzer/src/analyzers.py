@@ -456,6 +456,13 @@ def compute_endpoints(json_series: pd.Series, attack_window: AttackWindow = None
         return pd.DataFrame(columns=['Address', 'CurrentConnections', 'TotalConnectionsToday', 'Risk'])
         
     df = pd.DataFrame(all_records)
+    
+    # Filter out Low risk to avoid noise
+    df = df[df['Risk'] != 'Low']
+    
+    if df.empty:
+        return pd.DataFrame(columns=['Address', 'CurrentConnections', 'TotalConnectionsToday', 'Risk'])
+        
     # Get latest/max state per address
     df_agg = df.groupby('Address').agg(
         CurrentConnections=('CurrentConnections', 'max'),
@@ -463,7 +470,7 @@ def compute_endpoints(json_series: pd.Series, attack_window: AttackWindow = None
         Risk=('Risk', 'last')
     ).reset_index()
     
-    return df_agg.sort_values('CurrentConnections', ascending=False)
+    return df_agg.sort_values('CurrentConnections', ascending=False).head(15)
 
 def detect_worker_imbalance(json_series: pd.Series) -> list[AnomalyEvent]:
     events = []
@@ -534,3 +541,37 @@ def compute_task_details(recurring_series: pd.Series, workers_series: pd.Series)
         work_df = pd.DataFrame(records)
         
     return rec_df, work_df
+
+def compute_rate_limiter_endpoints(json_series: pd.Series) -> pd.DataFrame:
+    all_records = []
+    
+    for ts, json_val in json_series.items():
+        parsed = parse_json_safely(json_val)
+        for item in parsed:
+            addr = item.get('Endpoint', 'Unknown')
+            if addr == '::1':
+                continue
+                
+            all_records.append({
+                'Endpoint': addr,
+                'Blocked': item.get('Blocked', False),
+                'Credit': item.get('Credit', 0),
+                'MicroBalance': item.get('MicroBalance', 0),
+                'RetryAfterMs': item.get('RetryAfterMs', 0),
+                'Timestamp': ts
+            })
+            
+    if not all_records:
+        return pd.DataFrame(columns=['Endpoint', 'WasBlocked', 'MinCredit', 'MaxRetryAfterMs'])
+        
+    df = pd.DataFrame(all_records)
+    df_agg = df.groupby('Endpoint').agg(
+        WasBlocked=('Blocked', 'max'),
+        MinCredit=('Credit', 'min'),
+        MaxRetryAfterMs=('RetryAfterMs', 'max')
+    ).reset_index()
+    
+    # Filter only those that were blocked or had low credit to avoid noise
+    df_agg = df_agg[(df_agg['WasBlocked'] == True) | (df_agg['MinCredit'] < 10)]
+    
+    return df_agg.sort_values(by=['WasBlocked', 'MaxRetryAfterMs', 'MinCredit'], ascending=[False, False, True]).head(15)

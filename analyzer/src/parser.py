@@ -26,13 +26,13 @@ FILE_SCHEMA_MAP = {
     'dispatch_metrics.csv': ['Timestamp', 'PendingPerPriority.HIGH', 'PendingPerPriority.URGENT', 'PendingByConnection', 'PipelineMetrics.ActiveExecutions'],
     'tasks_metrics.csv': [
         'Timestamp', 
-        'AverageWorkerExecutionTimeMs', 
+        'AverageWorkerUptimeMs', 
         'Process.Threads', 
         'Process.ThreadsRunning',
         'Memory.WorkingSetMB',
         'Process.ManagedHeapMB',
-        'P95WorkerExecutionTimeMs',
-        'P99WorkerExecutionTimeMs',
+        'P95WorkerUptimeMs',
+        'P99WorkerUptimeMs',
         'PeakRunningWorkerCount',
         'WorkersRunning',
         'WorkersTotal',
@@ -49,7 +49,9 @@ FILE_SCHEMA_MAP = {
     'listener_metrics.csv': ['Timestamp', 'TCP.Connections.ActiveConnections', 'TCP.Metrics.TotalAccepted', 'TCP.Metrics.TotalErrors', 'TCP.Metrics.TotalRejected'],
     'sessions_metrics.csv': ['Timestamp'],
     'protocol_metrics.csv': ['Timestamp', 'TCP.TotalMessages', 'TCP.TotalErrors', 'WEBSOCKET.TotalMessages', 'WEBSOCKET.TotalErrors'],
-    'connection_guard_metrics.csv': ['Timestamp', 'TotalAttempts', 'TotalRejections', 'RejectionRate', 'TotalConcurrent', 'TopEndpoints']
+    'connection_guard_metrics.csv': ['Timestamp', 'TotalAttempts', 'TotalRejections', 'RejectionRate', 'TotalConcurrent', 'TopEndpoints'],
+    'token_bucket_limiter_metrics.csv': ['Timestamp', 'Endpoints', 'HardBlockedCount', 'CapacityTokens'],
+    'policy_rate_limiter_metrics.csv': ['Timestamp', 'SharedEngine.Endpoints', 'SharedEngine.HardBlockedCount', 'SharedEngine.CapacityTokens']
 }
 
 class TelemetryParser:
@@ -103,7 +105,7 @@ class TelemetryParser:
             
             # Clean up numeric columns that might have comma decimal separators
             for col in df.columns:
-                if col in ['Timestamp', 'UtcNow', 'StartTime', 'Pools', 'TopEndpoints', 'Recurring', 'TopRunningWorkers', 'PendingByConnection', 'Instances', 'UnhealthyPools']:
+                if col in ['Timestamp', 'UtcNow', 'StartTime', 'Pools', 'TopEndpoints', 'Recurring', 'TopRunningWorkers', 'PendingByConnection', 'Instances', 'UnhealthyPools', 'Endpoints', 'SharedEngine.Endpoints']:
                     continue
                 if df[col].dtype == 'object':
                     try:
@@ -132,7 +134,7 @@ class TelemetryParser:
             return
             
         # Store and remove JSON columns so they don't corrupt the numeric merge
-        json_columns = ['Pools', 'TopEndpoints', 'Recurring', 'TopRunningWorkers', 'PendingByConnection', 'Instances']
+        json_columns = ['Pools', 'TopEndpoints', 'Recurring', 'TopRunningWorkers', 'PendingByConnection', 'Instances', 'Endpoints', 'SharedEngine.Endpoints']
         
         for file_name, df in self.raw_dfs.items():
             for jc in json_columns:

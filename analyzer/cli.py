@@ -8,7 +8,7 @@ from plotly.subplots import make_subplots
 from jinja2 import Environment, FileSystemLoader
 
 from src.parser import TelemetryParser, SchemaError
-from src.analyzers import detect_spikes, detect_leak, detect_attack_window, compute_endpoints, detect_worker_imbalance, compute_task_details
+from src.analyzers import detect_spikes, detect_leak, detect_attack_window, compute_endpoints, detect_worker_imbalance, compute_task_details, compute_rate_limiter_endpoints
 import urllib.request
 
 def generate_charts(df, attack_window, parser=None):
@@ -145,11 +145,11 @@ def generate_charts(df, attack_window, parser=None):
         charts_html.append(fig7.to_html(full_html=False, include_plotlyjs=False))
         
     # Chart 8: Execution Percentiles
-    if 'P95WorkerExecutionTimeMs' in df.columns:
+    if 'P95WorkerUptimeMs' in df.columns:
         fig8 = plotly_go.Figure()
-        fig8.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['AverageWorkerExecutionTimeMs'], name="Avg Latency", line=dict(color="#22c55e")))
-        fig8.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['P95WorkerExecutionTimeMs'], name="P95 Latency", line=dict(color="#f59e0b")))
-        fig8.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['P99WorkerExecutionTimeMs'], name="P99 Latency", line=dict(color="#ef4444")))
+        fig8.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['AverageWorkerUptimeMs'], name="Avg Latency", line=dict(color="#22c55e")))
+        fig8.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['P95WorkerUptimeMs'], name="P95 Latency", line=dict(color="#f59e0b")))
+        fig8.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['P99WorkerUptimeMs'], name="P99 Latency", line=dict(color="#ef4444")))
         fig8.update_layout(title="Task Latency Percentiles (ms)", template="plotly_dark", height=400, margin=dict(l=20, r=20, t=40, b=20))
         add_attack_rect(fig8)
         charts_html.append(fig8.to_html(full_html=False, include_plotlyjs=False))
@@ -202,7 +202,29 @@ def generate_charts(df, attack_window, parser=None):
     else:
         charts_html.append("<div>No Instance Cache data available</div>")
 
-    return charts_html
+    # Chart 12: Rate Limiter Performance
+    has_rl = False
+    fig12 = make_subplots(specs=[[{"secondary_y": True}]])
+    if 'HardBlockedCount' in df.columns:
+        fig12.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['HardBlockedCount'], name="Token Bucket Blocks", fill='tozeroy', line=dict(color="#ef4444", width=2), mode='lines'), secondary_y=False)
+        has_rl = True
+    if 'SharedEngine.HardBlockedCount' in df.columns:
+        fig12.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['SharedEngine.HardBlockedCount'], name="Policy Rate Limiter Blocks", fill='tozeroy', line=dict(color="#f97316", width=2), mode='lines'), secondary_y=False)
+        has_rl = True
+    if 'CapacityTokens' in df.columns:
+        fig12.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['CapacityTokens'], name="Token Bucket Capacity", line=dict(color="#10b981", width=1.5, dash='dot'), mode='lines'), secondary_y=True)
+    if 'SharedEngine.CapacityTokens' in df.columns:
+        fig12.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['SharedEngine.CapacityTokens'], name="Policy Limit Capacity", line=dict(color="#3b82f6", width=1.5, dash='dot'), mode='lines'), secondary_y=True)
+        
+    if has_rl:
+        fig12.update_layout(title="Rate Limiter Blocks & Capacity", template="plotly_dark", height=400, margin=dict(l=20, r=20, t=40, b=20), hovermode="x unified")
+        fig12.update_yaxes(title_text="Blocks", secondary_y=False)
+        fig12.update_yaxes(title_text="Capacity", secondary_y=True)
+        rl_chart_html = fig12.to_html(full_html=False, include_plotlyjs=False)
+    else:
+        rl_chart_html = ""
+
+    return charts_html, rl_chart_html
 
 def format_top_endpoints_html(top_endpoints):
     if top_endpoints.empty:
@@ -251,6 +273,19 @@ def export_html(parser, output_path):
     endpoints_df = compute_endpoints(parser.get_json_series('connection_guard_metrics.csv_TopEndpoints'), attack_window)
     rec_df, work_df = compute_task_details(parser.get_json_series('tasks_metrics.csv_Recurring'), parser.get_json_series('tasks_metrics.csv_TopRunningWorkers'))
     worker_anomalies = detect_worker_imbalance(parser.get_json_series('tasks_metrics.csv_TopRunningWorkers'))
+    
+    rl_series_list = []
+    if 'token_bucket_limiter_metrics.csv_Endpoints' in parser.json_series:
+        rl_series_list.append(parser.get_json_series('token_bucket_limiter_metrics.csv_Endpoints'))
+    if 'policy_rate_limiter_metrics.csv_SharedEngine.Endpoints' in parser.json_series:
+        rl_series_list.append(parser.get_json_series('policy_rate_limiter_metrics.csv_SharedEngine.Endpoints'))
+        
+    if rl_series_list:
+        rl_series = pd.concat(rl_series_list)
+        rl_endpoints_df = compute_rate_limiter_endpoints(rl_series)
+    else:
+        rl_endpoints_df = pd.DataFrame()
+
     
     # Anomalies collection
     anomalies = []
@@ -353,11 +388,11 @@ def export_html(parser, output_path):
         'instance_cache_eff': f"{instance_cache_eff_val:.1f}%" if 'InstanceCacheHitCount' in df.columns else "N/A",
         'total_rejections': f"{df['TotalRejections'].max():,}" if 'TotalRejections' in df.columns else "0",
         'total_messages': f"{df['TCP.TotalMessages'].max() + df['WEBSOCKET.TotalMessages'].max():,}" if 'TCP.TotalMessages' in df.columns else "N/A",
-        'p99_latency': f"{df['P99WorkerExecutionTimeMs'].max():.1f} ms" if 'P99WorkerExecutionTimeMs' in df.columns else "N/A"
+        'p99_latency': f"{df['P99WorkerUptimeMs'].max():.1f} ms" if 'P99WorkerUptimeMs' in df.columns else "N/A"
     }
         
     # Generate charts
-    charts = generate_charts(df, attack_window, parser)
+    charts, rl_chart_html = generate_charts(df, attack_window, parser)
     
     top_endpoints_html = format_top_endpoints_html(top_endpoints)
     top_pools_html = format_top_pools_html(top_pools)
@@ -414,6 +449,19 @@ def export_html(parser, output_path):
             <td class="p-3 border-t border-gray-700 {status_color}">{row['Status']}</td>
         </tr>
         """
+        
+    # Build Rate Limiter Endpoints Table
+    rl_html = ""
+    for _, row in rl_endpoints_df.iterrows():
+        blocked_color = "text-red-400 font-bold" if row['WasBlocked'] else "text-gray-400"
+        rl_html += f"""
+        <tr class="hover:bg-gray-800 transition-colors">
+            <td class="p-3 border-t border-gray-700 font-mono text-gray-300">{row['Endpoint']}</td>
+            <td class="p-3 border-t border-gray-700 {blocked_color}">{row['WasBlocked']}</td>
+            <td class="p-3 border-t border-gray-700 text-right text-amber-400">{row['MinCredit']}</td>
+            <td class="p-3 border-t border-gray-700 text-right text-gray-400">{row['MaxRetryAfterMs']}</td>
+        </tr>
+        """
     
     plotly_js_url = "https://cdn.plot.ly/plotly-3.5.0.min.js"
     try:
@@ -443,6 +491,9 @@ def export_html(parser, output_path):
         workers_html=workers_html,
         has_recurring=not rec_df.empty,
         recurring_html=recurring_html,
+        has_rl_endpoints=not rl_endpoints_df.empty,
+        rl_html=rl_html,
+        rl_chart_html=rl_chart_html,
         top_pools=not top_pools.empty,
         top_pools_html=top_pools_html,
         top_pools_list=top_pools_list,
