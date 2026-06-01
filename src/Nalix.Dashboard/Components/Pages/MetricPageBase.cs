@@ -1,3 +1,6 @@
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Licensed under the Apache License, Version 2.0.
+
 using Microsoft.AspNetCore.Components;
 using Nalix.Dashboard.Application.Abstractions;
 using Nalix.Dashboard.Application.Reports;

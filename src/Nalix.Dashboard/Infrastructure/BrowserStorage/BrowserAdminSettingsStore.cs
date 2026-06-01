@@ -1,3 +1,6 @@
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Licensed under the Apache License, Version 2.0.
+
 using System.Text.Json;
 using Microsoft.JSInterop;
 using Nalix.Dashboard.Application.Abstractions;
@@ -5,7 +8,9 @@ using Nalix.Dashboard.Application.Settings;
 
 namespace Nalix.Dashboard.Infrastructure.BrowserStorage;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Design", "CA1031:Do not catch general exception types", Justification = "Browser storage access may fail due to sandboxing, private browsing, or quota exceptions, which should not crash the dashboard.")]
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Design", "CA1031:Do not catch general exception types",
+    Justification = "Browser storage access may fail due to sandboxing, private browsing, or quota exceptions, which should not crash the dashboard.")]
 internal sealed class BrowserAdminSettingsStore : IAdminSettingsStore
 {
     private const string SettingsKey = "nalix-admin-settings";

@@ -6,4 +6,4 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage("Style", "IDE0005:Using directive is unnecessary.", Justification = "<Pending>")]
-
+[assembly: SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "<Pending>", Scope = "member", Target = "~M:Nalix.Dashboard.Application.Navigation.AppNavigation.Build(Nalix.Abstractions.Security.PermissionLevel)~System.Collections.Generic.IReadOnlyList{Nalix.Dashboard.Application.Navigation.NavSection}")]

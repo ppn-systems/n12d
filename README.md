@@ -1,5 +1,6 @@
-# 📊 Nalix Observability Suite
+# 📊 Nalix Observability Suite (`n12d` / `nalixdashboard`)
 
+[![GitHub repository](https://img.shields.io/badge/GitHub-ppn--systems%2Fn12d-blue?logo=github)](https://github.com/ppn-systems/n12d)
 [![Nalix Observability](docs/media/overview.png)](docs/media/overview.png)
 
 A high-performance, real-time telemetry observation and post-mortem diagnostics ecosystem designed for **Nalix** applications. It tracks resource usage, message dispatch queues, active object pools, background tasks, and provides statistical models to pinpoint performance bottlenecks and resource leaks.

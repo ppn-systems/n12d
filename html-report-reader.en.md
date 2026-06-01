@@ -90,7 +90,7 @@ Reply in the same language used by the user. Prioritize:
 ## Common report types
 
 | Type | Identification signs |
-|------|----------------------|
+| ---- | -------------------- |
 | Performance/Diagnostic | "Peak Connections", "Latency", "Memory", "Threads" |
 | Security/DDoS | "Attack Detected", "Suspected Attacker", "Z-score" |
 | Analytics | "Sessions", "Users", "Bounce Rate", "Conversion" |

@@ -32,10 +32,10 @@ graph TD
     %% Interactions
     Core ----> Handlers
     Handlers -->|Reference| Contracts
-    Dashboard -->|1. WebSocket Connection & Auth<br/>(64-char Security Key)| Handlers
-    Handlers -->|2. Real-Time Telemetry Stream| Dashboard
-    Dashboard -->|3. Manual CSV Export| CSVs
-    CSVs -->|4. Ingestion & Alignment| Analyzer
+    Dashboard -->|"1. WebSocket Connection & Auth<br/>(64-char Security Key)"| Handlers
+    Handlers -->|"2. Real-Time Telemetry Stream"| Dashboard
+    Dashboard -->|"3. Manual CSV Export"| CSVs
+    CSVs -->|"4. Ingestion & Alignment"| Analyzer
 ```
 
 ---
