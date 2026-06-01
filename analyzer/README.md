@@ -74,3 +74,10 @@ If you modify the source files and want to recompile the standalone binary:
    ```
 
 3. The newly built executable will be saved in `dist/Nalix.Analyzer.exe`.
+
+---
+
+## 🛠️ Developer Resources
+
+If you are extending or modifying the Nalix Diagnostics Engine:
+* Please review the **[Development Rules & Guidelines](DEVELOPMENT.md)** to understand our strict column renaming contracts, rolling Z-score shifted window rules, $p$-value statistical thresholds, and type pool name formatting conventions.
