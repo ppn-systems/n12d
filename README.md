@@ -82,4 +82,4 @@ Open the shown URL, enter the 64-character observability key, then point the das
 
 If you are extending or modifying the Nalix Diagnostics Engine:
 
-* Please review the **[Development Rules & Guidelines](DEVELOPMENT.md)** to understand our strict column renaming contracts, rolling Z-score shifted window rules, $p$-value statistical thresholds, and type pool name formatting conventions.
+* Please review the **[Development Rules & Guidelines](analyzer/DEVELOPMENT.md)** to understand our strict column renaming contracts, rolling Z-score shifted window rules, $p$-value statistical thresholds, and type pool name formatting conventions.
