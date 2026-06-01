@@ -1,3 +1,6 @@
+// Copyright (c) 2026 PPN Corporation. All rights reserved.
+// Licensed under the Apache License, Version 2.0.
+
 using System.Globalization;
 using System.Text;
 
@@ -51,7 +54,7 @@ public static class MetricFormat
             return "-";
         }
 
-        if (DateTimeOffset.TryParse(value, out var dt))
+        if (DateTimeOffset.TryParse(value, out DateTimeOffset dt))
         {
             return dt.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
         }
