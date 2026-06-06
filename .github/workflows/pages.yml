@@ -1,0 +1,98 @@
+name: Deploy Dashboard to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - .github/workflows/pages.yml
+      - src/Nalix.Dashboard/**
+      - src/Nalix.Dashboard.sln
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+    paths:
+      - .github/workflows/pages.yml
+      - src/Nalix.Dashboard/**
+      - src/Nalix.Dashboard.sln
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build Dashboard
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'document') || github.event.pull_request.user.login == 'dependabot[bot]'))
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore src/Nalix.Dashboard.sln
+
+      - name: Build
+        run: dotnet build src/Nalix.Dashboard.sln --configuration Release --no-restore
+
+      - name: Publish dashboard
+        run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-restore --output artifacts/dashboard
+
+      - name: Prepare GitHub Pages artifact
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pages_root="artifacts/dashboard/wwwroot"
+          base_path="/"
+
+          sed -i "s|<base href=\"/\" />|<base href=\"${base_path}\" />|g" "${pages_root}/index.html"
+          if grep -q "fingerprint" "${pages_root}/index.html"; then
+            echo "Blazor fingerprint placeholders were not replaced during publish." >&2
+            exit 1
+          fi
+
+          cp "${pages_root}/index.html" "${pages_root}/404.html"
+          echo "dash.ppn.io.vn" > "${pages_root}/CNAME"
+          touch "${pages_root}/.nojekyll"
+
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/configure-pages@v5
+
+      - name: Upload GitHub Pages artifact
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/dashboard/wwwroot
+
+  deploy:
+    name: Deploy
+    needs: build
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
