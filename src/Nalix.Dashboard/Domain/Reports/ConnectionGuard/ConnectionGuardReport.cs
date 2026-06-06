@@ -14,10 +14,7 @@ public sealed record ConnectionGuardReport(
     long TotalRejections,
     long TotalCleaned,
     double RejectionRate,
-    IReadOnlyList<TopEndpointEntry>? TopEndpoints);
-
-public sealed record TopEndpointEntry(
-    string? Address,
-    int CurrentConnections,
-    long TotalConnectionsToday,
-    string? LastConnectionUtc);
+    int SubnetTrackedV4,
+    int SubnetTrackedV6,
+    double EWMARate,
+    bool AdaptiveActive);

@@ -93,7 +93,8 @@
                     <HeaderContent>
                         <MudTh>Type</MudTh>
                         <MudTh>Available / Max</MudTh>
-                        <MudTh>Traffic</MudTh>
+                        <MudTh>Traffic (Get/Hit)</MudTh>
+                        <MudTh>Misses / Trimmed</MudTh>
                         <MudTh>Outstanding</MudTh>
                         <MudTh>Last Access</MudTh>
                         <MudTh>Hit Rate</MudTh>
@@ -103,6 +104,7 @@
                         <MudTd Class="metric-table__wide">@MetricFormat.TypeName(p.Type)</MudTd>
                         <MudTd>@MetricFormat.Count(p.Available) / @MetricFormat.Count(p.MaxCapacity)</MudTd>
                         <MudTd>@MetricFormat.Count(p.Gets) / @MetricFormat.Count(p.Hits)</MudTd>
+                        <MudTd>@MetricFormat.Count(p.Misses) / @MetricFormat.Count(p.Trimmed)</MudTd>
                         <MudTd>
                             <MudText Color="@(p.Outstanding > 0 ? Color.Warning : Color.Default)">
                                 @MetricFormat.Count(p.Outstanding)

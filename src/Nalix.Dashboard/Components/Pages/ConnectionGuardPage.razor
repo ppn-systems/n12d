@@ -67,25 +67,20 @@
             </MudItem>
         </MudGrid>
 
-        @if (report.TopEndpoints is { Count: > 0 } endpoints)
-        {
-            <MetricSection Title="Top Endpoints">
-                <MudTable Items="@endpoints" Dense="true" Hover="true" Striped="false" Class="metric-table">
-                    <HeaderContent>
-                        <MudTh>Address</MudTh>
-                        <MudTh>Current</MudTh>
-                        <MudTh>Today Total</MudTh>
-                        <MudTh>Last Seen</MudTh>
-                    </HeaderContent>
-                    <RowTemplate Context="ep">
-                        <MudTd Class="metric-table__wide">@(ep.Address ?? "-")</MudTd>
-                        <MudTd>@ep.CurrentConnections</MudTd>
-                        <MudTd>@ep.TotalConnectionsToday.ToString("N0")</MudTd>
-                        <MudTd>@MetricFormat.DateTimeOrDash(ep.LastConnectionUtc)</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MetricSection>
-        }
+        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+            <MudItem xs="12" sm="4">
+                <MetricTile Label="EWMA Connection Rate" Value="@($"{MetricFormat.Number(report.EWMARate, 2)} req/s")" Detail="Exponentially weighted rate" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MetricTile Label="Subnets Tracked (v4 / v6)" Value="@($"{MetricFormat.Count(report.SubnetTrackedV4)} / {MetricFormat.Count(report.SubnetTrackedV6)}")" Detail="Tracked subnets count" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
+                <MetricTile Label="Adaptive Limits" 
+                            Value="@(report.AdaptiveActive ? "Active" : "Normal")" 
+                            ValueColor="@(report.AdaptiveActive ? Color.Error : Color.Success)"
+                            Detail="Throttling under high load" />
+            </MudItem>
+        </MudGrid>
     }
 </MudContainer>
 
