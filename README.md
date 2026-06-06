@@ -1,5 +1,11 @@
 # Nalix Observability
 
+[![GitHub repository](https://img.shields.io/badge/GitHub-ppn--systems%2Fn12d-blue?logo=github)](https://github.com/ppn-systems/n12d)
+[![.NET](https://img.shields.io/badge/.NET-10.0-blueviolet?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
+[![LICENSE](https://img.shields.io/github/license/ppn-systems/nalix?style=flat-square)](License)
+
+[![Nalix Observability](docs/media/overview.png)](docs/media/overview.png)
+
 Small observability bundle for Nalix apps:
 
 - `Nalix.Observability.Contracts`: packets shared by backend and clients.
@@ -11,10 +17,11 @@ Small observability bundle for Nalix apps:
 ## 🗺️ Documentation Index
 
 To help you get the most out of Nalix Observability, we have structured our documentation into three core guides:
+
 * **📐 [Architecture & System Design](docs/ARCHITECTURE.md):** Learn how the telemetry events are defined, collected, transmitted via WebSockets, and analyzed.
 * **🖥️ [Dashboard User Guide](docs/DASHBOARD_GUIDE.md):** A visual tour of the Blazor WebAssembly UI, detailing how to interpret metrics (Dispatch, Buffers, Object Pools, Tasks, etc.).
 * **📈 [Telemetry Diagnostics Analyzer (Python)](analyzer/README.md):** Offline diagnostics engine utilizing rolling Z-scores and linear regressions to automate regression checks and pinpoint leaks.
-
+* **📜 [Analyzer Developer Guidelines](analyzer/DEVELOPMENT.md):** Development rules covering column contracts, rolling Z-score math safeguards, and parsing arity cleanups.
 ---
 
 ## 📦 Project Ecosystem
@@ -43,10 +50,6 @@ dotnet restore src\Nalix.Observability.sln
 dotnet build src\Nalix.Observability.sln
 ```
 
-## Packages
-
-This repo uses Nalix packages from NuGet, version `12.5.0`, for core dependencies such as `Nalix.SDK`, `Nalix.Codec`, `Nalix.Runtime`, and `Nalix.Framework`.
-
 ## Example Use
 
 Backend setup:
@@ -72,3 +75,11 @@ dotnet run --project .\src\Nalix.Dashboard\Nalix.Dashboard.csproj
 ```
 
 Open the shown URL, enter the 64-character observability key, then point the dashboard to the backend host, port, and WebSocket path.
+
+---
+
+## 🛠️ Developer Resources
+
+If you are extending or modifying the Nalix Diagnostics Engine:
+
+* Please review the **[Development Rules & Guidelines](analyzer/DEVELOPMENT.md)** to understand our strict column renaming contracts, rolling Z-score shifted window rules, $p$-value statistical thresholds, and type pool name formatting conventions.
