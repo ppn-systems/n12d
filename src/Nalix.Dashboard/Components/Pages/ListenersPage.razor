@@ -58,7 +58,12 @@
                         <MudDivider Class="my-2" />
                         <MudText Typo="Typo.body2" Class="my-1"><b>Accepted Connections:</b> @tcp.Metrics?.TotalAccepted.ToString("N0")</MudText>
                         <MudText Typo="Typo.body2" Class="my-1"><b>Rejected Connections:</b> @tcp.Metrics?.TotalRejected.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Queue Full: @tcp.Metrics?.QueueFullRejections.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Limiter: @tcp.Metrics?.LimiterRejections.ToString("N0")</MudText>
                         <MudText Typo="Typo.body2" Class="my-1"><b>Errors:</b> @tcp.Metrics?.TotalErrors.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Proxy Protocol: @tcp.Metrics?.ProxyProtocolErrors.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Pending Proxies:</b> @tcp.Metrics?.PendingProxyConnections.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Accept Queue Depth:</b> @tcp.Metrics?.AcceptQueueDepth.ToString("N0")</MudText>
                         <MudText Typo="Typo.body2" Class="my-1"><b>Active:</b> @tcp.Connections?.ActiveConnections.ToString("N0")</MudText>
                     </MudPaper>
                 </MudItem>
@@ -75,13 +80,18 @@
                         <MudDivider Class="my-2" />
                         <MudText Typo="Typo.body2" Class="my-1"><b>Port:</b> @udp.Port</MudText>
                         <MudText Typo="Typo.body2" Class="my-1"><b>State:</b> @udp.State</MudText>
-                        <MudText Typo="Typo.body2" Class="my-1"><b>Disposed:</b> @(udp.Disposed ? "Yes" : "No")</MudText>
-                        <MudText Typo="Typo.body2" Class="my-1"><b>Protocol:</b> @(udp.Protocol?.BoundProtocol ?? "-")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Disposed:</b> @((udp.Disposed || (udp.IsDisposed ?? false)) ? "Yes" : "No")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Protocol:</b> @(udp.ProtocolType ?? "-")</MudText>
                         <MudDivider Class="my-2" />
-                        <MudText Typo="Typo.body2" Class="my-1"><b>Accepted Connections:</b> @udp.Metrics?.TotalAccepted.ToString("N0")</MudText>
-                        <MudText Typo="Typo.body2" Class="my-1"><b>Rejected Connections:</b> @udp.Metrics?.TotalRejected.ToString("N0")</MudText>
-                        <MudText Typo="Typo.body2" Class="my-1"><b>Errors:</b> @udp.Metrics?.TotalErrors.ToString("N0")</MudText>
-                        <MudText Typo="Typo.body2" Class="my-1"><b>Active:</b> @udp.Connections?.ActiveConnections.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Received Packets:</b> @udp.Traffic?.ReceivedPackets.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Received Bytes:</b> @MetricFormat.Bytes(udp.Traffic?.ReceivedBytes ?? 0)</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Dropped Packets:</b> @udp.Traffic?.TotalDropped.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Short: @udp.Traffic?.DroppedShort.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Unauth: @udp.Traffic?.DroppedUnauth.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Unknown: @udp.Traffic?.DroppedUnknown.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Rate Limited: @udp.Traffic?.DroppedRateLimited.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Oversized: @udp.Traffic?.DroppedOversize.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Receive Errors:</b> @udp.Errors?.ReceiveErrors.ToString("N0")</MudText>
                     </MudPaper>
                 </MudItem>
             }
@@ -102,7 +112,10 @@
                         <MudDivider Class="my-2" />
                         <MudText Typo="Typo.body2" Class="my-1"><b>Accepted Connections:</b> @ws.Metrics?.TotalAccepted.ToString("N0")</MudText>
                         <MudText Typo="Typo.body2" Class="my-1"><b>Rejected Connections:</b> @ws.Metrics?.TotalRejected.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Queue Full: @ws.Metrics?.QueueFullRejections.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-2" Style="margin-left: 12px; font-size: 0.825rem; opacity: 0.8;">— Limiter: @ws.Metrics?.LimiterRejections.ToString("N0")</MudText>
                         <MudText Typo="Typo.body2" Class="my-1"><b>Errors:</b> @ws.Metrics?.TotalErrors.ToString("N0")</MudText>
+                        <MudText Typo="Typo.body2" Class="my-1"><b>Accept Queue Depth:</b> @ws.Metrics?.AcceptQueueDepth.ToString("N0")</MudText>
                         <MudText Typo="Typo.body2" Class="my-1"><b>Active:</b> @ws.Connections?.ActiveConnections.ToString("N0")</MudText>
                     </MudPaper>
                 </MudItem>

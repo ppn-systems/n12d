@@ -34,6 +34,7 @@ public sealed record ObjectPoolEntry(
     long Gets,
     long Hits,
     long Misses,
+    long Trimmed,
     double HitRate,
     string? LastAccessUtc,
     string? LastAccessType,

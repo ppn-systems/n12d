@@ -8,8 +8,7 @@ on:
     paths:
       - .github/workflows/pages.yml
       - src/Nalix.Dashboard/**
-      - src/Nalix.Observability.Contracts/**
-      - src/Nalix.Observability.sln
+      - src/Nalix.Dashboard.sln
   pull_request:
     types:
       - opened
@@ -19,8 +18,7 @@ on:
     paths:
       - .github/workflows/pages.yml
       - src/Nalix.Dashboard/**
-      - src/Nalix.Observability.Contracts/**
-      - src/Nalix.Observability.sln
+      - src/Nalix.Dashboard.sln
   workflow_dispatch:
 
 permissions:
@@ -48,10 +46,10 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore src/Nalix.Observability.sln
+        run: dotnet restore src/Nalix.Dashboard.sln
 
       - name: Build
-        run: dotnet build src/Nalix.Observability.sln --configuration Release --no-restore
+        run: dotnet build src/Nalix.Dashboard.sln --configuration Release --no-restore
 
       - name: Publish dashboard
         run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-restore --output artifacts/dashboard

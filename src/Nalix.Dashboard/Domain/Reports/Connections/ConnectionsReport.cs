@@ -10,4 +10,15 @@ public sealed record ConnectionsReport(
     long TotalBytesSent,
     long TotalBytesReceived,
     long IngressBytesPerSecond,
-    long EgressBytesPerSecond);
+    long EgressBytesPerSecond,
+    long TotalPacketsDropped,
+    AsyncCallbackInfo? AsyncCallback);
+
+public sealed record AsyncCallbackInfo(
+    long PendingProcess,
+    long PendingPost,
+    long TotalInvoked,
+    long Dropped,
+    long SlowCallbacks,
+    long FairnessCollisions,
+    long FairnessEvictions);

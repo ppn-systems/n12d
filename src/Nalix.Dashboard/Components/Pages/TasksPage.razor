@@ -50,10 +50,10 @@
                             Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Avg Execution" 
-                            Value="@MetricFormat.Milliseconds(report.AverageWorkerExecutionTimeMs)" 
-                            Detail="@($"P95 {MetricFormat.Milliseconds(report.P95WorkerExecutionTimeMs)}")"
-                            ValueColor="@(report.AverageWorkerExecutionTimeMs > 2000 ? Color.Error : (report.AverageWorkerExecutionTimeMs > 500 ? Color.Warning : Color.Success))"
+                <MetricTile Label="Avg Uptime" 
+                            Value="@MetricFormat.Milliseconds(report.AverageWorkerUptimeMs)" 
+                            Detail="@($"P95 {MetricFormat.Milliseconds(report.P95WorkerUptimeMs)}")"
+                            ValueColor="@(report.AverageWorkerUptimeMs > 2000 ? Color.Error : (report.AverageWorkerUptimeMs > 500 ? Color.Warning : Color.Success))"
                             Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
@@ -114,7 +114,7 @@
             <MudItem xs="12" sm="6" md="3">
                 <MetricTile Label="Wait Time" 
                             Value="@MetricFormat.Milliseconds(report.AverageWorkerWaitTimeMs)" 
-                            Detail="@($"P99 {MetricFormat.Milliseconds(report.P99WorkerExecutionTimeMs)}")"
+                            Detail="@($"P99 {MetricFormat.Milliseconds(report.P99WorkerUptimeMs)}")"
                             ValueColor="@(report.AverageWorkerWaitTimeMs > 1000 ? Color.Error : (report.AverageWorkerWaitTimeMs > 200 ? Color.Warning : Color.Success))" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">

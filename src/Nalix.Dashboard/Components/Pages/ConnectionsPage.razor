@@ -70,13 +70,52 @@
         </MudGrid>
 
         <MudGrid Spacing="3" Class="mb-4 metrics-grid">
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="4">
                 <MetricTile Label="Bytes Sent" Value="@MetricFormat.Bytes(report.TotalBytesSent)" />
             </MudItem>
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="4">
                 <MetricTile Label="Bytes Received" Value="@MetricFormat.Bytes(report.TotalBytesReceived)" />
             </MudItem>
+            <MudItem xs="12" sm="4">
+                <MetricTile Label="Packets Dropped" 
+                            Value="@MetricFormat.Count(report.TotalPacketsDropped)" 
+                            ValueColor="@(report.TotalPacketsDropped > 0 ? Color.Error : Color.Success)" />
+            </MudItem>
         </MudGrid>
+
+        @if (report.AsyncCallback is { } cb)
+        {
+            <MetricSection Title="AsyncCallback Queue Dispatcher">
+                <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Total Invoked" Value="@MetricFormat.Count(cb.TotalInvoked)" Detail="Callbacks completed" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Dropped Callbacks" 
+                                    Value="@MetricFormat.Count(cb.Dropped)" 
+                                    ValueColor="@(cb.Dropped > 0 ? Color.Error : Color.Success)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Slow Callbacks" 
+                                    Value="@MetricFormat.Count(cb.SlowCallbacks)" 
+                                    Detail="Executing slowly"
+                                    ValueColor="@(cb.SlowCallbacks > 0 ? Color.Warning : Color.Success)" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Pending (Proc / Post)" Value="@($"{MetricFormat.Count(cb.PendingProcess)} / {MetricFormat.Count(cb.PendingPost)}")" Detail="Queue depth" />
+                    </MudItem>
+                </MudGrid>
+
+                <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+                    <MudItem xs="12" sm="6">
+                        <MetricTile Label="Fairness Map Collisions" Value="@MetricFormat.Count(cb.FairnessCollisions)" Detail="Lock collisions in dispatching" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6">
+                        <MetricTile Label="Fairness Map Evictions" Value="@MetricFormat.Count(cb.FairnessEvictions)" Detail="Eviction rate" />
+                    </MudItem>
+                </MudGrid>
+            </MetricSection>
+        }
     }
 </MudContainer>
 
