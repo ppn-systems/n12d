@@ -94,8 +94,8 @@
                         <MudTh>Type</MudTh>
                         <MudTh>Available / Max</MudTh>
                         <MudTh>Traffic (Get/Hit)</MudTh>
-                        <MudTh>Misses / Trimmed</MudTh>
-                        <MudTh>Outstanding</MudTh>
+                        <MudTh>Miss / Trim / Drop</MudTh>
+                        <MudTh>Outstanding / Peak</MudTh>
                         <MudTh>Last Access</MudTh>
                         <MudTh>Hit Rate</MudTh>
                         <MudTh>Status</MudTh>
@@ -104,10 +104,14 @@
                         <MudTd Class="metric-table__wide">@MetricFormat.TypeName(p.Type)</MudTd>
                         <MudTd>@MetricFormat.Count(p.Available) / @MetricFormat.Count(p.MaxCapacity)</MudTd>
                         <MudTd>@MetricFormat.Count(p.Gets) / @MetricFormat.Count(p.Hits)</MudTd>
-                        <MudTd>@MetricFormat.Count(p.Misses) / @MetricFormat.Count(p.Trimmed)</MudTd>
+                        <MudTd>@MetricFormat.Count(p.Misses) / @MetricFormat.Count(p.Trimmed) / <MudText Color="@(p.Dropped > 0 ? Color.Error : Color.Default)" Inline="true">@MetricFormat.Count(p.Dropped)</MudText></MudTd>
                         <MudTd>
-                            <MudText Color="@(p.Outstanding > 0 ? Color.Warning : Color.Default)">
+                            <MudText Color="@(p.Outstanding > 0 ? Color.Warning : Color.Default)" Inline="true">
                                 @MetricFormat.Count(p.Outstanding)
+                            </MudText>
+                            <MudText Inline="true"> / </MudText>
+                            <MudText Inline="true" Color="@(p.PeakOutstanding > 0 ? Color.Info : Color.Default)">
+                                @MetricFormat.Count(p.PeakOutstanding)
                             </MudText>
                         </MudTd>
                         <MudTd>@(p.LastAccessType ?? "-")</MudTd>
@@ -131,13 +135,13 @@
                     <HeaderContent>
                         <MudTh>Type</MudTh>
                         <MudTh>Failures</MudTh>
-                        <MudTh>Outstanding</MudTh>
+                        <MudTh>Outstanding / Peak</MudTh>
                         <MudTh>Last Access</MudTh>
                     </HeaderContent>
                     <RowTemplate Context="p">
                         <MudTd Class="metric-table__wide">@MetricFormat.TypeName(p.Type)</MudTd>
                         <MudTd>@MetricFormat.Count(p.ConsecutiveFailures)</MudTd>
-                        <MudTd>@MetricFormat.Count(p.Outstanding)</MudTd>
+                        <MudTd>@MetricFormat.Count(p.Outstanding) / @MetricFormat.Count(p.PeakOutstanding)</MudTd>
                         <MudTd>@MetricFormat.DateTimeOrDash(p.LastAccessUtc)</MudTd>
                     </RowTemplate>
                 </MudTable>

@@ -42,27 +42,31 @@
     else
     {
         <MudGrid Spacing="3" Class="mb-4 metrics-grid">
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="3">
                 <MetricTile Label="Tracked Endpoints" 
-                            Value="@($"{MetricFormat.Count(report.TrackedEndpoints)} / {MetricFormat.Count(report.MaxTrackedEndpoints)}")" 
-                            Detail="Active rate limit states"
+                            Value="@($"{MetricFormat.Count(report.TrackedEndpoints)} / {MetricFormat.Count(report.PeakTrackedEndpoints)}")" 
+                            Detail="Active limit states"
                             Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="3">
                 <MetricTile Label="Blocked Endpoints" 
                             Value="@MetricFormat.Count(report.HardBlockedCount)" 
                             ValueColor="@(report.HardBlockedCount > 0 ? Color.Error : Color.Success)" 
                             Detail="Currently in lockout"
                             Hero="true" />
             </MudItem>
-        </MudGrid>
-
-        <MudGrid Spacing="3" Class="mb-4 metrics-grid">
-            <MudItem xs="12" sm="6">
-                <MetricTile Label="Default Capacity" Value="@report.CapacityTokens.ToString("N0")" Detail="Tokens per bucket" />
+            <MudItem xs="12" sm="3">
+                <MetricTile Label="Warning Endpoints" 
+                            Value="@MetricFormat.Count(report.SoftWarningCount)" 
+                            ValueColor="@(report.SoftWarningCount > 0 ? Color.Warning : Color.Default)" 
+                            Detail="Soft throttled"
+                            Hero="true" />
             </MudItem>
-            <MudItem xs="12" sm="6">
-                <MetricTile Label="Default Refill" Value="@($"{report.RefillPerSecond.ToString("N0")}/s")" Detail="Refill rate" />
+            <MudItem xs="12" sm="3">
+                <MetricTile Label="Total Cleaned" 
+                            Value="@MetricFormat.Count(report.TotalCleaned)" 
+                            Detail="Stale limits evicted"
+                            Hero="true" />
             </MudItem>
         </MudGrid>
 
@@ -70,60 +74,23 @@
             <MudText Typo="Typo.subtitle1" Style="font-weight: bold;" Class="mb-2">Engine System Settings</MudText>
             <MudDivider Class="my-2" />
             <MudGrid>
-                <MudItem xs="12" sm="3">
+                <MudItem xs="12" sm="4">
+                    <MudText Typo="Typo.body2"><b>Capacity / Refill:</b> @report.CapacityTokens.ToString("N0") / @($"{report.RefillPerSecond.ToString("N0")}/s")</MudText>
+                </MudItem>
+                <MudItem xs="12" sm="2">
                     <MudText Typo="Typo.body2"><b>Shards:</b> @report.Shards</MudText>
                 </MudItem>
-                <MudItem xs="12" sm="3">
+                <MudItem xs="12" sm="2">
                     <MudText Typo="Typo.body2"><b>Token Scale:</b> @report.TokenScale.ToString("N0")</MudText>
                 </MudItem>
-                <MudItem xs="12" sm="3">
-                    <MudText Typo="Typo.body2"><b>Hard Lockout:</b> @report.HardLockoutSeconds seconds</MudText>
+                <MudItem xs="12" sm="2">
+                    <MudText Typo="Typo.body2"><b>Hard Lockout:</b> @report.HardLockoutSeconds s</MudText>
                 </MudItem>
-                <MudItem xs="12" sm="3">
-                    <MudText Typo="Typo.body2"><b>Cleanup Interval:</b> @report.CleanupIntervalSecs seconds</MudText>
+                <MudItem xs="12" sm="2">
+                    <MudText Typo="Typo.body2"><b>Cleanup:</b> @report.CleanupIntervalSecs s</MudText>
                 </MudItem>
             </MudGrid>
         </MudPaper>
-
-        @if (report.Endpoints is { Count: > 0 } endpoints)
-        {
-            <MetricSection Title="Top Endpoints by Pressure">
-                <MudTable Items="@endpoints" Dense="true" Hover="true" Striped="false" Class="metric-table">
-                    <HeaderContent>
-                        <MudTh>Endpoint (IP / Option / Key)</MudTh>
-                        <MudTh>Status</MudTh>
-                        <MudTh>Remaining Credit</MudTh>
-                        <MudTh>Micro Balance</MudTh>
-                        <MudTh>Retry After</MudTh>
-                    </HeaderContent>
-                    <RowTemplate Context="ep">
-                        <MudTd Style="font-family: monospace;">@ep.Endpoint</MudTd>
-                        <MudTd>
-                            @if (ep.Blocked)
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Error" Variant="Variant.Filled">Blocked</MudChip>
-                            }
-                            else
-                            {
-                                <MudChip T="string" Size="Size.Small" Color="Color.Success" Variant="Variant.Text">Allowed</MudChip>
-                            }
-                        </MudTd>
-                        <MudTd>@ep.Credit</MudTd>
-                        <MudTd>@ep.MicroBalance.ToString("N0")</MudTd>
-                        <MudTd>
-                            @if (ep.RetryAfterMs > 0)
-                            {
-                                <span style="color: var(--mud-palette-error);">@($"{ep.RetryAfterMs:N0} ms")</span>
-                            }
-                            else
-                            {
-                                <span>-</span>
-                            }
-                        </MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MetricSection>
-        }
     }
 </MudContainer>
 

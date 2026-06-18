@@ -50,7 +50,7 @@
                             Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
-                <MetricTile Label="Total Packets" Value="@MetricFormat.Count(report.TotalPackets)" Detail="Processed by dispatch" Hero="true" />
+                <MetricTile Label="Pending Packets" Value="@($"{MetricFormat.Count(report.TotalPackets)} / {MetricFormat.Count(report.PeakPackets)}")" Detail="Current / Peak queued" Hero="true" />
             </MudItem>
             <MudItem xs="12" sm="6" md="3">
                 <MetricTile Label="Ready Connections" 
@@ -81,7 +81,10 @@
                     <MetricTile Label="Total Executions" Value="@MetricFormat.Count(pipeInfo.TotalExecutions)" />
                 </MudItem>
                 <MudItem xs="12" sm="6" md="3">
-                    <MetricTile Label="Average Time" Value="@($"{pipeInfo.AverageTimeMs:F4} ms")" />
+                    <MetricTile Label="Total Dropped" Value="@MetricFormat.Count(pipeInfo.TotalDropped)" ValueColor="@(pipeInfo.TotalDropped > 0 ? Color.Error : Color.Default)" Detail="Discarded packets" />
+                </MudItem>
+                <MudItem xs="12" sm="6" md="3">
+                    <MetricTile Label="Execution Time" Value="@($"{pipeInfo.AverageTimeMs:F3} / {pipeInfo.MaxTimeMs:F3} ms")" Detail="Avg / Peak" />
                 </MudItem>
             }
         </MudGrid>
@@ -104,12 +107,14 @@
                         <MudTh>Executions</MudTh>
                         <MudTh>Errors</MudTh>
                         <MudTh>Average Time (ms)</MudTh>
+                        <MudTh>Max Time (ms)</MudTh>
                     </HeaderContent>
                     <RowTemplate Context="row">
                         <MudTd>@row.Type</MudTd>
                         <MudTd>@row.TotalExecutions.ToString("N0")</MudTd>
                         <MudTd>@row.TotalErrors.ToString("N0")</MudTd>
                         <MudTd>@row.AverageTimeMs.ToString("F4")</MudTd>
+                        <MudTd>@row.MaxTimeMs.ToString("F4")</MudTd>
                     </RowTemplate>
                 </MudTable>
             </MetricSection>
@@ -131,21 +136,7 @@
             </MetricSection>
         }
 
-        @if (report.PendingByConnection is { Count: > 0 } conns)
-        {
-            <MetricSection Title="Pending by Connection">
-                <MudTable Items="@conns" Dense="true" Hover="true" Striped="false" Class="metric-table">
-                    <HeaderContent>
-                        <MudTh>Endpoint</MudTh>
-                        <MudTh>Pending</MudTh>
-                    </HeaderContent>
-                    <RowTemplate Context="row">
-                        <MudTd Class="metric-table__wide">@(row.EndPoint ?? "-")</MudTd>
-                        <MudTd>@row.Pending.ToString("N0")</MudTd>
-                    </RowTemplate>
-                </MudTable>
-            </MetricSection>
-        }
+
     }
 </MudContainer>
 
