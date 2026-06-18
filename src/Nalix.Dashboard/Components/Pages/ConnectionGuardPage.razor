@@ -59,26 +59,39 @@
         </MudGrid>
 
         <MudGrid Spacing="3" Class="mb-4 metrics-grid">
-            <MudItem xs="12" sm="6">
-                <MetricTile Label="Tracked Endpoints" Value="@MetricFormat.Count(report.TrackedEndpoints)" Detail="@($"Concurrent {MetricFormat.Count(report.TotalConcurrent)}")" />
+            <MudItem xs="12" sm="4">
+                <MetricTile Label="Global Connections" 
+                            Value="@($"{MetricFormat.Count(report.GlobalConnections)} / {MetricFormat.Count(report.PeakGlobalConnections)}")" 
+                            Detail="@($"Limit {MetricFormat.Count(report.MaxGlobalConnections)}")" />
             </MudItem>
-            <MudItem xs="12" sm="6">
+            <MudItem xs="12" sm="4">
+                <MetricTile Label="Tracked Endpoints" 
+                            Value="@($"{MetricFormat.Count(report.TrackedEndpoints)} / {MetricFormat.Count(report.PeakTrackedEndpoints)}")" 
+                            Detail="@($"Concurrent {MetricFormat.Count(report.TotalConcurrent)}")" />
+            </MudItem>
+            <MudItem xs="12" sm="4">
                 <MetricTile Label="Total Attempts" Value="@MetricFormat.Count(report.TotalAttempts)" Detail="@($"Limit {MetricFormat.Count(report.MaxPerEndpoint)} / endpoint")" />
             </MudItem>
         </MudGrid>
 
         <MudGrid Spacing="3" Class="mb-4 metrics-grid">
-            <MudItem xs="12" sm="4">
+            <MudItem xs="12" sm="3">
                 <MetricTile Label="EWMA Connection Rate" Value="@($"{MetricFormat.Number(report.EWMARate, 2)} req/s")" Detail="Exponentially weighted rate" />
             </MudItem>
-            <MudItem xs="12" sm="4">
+            <MudItem xs="12" sm="3">
                 <MetricTile Label="Subnets Tracked (v4 / v6)" Value="@($"{MetricFormat.Count(report.SubnetTrackedV4)} / {MetricFormat.Count(report.SubnetTrackedV6)}")" Detail="Tracked subnets count" />
             </MudItem>
-            <MudItem xs="12" sm="4">
+            <MudItem xs="12" sm="3">
                 <MetricTile Label="Adaptive Limits" 
                             Value="@(report.AdaptiveActive ? "Active" : "Normal")" 
                             ValueColor="@(report.AdaptiveActive ? Color.Error : Color.Success)"
                             Detail="Throttling under high load" />
+            </MudItem>
+            <MudItem xs="12" sm="3">
+                <MetricTile Label="PoW Difficulty" 
+                            Value="@report.CurrentDifficulty.ToString()" 
+                            ValueColor="@(report.CurrentDifficulty > 0 ? Color.Warning : Color.Default)"
+                            Detail="Anti-DDoS Difficulty" />
             </MudItem>
         </MudGrid>
     }

@@ -116,6 +116,34 @@
                 </MudGrid>
             </MetricSection>
         }
+
+        @if (report.TimingWheel is { } tw)
+        {
+            <MetricSection Title="TimingWheel Idle Timeout Tracking">
+                <MudGrid Spacing="3" Class="mb-4 metrics-grid">
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Registered Connections" 
+                                    Value="@MetricFormat.Count(tw.RegisteredCount)" 
+                                    Detail="@($"Peak: {MetricFormat.Count(tw.PeakRegistered)}")" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Total Timeouts" 
+                                    Value="@MetricFormat.Count(tw.TotalTimeouts)" 
+                                    ValueColor="@(tw.TotalTimeouts > 0 ? Color.Warning : Color.Success)"
+                                    Detail="Idle connections closed" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Lifetime Reg / Unreg" 
+                                    Value="@($"{MetricFormat.Count(tw.TotalRegistrations)} / {MetricFormat.Count(tw.TotalUnregistrations)}")" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MetricTile Label="Stale Skips / Tick Drift" 
+                                    Value="@($"{MetricFormat.Count(tw.TotalStaleSkips)} / {MetricFormat.Count(tw.MaxTickDrift)}")"
+                                    ValueColor="@(tw.MaxTickDrift > 500 ? Color.Error : (tw.MaxTickDrift > 0 ? Color.Warning : Color.Success))" />
+                    </MudItem>
+                </MudGrid>
+            </MetricSection>
+        }
     }
 </MudContainer>
 

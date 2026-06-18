@@ -27,7 +27,6 @@ public static class AppNavigation
                 new NavItem("Listeners",       "/metrics/listeners",       Icons.Material.Outlined.Sensors,         PermissionLevel.SUPERVISOR),
                 new NavItem("Protocols",       "/metrics/protocols",       Icons.Material.Outlined.CompareArrows,   PermissionLevel.SUPERVISOR),
                 new NavItem("Sessions",        "/metrics/sessions",        Icons.Material.Outlined.Fingerprint,     PermissionLevel.SUPERVISOR),
-                new NavItem("Concurrency Gate","/metrics/concurrency-gate",Icons.Material.Outlined.Lock,             PermissionLevel.SUPERVISOR),
                 new NavItem("Policy Rate Limiter","/metrics/policy-rate-limiter",Icons.Material.Outlined.Speed,        PermissionLevel.SUPERVISOR),
                 new NavItem("Token Bucket Limiter","/metrics/token-bucket-limiter",Icons.Material.Outlined.HourglassEmpty,PermissionLevel.SUPERVISOR),
             ]),

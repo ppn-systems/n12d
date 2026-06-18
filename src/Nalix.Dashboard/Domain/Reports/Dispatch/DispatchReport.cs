@@ -8,6 +8,7 @@ public sealed record DispatchReport(
     bool Running,
     long DispatchLoops,
     long TotalPackets,
+    long PeakPackets,
     long TotalConnections,
     long ReadyConnections,
     long WakeSignals,
@@ -15,21 +16,21 @@ public sealed record DispatchReport(
     bool WakeRequested,
     string? PacketRegistryType,
     IReadOnlyDictionary<string, long>? PendingPerPriority,
-    IReadOnlyList<PendingConnectionEntry>? PendingByConnection,
     PipelineMetricsReport? PipelineMetrics,
     IReadOnlyList<MiddlewareMetricEntry>? MiddlewareMetrics);
-
-public sealed record PendingConnectionEntry(string? EndPoint, long Pending);
 
 public sealed record PipelineMetricsReport(
     long ActiveExecutions,
     long TotalExecutions,
+    long TotalDropped,
     long TotalErrors,
     long DeserializationErrors,
-    double AverageTimeMs);
+    double AverageTimeMs,
+    double MaxTimeMs);
 
 public sealed record MiddlewareMetricEntry(
     string? Type,
     long TotalExecutions,
     long TotalErrors,
-    double AverageTimeMs);
+    double AverageTimeMs,
+    double MaxTimeMs);

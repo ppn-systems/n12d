@@ -6,7 +6,6 @@ using MudBlazor.Services;
 using Nalix.Dashboard.Application.Abstractions;
 using Nalix.Dashboard.Application.Reports;
 using Nalix.Dashboard.Application.Reports.Buffers;
-using Nalix.Dashboard.Application.Reports.ConcurrencyGate;
 using Nalix.Dashboard.Application.Reports.ConnectionGuard;
 using Nalix.Dashboard.Application.Reports.Connections;
 using Nalix.Dashboard.Application.Reports.Dispatch;
@@ -54,7 +53,6 @@ internal class Program
         _ = builder.Services.AddSingleton<IReportParser, ListenersReportParser>();
         _ = builder.Services.AddSingleton<IReportParser, ProtocolsReportParser>();
         _ = builder.Services.AddSingleton<IReportParser, SessionsReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, ConcurrencyGateReportParser>();
         _ = builder.Services.AddSingleton<IReportParser, PolicyRateLimiterReportParser>();
         _ = builder.Services.AddSingleton<IReportParser, TokenBucketLimiterReportParser>();
         _ = builder.Services.AddSingleton<ReportParserRegistry>();

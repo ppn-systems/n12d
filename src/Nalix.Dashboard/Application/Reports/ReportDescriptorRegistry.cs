@@ -19,7 +19,6 @@ internal sealed class ReportDescriptorRegistry
         new(RuntimeObservationTarget.LISTENER,         "/metrics/listeners",       "Listeners",        "Active listeners and transport binding configurations.",             3_000, 500, 60_000, true, false),
         new(RuntimeObservationTarget.PROTOCOL,         "/metrics/protocols",       "Protocols",        "Protocol state machine and network traffic message metrics.",         3_000, 500, 60_000, true, false),
         new(RuntimeObservationTarget.SESSIONS,         "/metrics/sessions",        "Sessions",         "Session store metrics, hit rates, and client attribute persistence.", 3_000, 500, 60_000, true, false),
-        new(RuntimeObservationTarget.CONCURRENCY_GATE, "/metrics/concurrency-gate", "Concurrency Gate", "Active connection opcodes, capacity limits, and queuing pressure.", 3_000, 500, 60_000, true, false),
         new(RuntimeObservationTarget.POLICY_RATE_LIMITER, "/metrics/policy-rate-limiter", "Policy Rate Limiter", "Stateless policy-based token bucket evaluation engine.",       3_000, 500, 60_000, true, false),
         new(RuntimeObservationTarget.TOKEN_BUCKET_LIMITER, "/metrics/token-bucket-limiter", "Token Bucket Limiter", "Fine-grained connection IP endpoint rate-limiting and lockout.", 3_000, 500, 60_000, true, false),
     ];

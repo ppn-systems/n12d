@@ -202,7 +202,70 @@ def generate_charts(df, attack_window, parser=None):
     else:
         charts_html.append("<div>No Instance Cache data available</div>")
 
-    # Chart 12: Rate Limiter Performance
+    # Chart 12: Concurrency Gate & Circuit Breaker
+    has_cg = False
+    fig12 = make_subplots(specs=[[{"secondary_y": True}]])
+    if 'TotalQueued' in df.columns:
+        fig12.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['TotalQueued'], name="Total Queued", fill='tozeroy', line=dict(color="#3b82f6", width=1.5), mode='lines'), secondary_y=False)
+        has_cg = True
+    if 'TotalRejected' in df.columns:
+        fig12.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['TotalRejected'], name="Total Rejected", line=dict(color="#ef4444", width=2), mode='lines'), secondary_y=False)
+        has_cg = True
+    if 'CircuitBreaker.Trips' in df.columns:
+        trips_diff = df['CircuitBreaker.Trips'].diff().fillna(0)
+        if trips_diff.sum() > 0:
+            fig12.add_trace(plotly_go.Bar(x=df['Timestamp'], y=trips_diff, name="Circuit Breaker Trips (Delta)", marker_color="#f59e0b", opacity=0.7), secondary_y=True)
+    if 'ConcurrencyGate.RejectionRate' in df.columns and has_cg:
+        fig12.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['ConcurrencyGate.RejectionRate'], name="Concurrency Gate Rejection Rate", line=dict(color="#ec4899", width=1.5, dash='dot'), mode='lines'), secondary_y=True)
+
+    if has_cg:
+        fig12.update_layout(title="Concurrency Gate & Circuit Breaker", template="plotly_dark", height=400, margin=dict(l=20, r=20, t=40, b=20), hovermode="x unified")
+        fig12.update_yaxes(title_text="Queued / Rejected", secondary_y=False)
+        fig12.update_yaxes(title_text="Trips / Rejection Rate", secondary_y=True)
+        charts_html.append(fig12.to_html(full_html=False, include_plotlyjs=False))
+
+    # Chart 13: Sessions Activity
+    if 'Store.ActiveSessions' in df.columns:
+        fig13 = make_subplots(specs=[[{"secondary_y": True}]])
+        fig13.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['Store.ActiveSessions'], name="Active Sessions", fill='tozeroy', line=dict(color="#8b5cf6", width=2), mode='lines'), secondary_y=False)
+        if 'TotalConsumesSucceeded' in df.columns:
+            consume_delta = df['TotalConsumesSucceeded'].diff().fillna(0)
+            fig13.add_trace(plotly_go.Bar(x=df['Timestamp'], y=consume_delta, name="Consumes (Delta)", marker_color="#3b82f6", opacity=0.6), secondary_y=True)
+        if 'Sessions.TotalStoresSucceeded' in df.columns:
+            store_delta = df['Sessions.TotalStoresSucceeded'].diff().fillna(0)
+            fig13.add_trace(plotly_go.Bar(x=df['Timestamp'], y=store_delta, name="Stores (Delta)", marker_color="#10b981", opacity=0.6), secondary_y=True)
+        fig13.update_layout(title="Sessions: Active & Operations", template="plotly_dark", height=400, margin=dict(l=20, r=20, t=40, b=20), hovermode="x unified")
+        fig13.update_yaxes(title_text="Active Sessions", secondary_y=False)
+        fig13.update_yaxes(title_text="Operations (Delta)", secondary_y=True)
+        charts_html.append(fig13.to_html(full_html=False, include_plotlyjs=False))
+
+    # Chart 14: Listener Queue Depth & Rejections
+    has_listener = False
+    fig14 = make_subplots(specs=[[{"secondary_y": True}]])
+    if 'TCP.Metrics.AcceptQueueDepth' in df.columns:
+        fig14.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['TCP.Metrics.AcceptQueueDepth'], name="TCP Accept Queue", line=dict(color="#3b82f6", width=1.5), mode='lines'), secondary_y=False)
+        has_listener = True
+    if 'WEBSOCKET.Metrics.AcceptQueueDepth' in df.columns:
+        fig14.add_trace(plotly_go.Scatter(x=df['Timestamp'], y=df['WEBSOCKET.Metrics.AcceptQueueDepth'], name="WS Accept Queue", line=dict(color="#ec4899", width=1.5), mode='lines'), secondary_y=False)
+        has_listener = True
+    if 'TCP.Metrics.LimiterRejections' in df.columns:
+        tcp_rej_diff = df['TCP.Metrics.LimiterRejections'].diff().fillna(0)
+        if tcp_rej_diff.sum() > 0:
+            fig14.add_trace(plotly_go.Bar(x=df['Timestamp'], y=tcp_rej_diff, name="TCP Limiter Rejections (Delta)", marker_color="#ef4444", opacity=0.7), secondary_y=True)
+            has_listener = True
+    if 'WEBSOCKET.Metrics.LimiterRejections' in df.columns:
+        ws_rej_diff = df['WEBSOCKET.Metrics.LimiterRejections'].diff().fillna(0)
+        if ws_rej_diff.sum() > 0:
+            fig14.add_trace(plotly_go.Bar(x=df['Timestamp'], y=ws_rej_diff, name="WS Limiter Rejections (Delta)", marker_color="#f59e0b", opacity=0.7), secondary_y=True)
+            has_listener = True
+
+    if has_listener:
+        fig14.update_layout(title="Listener Accept Queue & Limiter Rejections", template="plotly_dark", height=400, margin=dict(l=20, r=20, t=40, b=20), hovermode="x unified")
+        fig14.update_yaxes(title_text="Queue Depth", secondary_y=False)
+        fig14.update_yaxes(title_text="Rejections (Delta)", secondary_y=True)
+        charts_html.append(fig14.to_html(full_html=False, include_plotlyjs=False))
+
+    # Chart 15: Rate Limiter Performance
     has_rl = False
     fig12 = make_subplots(specs=[[{"secondary_y": True}]])
     if 'HardBlockedCount' in df.columns:
@@ -378,6 +441,57 @@ def export_html(parser, output_path):
                 'algorithm': 'Threshold Check'
             })
 
+    # Concurrency Gate anomalies
+    if 'ConcurrencyGate.TotalRejected' in df.columns:
+        max_cg_rejected = df['ConcurrencyGate.TotalRejected'].max()
+        if max_cg_rejected > 0:
+            anomalies.append({
+                'timestamp': str(df.loc[df['ConcurrencyGate.TotalRejected'] > 0, 'Timestamp'].iloc[0]) if not df[df['ConcurrencyGate.TotalRejected'] > 0].empty else "Unknown",
+                'severity': 'WARNING',
+                'message': f"Concurrency Gate rejections detected! {max_cg_rejected:.0f} total rejections. Some connections were rejected by the gate.",
+                'value': max_cg_rejected,
+                'expected_value': 0,
+                'algorithm': 'Threshold Check'
+            })
+
+    if 'CircuitBreaker.Trips' in df.columns:
+        max_trips = df['CircuitBreaker.Trips'].max()
+        if max_trips > 0:
+            anomalies.append({
+                'timestamp': str(df.loc[df['CircuitBreaker.Trips'] > 0, 'Timestamp'].iloc[0]) if not df[df['CircuitBreaker.Trips'] > 0].empty else "Unknown",
+                'severity': 'CRITICAL',
+                'message': f"Circuit Breaker tripped {max_trips:.0f} time(s)! The system has entered circuit-breaker mode to protect against overload.",
+                'value': max_trips,
+                'expected_value': 0,
+                'algorithm': 'Threshold Check'
+            })
+
+    # Session store anomalies
+    if 'Sessions.TotalStoresRejectedByPolicy' in df.columns:
+        max_store_reject = df['Sessions.TotalStoresRejectedByPolicy'].max()
+        if max_store_reject > 0:
+            anomalies.append({
+                'timestamp': str(df.loc[df['Sessions.TotalStoresRejectedByPolicy'] > 0, 'Timestamp'].iloc[0]) if not df[df['Sessions.TotalStoresRejectedByPolicy'] > 0].empty else "Unknown",
+                'severity': 'WARNING',
+                'message': f"Session store policy rejections detected: {max_store_reject:.0f} store attempts rejected by policy.",
+                'value': max_store_reject,
+                'expected_value': 0,
+                'algorithm': 'Threshold Check'
+            })
+
+    # Listener queue depth anomalies
+    if 'TCP.Metrics.AcceptQueueDepth' in df.columns:
+        max_tcp_queue = df['TCP.Metrics.AcceptQueueDepth'].max()
+        if max_tcp_queue > 50:
+            anomalies.append({
+                'timestamp': str(df.loc[df['TCP.Metrics.AcceptQueueDepth'] > 50, 'Timestamp'].iloc[0]) if not df[df['TCP.Metrics.AcceptQueueDepth'] > 50].empty else "Unknown",
+                'severity': 'WARNING',
+                'message': f"TCP accept queue depth peaked at {max_tcp_queue:.0f}. Connections may be queuing up waiting to be accepted.",
+                'value': max_tcp_queue,
+                'expected_value': 0,
+                'algorithm': 'Threshold Check'
+            })
+
     # Calculate summary KPIs
     kpis = {
         'duration': str(df['Timestamp'].max() - df['Timestamp'].min()).split('.')[0],
@@ -388,7 +502,10 @@ def export_html(parser, output_path):
         'instance_cache_eff': f"{instance_cache_eff_val:.1f}%" if 'InstanceCacheHitCount' in df.columns else "N/A",
         'total_rejections': f"{df['TotalRejections'].max():,}" if 'TotalRejections' in df.columns else "0",
         'total_messages': f"{df['TCP.TotalMessages'].max() + df['WEBSOCKET.TotalMessages'].max():,}" if 'TCP.TotalMessages' in df.columns else "N/A",
-        'p99_latency': f"{df['P99WorkerUptimeMs'].max():.1f} ms" if 'P99WorkerUptimeMs' in df.columns else "N/A"
+        'p99_latency': f"{df['P99WorkerUptimeMs'].max():.1f} ms" if 'P99WorkerUptimeMs' in df.columns else "N/A",
+        'active_sessions': f"{df['Store.ActiveSessions'].iloc[-1]:,}" if 'Store.ActiveSessions' in df.columns else "N/A",
+        'cg_total_rejected': f"{df['ConcurrencyGate.TotalRejected'].max():,}" if 'ConcurrencyGate.TotalRejected' in df.columns else "0",
+        'gate_trips': f"{df['CircuitBreaker.Trips'].max():.0f}" if 'CircuitBreaker.Trips' in df.columns else "0",
     }
         
     # Generate charts

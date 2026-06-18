@@ -81,7 +81,7 @@
                                  Label="Port"
                                  Min="1" Max="65535"
                                  Variant="Variant.Outlined"
-                                 HelperText="Default: 57206" />
+                                 HelperText="Default: 57207" />
                 <MudSwitch T="bool" @bind-Value="_useTls"
                            Label="Use TLS"
                            Color="Color.Primary" />
@@ -106,7 +106,7 @@
 
     private bool _showServerDialog;
     private string _serverHost = string.Empty;
-    private int _serverPort = 57206;
+    private int _serverPort = 57207;
     private bool _useTls;
     private readonly DialogOptions _dialogOptions = new() { MaxWidth = MaxWidth.Small, FullWidth = true };
 
@@ -114,7 +114,7 @@
     {
         AdminSettings settings = await SettingsStore.LoadAsync().ConfigureAwait(false);
         _serverHost = settings.ServerHost ?? string.Empty;
-        _serverPort = settings.ServerPort ?? 57206;
+        _serverPort = settings.ServerPort ?? 57207;
         _useTls = settings.UseTls;
         _showServerDialog = true;
     }
@@ -128,7 +128,7 @@
     {
         AdminSettings settings = await SettingsStore.LoadAsync().ConfigureAwait(false);
         settings.ServerHost = string.IsNullOrWhiteSpace(_serverHost) ? null : _serverHost.Trim();
-        settings.ServerPort = _serverPort == 57206 ? null : (ushort)_serverPort;
+        settings.ServerPort = _serverPort == 57207 ? null : (ushort)_serverPort;
         settings.UseTls = _useTls;
         await SettingsStore.SaveAsync(settings).ConfigureAwait(false);
         _showServerDialog = false;
