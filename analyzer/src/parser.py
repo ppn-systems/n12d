@@ -21,13 +21,29 @@ COLUMN_RENAME_MAP = {
     'Memory.VirtualMB': 'VirtualMB',
 }
 
+# Per-file column renames to avoid merge conflicts when multiple files share column names
+FILE_COLUMN_RENAME_MAP = {
+    'concurrency_gate_metrics.csv': {
+        'RejectionRate': 'ConcurrencyGate.RejectionRate',
+        'TotalRejected': 'ConcurrencyGate.TotalRejected',
+        'TotalAcquired': 'ConcurrencyGate.TotalAcquired',
+        'TotalQueued': 'ConcurrencyGate.TotalQueued',
+        'TotalCleaned': 'ConcurrencyGate.TotalCleaned',
+    },
+    'sessions_metrics.csv': {
+        'TotalStoresFailed': 'Sessions.TotalStoresFailed',
+        'TotalStoresSucceeded': 'Sessions.TotalStoresSucceeded',
+        'TotalStoresRejectedByPolicy': 'Sessions.TotalStoresRejectedByPolicy',
+    },
+}
+
 FILE_SCHEMA_MAP = {
-    'connections_metrics.csv': ['Timestamp', 'TotalConnections'],
-    'dispatch_metrics.csv': ['Timestamp', 'PendingPerPriority.HIGH', 'PendingPerPriority.URGENT', 'PendingByConnection', 'PipelineMetrics.ActiveExecutions'],
+    'connections_metrics.csv': ['Timestamp', 'TotalConnections', 'IngressBytesPerSecond', 'EgressBytesPerSecond', 'TotalBytesReceived', 'TotalBytesSent'],
+    'dispatch_metrics.csv': ['Timestamp', 'PendingPerPriority.HIGH', 'PendingPerPriority.URGENT', 'PendingPerPriority.LOW', 'PendingPerPriority.MEDIUM', 'PendingPerPriority.NONE', 'PendingByConnection', 'PipelineMetrics.ActiveExecutions', 'PipelineMetrics.AverageTimeMs', 'PipelineMetrics.TotalExecutions', 'PipelineMetrics.TotalErrors', 'TotalPackets', 'WakeReads', 'WakeSignals', 'ReadyConnections', 'Running'],
     'tasks_metrics.csv': [
-        'Timestamp', 
-        'AverageWorkerUptimeMs', 
-        'Process.Threads', 
+        'Timestamp',
+        'AverageWorkerUptimeMs',
+        'Process.Threads',
         'Process.ThreadsRunning',
         'Memory.WorkingSetMB',
         'Process.ManagedHeapMB',
@@ -41,17 +57,25 @@ FILE_SCHEMA_MAP = {
         'Process.GCGen2',
         'Memory.PrivateMB',
         'Recurring',
-        'TopRunningWorkers'
+        'TopRunningWorkers',
+        'Process.UptimeDays',
+        'CurrentConcurrencyLimit',
+        'WorkerCompletionCount',
+        'WorkerErrorCount',
+        'RecurringCount',
+        'RecurringErrorCount',
+        'RecurringExecutionCount',
     ],
-    'object_pools_metrics.csv': ['Timestamp', 'Pools', 'TotalLeaked', 'CacheHitRate', 'TotalCreated', 'TotalDisposed', 'TotalGetOperations', 'TotalReturnOperations'],
-    'buffers_metrics.csv': ['Timestamp', 'PeakMemoryUsageBytes', 'ThroughputMBps', 'HitRate', 'TotalExpands', 'TotalShrinks', 'Pools'],
+    'object_pools_metrics.csv': ['Timestamp', 'Pools', 'TotalLeaked', 'CacheHitRate', 'TotalCreated', 'TotalDisposed', 'TotalGetOperations', 'TotalReturnOperations', 'PoolCount', 'UnhealthyPoolCount', 'PeakPoolCount', 'Throughput'],
+    'buffers_metrics.csv': ['Timestamp', 'PeakMemoryUsageBytes', 'ThroughputMBps', 'HitRate', 'TotalExpands', 'TotalShrinks', 'Pools', 'PoolCount', 'TrimCycleCount', 'BucketCacheHits', 'BucketCacheMisses'],
     'instances_metrics.csv': ['Timestamp', 'CachedInstanceCount', 'HitRatePermille', 'InstanceCreationCount', 'TotalGetOrCreateCalls', 'Instances'],
-    'listener_metrics.csv': ['Timestamp', 'TCP.Connections.ActiveConnections', 'TCP.Metrics.TotalAccepted', 'TCP.Metrics.TotalErrors', 'TCP.Metrics.TotalRejected'],
-    'sessions_metrics.csv': ['Timestamp'],
+    'listener_metrics.csv': ['Timestamp', 'TCP.Connections.ActiveConnections', 'TCP.Metrics.TotalAccepted', 'TCP.Metrics.TotalErrors', 'TCP.Metrics.TotalRejected', 'TCP.Metrics.AcceptQueueDepth', 'TCP.Metrics.LimiterRejections', 'TCP.Metrics.QueueFullRejections', 'TCP.Metrics.PendingProxyConnections', 'WEBSOCKET.Metrics.TotalAccepted', 'WEBSOCKET.Metrics.TotalErrors', 'WEBSOCKET.Metrics.TotalRejected', 'WEBSOCKET.Metrics.AcceptQueueDepth', 'WEBSOCKET.Metrics.LimiterRejections', 'WEBSOCKET.Metrics.QueueFullRejections'],
+    'sessions_metrics.csv': ['Timestamp', 'Store.ActiveSessions', 'Store.TotalConsumed', 'Store.TotalExpired', 'Store.TotalStored', 'TotalConsumesAttempted', 'TotalConsumesFailed', 'TotalConsumesSucceeded', 'TotalStoresAttempted', 'TotalStoresFailed', 'TotalStoresSucceeded', 'TotalStoresRejectedByPolicy'],
     'protocol_metrics.csv': ['Timestamp', 'TCP.TotalMessages', 'TCP.TotalErrors', 'WEBSOCKET.TotalMessages', 'WEBSOCKET.TotalErrors'],
-    'connection_guard_metrics.csv': ['Timestamp', 'TotalAttempts', 'TotalRejections', 'RejectionRate', 'TotalConcurrent', 'TopEndpoints'],
-    'token_bucket_limiter_metrics.csv': ['Timestamp', 'Endpoints', 'HardBlockedCount', 'CapacityTokens'],
-    'policy_rate_limiter_metrics.csv': ['Timestamp', 'SharedEngine.Endpoints', 'SharedEngine.HardBlockedCount', 'SharedEngine.CapacityTokens']
+    'connection_guard_metrics.csv': ['Timestamp', 'TotalAttempts', 'TotalRejections', 'RejectionRate', 'TotalConcurrent', 'AdaptiveActive', 'EWMARate', 'TrackedEndpoints', 'MaxPerEndpoint', 'TotalCleaned', 'SubnetTrackedV4', 'SubnetTrackedV6'],
+    'concurrency_gate_metrics.csv': ['Timestamp', 'CircuitBreaker.IsOpen', 'CircuitBreaker.Trips', 'TotalAcquired', 'TotalQueued', 'TotalRejected', 'RejectionRate', 'TotalCleaned'],
+    'token_bucket_limiter_metrics.csv': ['Timestamp', 'Endpoints', 'HardBlockedCount', 'CapacityTokens', 'TrackedEndpoints', 'RefillPerSecond'],
+    'policy_rate_limiter_metrics.csv': ['Timestamp', 'SharedEngine.Endpoints', 'SharedEngine.HardBlockedCount', 'SharedEngine.CapacityTokens', 'SharedEngine.TrackedEndpoints', 'SharedEngine.RefillPerSecond'],
 }
 
 class TelemetryParser:
@@ -100,14 +124,16 @@ class TelemetryParser:
                 if missing:
                     raise SchemaError(f"File {file_name} is missing required columns: {missing}")
                     
-            # Rename columns to standard names
+            # Rename columns to standard names (global + per-file)
             df.rename(columns=COLUMN_RENAME_MAP, inplace=True)
+            if file_name in FILE_COLUMN_RENAME_MAP:
+                df.rename(columns=FILE_COLUMN_RENAME_MAP[file_name], inplace=True)
             
             # Clean up numeric columns that might have comma decimal separators
             for col in df.columns:
                 if col in ['Timestamp', 'UtcNow', 'StartTime', 'Pools', 'TopEndpoints', 'Recurring', 'TopRunningWorkers', 'PendingByConnection', 'Instances', 'UnhealthyPools', 'Endpoints', 'SharedEngine.Endpoints']:
                     continue
-                if df[col].dtype == 'object':
+                if pd.api.types.is_string_dtype(df[col]) or df[col].dtype == 'object':
                     try:
                         converted = pd.to_numeric(df[col].astype(str).str.replace(',', '.'), errors='coerce')
                         if not converted.isna().all():
