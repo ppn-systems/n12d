@@ -35,9 +35,11 @@ public sealed record ObjectPoolEntry(
     long Hits,
     long Misses,
     long Trimmed,
+    long Dropped,
     double HitRate,
     string? LastAccessUtc,
     string? LastAccessType,
     int Outstanding,
+    int PeakOutstanding,
     int ConsecutiveFailures,
     string? Status);

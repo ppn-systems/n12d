@@ -12,7 +12,17 @@ public sealed record ConnectionsReport(
     long IngressBytesPerSecond,
     long EgressBytesPerSecond,
     long TotalPacketsDropped,
-    AsyncCallbackInfo? AsyncCallback);
+    AsyncCallbackInfo? AsyncCallback,
+    TimingWheelInfo? TimingWheel);
+
+public sealed record TimingWheelInfo(
+    int RegisteredCount,
+    int PeakRegistered,
+    long TotalRegistrations,
+    long TotalUnregistrations,
+    long TotalTimeouts,
+    long TotalStaleSkips,
+    long MaxTickDrift);
 
 public sealed record AsyncCallbackInfo(
     long PendingProcess,

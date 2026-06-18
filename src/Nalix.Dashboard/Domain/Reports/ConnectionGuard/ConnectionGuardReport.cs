@@ -9,6 +9,7 @@ public sealed record ConnectionGuardReport(
     double CleanupIntervalSeconds,
     double InactivityThresholdSeconds,
     int TrackedEndpoints,
+    int PeakTrackedEndpoints,
     long TotalConcurrent,
     long TotalAttempts,
     long TotalRejections,
@@ -16,5 +17,9 @@ public sealed record ConnectionGuardReport(
     double RejectionRate,
     int SubnetTrackedV4,
     int SubnetTrackedV6,
+    int GlobalConnections,
+    int PeakGlobalConnections,
+    int MaxGlobalConnections,
+    int CurrentDifficulty,
     double EWMARate,
     bool AdaptiveActive);

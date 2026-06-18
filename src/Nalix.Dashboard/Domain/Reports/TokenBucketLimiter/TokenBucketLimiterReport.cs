@@ -14,12 +14,7 @@ public sealed record TokenBucketLimiterReport(
     int CleanupIntervalSecs,
     int MaxTrackedEndpoints,
     int TrackedEndpoints,
+    int PeakTrackedEndpoints,
     int HardBlockedCount,
-    IReadOnlyList<TokenBucketEndpoint>? Endpoints);
-
-public sealed record TokenBucketEndpoint(
-    string? Endpoint,
-    bool Blocked,
-    int Credit,
-    long MicroBalance,
-    int RetryAfterMs);
+    int SoftWarningCount,
+    long TotalCleaned);
