@@ -1,0 +1,74 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v10.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v10.0": {
+      "Nalix.Observability.Contracts/14.0.0": {
+        "dependencies": {
+          "Nalix.Abstractions": "14.0.0",
+          "Nalix.Codec": "14.0.0",
+          "Nalix.Environment": "14.0.0"
+        },
+        "runtime": {
+          "Nalix.Observability.Contracts.dll": {}
+        }
+      },
+      "Nalix.Abstractions/14.0.0": {
+        "runtime": {
+          "Nalix.Abstractions.dll": {
+            "assemblyVersion": "14.0.0.0",
+            "fileVersion": "14.0.0.0"
+          }
+        }
+      },
+      "Nalix.Codec/14.0.0": {
+        "dependencies": {
+          "Nalix.Abstractions": "14.0.0",
+          "Nalix.Environment": "14.0.0"
+        },
+        "runtime": {
+          "Nalix.Codec.dll": {
+            "assemblyVersion": "14.0.0.0",
+            "fileVersion": "14.0.0.0"
+          }
+        }
+      },
+      "Nalix.Environment/14.0.0": {
+        "dependencies": {
+          "Nalix.Abstractions": "14.0.0"
+        },
+        "runtime": {
+          "Nalix.Environment.dll": {
+            "assemblyVersion": "14.0.0.0",
+            "fileVersion": "14.0.0.0"
+          }
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Nalix.Observability.Contracts/14.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Nalix.Abstractions/14.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Nalix.Codec/14.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Nalix.Environment/14.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
