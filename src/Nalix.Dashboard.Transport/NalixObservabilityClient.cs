@@ -1,11 +1,14 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 // Licensed under the Apache License, Version 2.0.
 
+using System.Buffers;
 using System.Diagnostics;
+using System.Text.Json;
 using Nalix.Abstractions.Networking.Protocols;
 using Nalix.Abstractions.Primitives;
 using Nalix.Abstractions.Security;
 using Nalix.Dashboard.Abstractions.Connection;
+using Nalix.Dashboard.Abstractions.History;
 using Nalix.Dashboard.Abstractions.Reports;
 using Nalix.Observability.Contracts;
 using Nalix.SDK.Options;
@@ -155,10 +158,142 @@ public sealed class NalixObservabilityClient : IObservabilityClient
     }
 
     /// <inheritdoc/>
+    public async Task<HistoryCatalog> GetHistoryCatalogAsync(long from, long to, CancellationToken ct)
+    {
+        using JsonDocument json = await HISTORY_AsyncCore(from, to, 0, [], ct);
+        JsonElement root = json.RootElement;
+
+        List<HistoryDay> days = [];
+        foreach (JsonElement day in root.GetProperty(RuntimeObservationHistory.Days).EnumerateArray())
+        {
+            days.Add(new HistoryDay(
+                DateOnly.ParseExact(day.GetProperty("date").GetString()!, "yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+                day.GetProperty(RuntimeObservationHistory.From).GetInt64(),
+                day.GetProperty(RuntimeObservationHistory.To).GetInt64(),
+                day.GetProperty("samples").GetInt32(),
+                day.GetProperty("bytes").GetInt64()));
+        }
+
+        List<string> metrics = [];
+        foreach (JsonElement metric in root.GetProperty(RuntimeObservationHistory.Metrics).EnumerateArray())
+        {
+            metrics.Add(metric.GetString()!);
+        }
+
+        return new HistoryCatalog(root.GetProperty(RuntimeObservationHistory.Interval).GetInt64(), days, metrics);
+    }
+
+    /// <inheritdoc/>
+    public async Task<HistorySeries> GetHistoryAsync(long from, long to, int points, IReadOnlyList<string> metrics, CancellationToken ct)
+    {
+        ArgumentNullException.ThrowIfNull(metrics);
+        if (metrics.Count == 0)
+        {
+            return new HistorySeries(from, to, 0, [], []);
+        }
+
+        using JsonDocument json = await HISTORY_AsyncCore(from, to, points, metrics, ct);
+        JsonElement root = json.RootElement;
+
+        JsonElement timesElement = root.GetProperty(RuntimeObservationHistory.Times);
+        long[] times = new long[timesElement.GetArrayLength()];
+        int index = 0;
+        foreach (JsonElement time in timesElement.EnumerateArray())
+        {
+            times[index++] = time.GetInt64();
+        }
+
+        JsonElement series = root.GetProperty(RuntimeObservationHistory.Series);
+        List<HistoryMetric> result = new(metrics.Count);
+        foreach (string name in metrics)
+        {
+            if (series.TryGetProperty(name, out JsonElement metric))
+            {
+                result.Add(new HistoryMetric(name, VALUES(metric.GetProperty(RuntimeObservationHistory.Average)), VALUES(metric.GetProperty(RuntimeObservationHistory.Maximum))));
+            }
+        }
+
+        return new HistorySeries(
+            root.GetProperty(RuntimeObservationHistory.From).GetInt64(),
+            root.GetProperty(RuntimeObservationHistory.To).GetInt64(),
+            root.GetProperty(RuntimeObservationHistory.Step).GetInt64(),
+            times,
+            result);
+    }
+
+    /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
         await DisconnectAsync();
         _gate.Dispose();
+    }
+
+    // Sends one HISTORY_REQUEST; an empty metric list asks for the catalog.
+    private async Task<JsonDocument> HISTORY_AsyncCore(long from, long to, int points, IReadOnlyList<string> metrics, CancellationToken ct)
+    {
+        ArrayBufferWriter<byte> query = new(256);
+        using (Utf8JsonWriter writer = new(query))
+        {
+            writer.WriteStartObject();
+            writer.WriteNumber(RuntimeObservationHistory.From, from);
+            writer.WriteNumber(RuntimeObservationHistory.To, to);
+            if (metrics.Count > 0)
+            {
+                writer.WriteNumber(RuntimeObservationHistory.Points, points);
+                writer.WriteStartArray(RuntimeObservationHistory.Metrics);
+                foreach (string metric in metrics)
+                {
+                    writer.WriteStringValue(metric);
+                }
+
+                writer.WriteEndArray();
+            }
+
+            writer.WriteEndObject();
+        }
+
+        await _gate.WaitAsync(ct);
+        try
+        {
+            WebSocketSession session = _session is not null && IsConnected
+                ? _session
+                : throw new ObservabilityException("Not connected.");
+
+            using RuntimeObservation request = RuntimeObservation.Create();
+            request.Initialize(RuntimeObservationStage.HISTORY_REQUEST, RuntimeObservationTargets.NONE, observationData: query.WrittenMemory);
+
+            using RuntimeObservation response = await session.RequestAsync<RuntimeObservation>(
+                request,
+                RequestOptions.Default.WithTimeout(Math.Max(_timeoutMs, 15_000)).WithEncrypt(),
+                predicate: static p => p.Stage == RuntimeObservationStage.HISTORY_RESPONSE,
+                ct);
+
+            if (response.Reason != ProtocolReason.NONE)
+            {
+                throw new ObservabilityException(
+                    response.Reason == ProtocolReason.OPERATION_UNSUPPORTED ? "History recording is disabled on this server." : $"History query failed ({response.Reason}).",
+                    response.Reason);
+            }
+
+            // The packet returns its buffer to the pool on dispose, so the document must own a copy.
+            return JsonDocument.Parse(response.ObservationData.ToArray());
+        }
+        finally
+        {
+            _ = _gate.Release();
+        }
+    }
+
+    private static double[] VALUES(JsonElement array)
+    {
+        double[] values = new double[array.GetArrayLength()];
+        int index = 0;
+        foreach (JsonElement value in array.EnumerateArray())
+        {
+            values[index++] = value.ValueKind == JsonValueKind.Number ? value.GetDouble() : double.NaN;
+        }
+
+        return values;
     }
 
     private void ON_DISCONNECTED(object? sender, Exception error)

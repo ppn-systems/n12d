@@ -36,6 +36,7 @@ public static class NavModel
         new("protection", "Protection", "connection-guard", PAGES(Sections.ConnectionGuard, Sections.ConcurrencyGate, Sections.PolicyRateLimiter, Sections.TokenBucketLimiter)),
         new("analysis", "Analysis", "diagnostics",
         [
+            new("History", "history", "clock"),
             new("Diagnostics", "diagnostics", "diagnostics"),
             new("Recordings", "recordings", "recordings"),
             new("Event log", "log", "log"),

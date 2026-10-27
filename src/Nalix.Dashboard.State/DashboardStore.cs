@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0.
 
 using Nalix.Dashboard.Abstractions.Connection;
+using Nalix.Dashboard.Abstractions.History;
 using Nalix.Dashboard.Abstractions.Reports;
 using Nalix.Dashboard.Abstractions.Settings;
 using Nalix.Dashboard.State.Logging;
@@ -234,6 +235,24 @@ public sealed class DashboardStore : IAsyncDisposable
         Log.Add(LogLevel.Info, $"Recording stopped: {Recorder.RowCount} samples, {Recorder.ColumnCount} metrics.");
         NOTIFY();
     }
+
+    /// <summary>Lists what the server has recorded between two Unix-millisecond times.</summary>
+    /// <param name="from">Range start.</param>
+    /// <param name="to">Range end.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The catalog.</returns>
+    public Task<HistoryCatalog> GetHistoryCatalogAsync(long from, long to, CancellationToken ct = default)
+        => _client.GetHistoryCatalogAsync(from, to, ct);
+
+    /// <summary>Reads server-recorded history, bucketed server-side to at most <paramref name="points"/> points.</summary>
+    /// <param name="from">Range start.</param>
+    /// <param name="to">Range end.</param>
+    /// <param name="points">Maximum buckets per metric.</param>
+    /// <param name="metrics">Metric paths.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The series.</returns>
+    public Task<HistorySeries> GetHistoryAsync(long from, long to, int points, IReadOnlyList<string> metrics, CancellationToken ct = default)
+        => _client.GetHistoryAsync(from, to, points, metrics, ct);
 
     /// <summary>Clears the metric history.</summary>
     public void ClearHistory()

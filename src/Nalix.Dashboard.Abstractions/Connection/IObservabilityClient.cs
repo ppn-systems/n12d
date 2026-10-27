@@ -1,6 +1,7 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 // Licensed under the Apache License, Version 2.0.
 
+using Nalix.Dashboard.Abstractions.History;
 using Nalix.Dashboard.Abstractions.Reports;
 using Nalix.Observability.Contracts;
 
@@ -38,4 +39,24 @@ public interface IObservabilityClient : IAsyncDisposable
     /// <param name="ct">The cancellation token.</param>
     /// <returns>The parsed snapshot.</returns>
     Task<ObservationSnapshot> SampleAsync(RuntimeObservationTargets targets, CancellationToken ct);
+
+    /// <summary>
+    /// Lists the days and metrics the server has recorded between <paramref name="from"/> and <paramref name="to"/>.
+    /// </summary>
+    /// <param name="from">Range start, Unix milliseconds.</param>
+    /// <param name="to">Range end, Unix milliseconds.</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The catalog.</returns>
+    Task<HistoryCatalog> GetHistoryCatalogAsync(long from, long to, CancellationToken ct);
+
+    /// <summary>
+    /// Reads recorded history of <paramref name="metrics"/>, folded by the server into at most <paramref name="points"/> buckets.
+    /// </summary>
+    /// <param name="from">Range start, Unix milliseconds.</param>
+    /// <param name="to">Range end, Unix milliseconds.</param>
+    /// <param name="points">Maximum buckets per metric (≤ 2000).</param>
+    /// <param name="metrics">Metric paths (≤ 32).</param>
+    /// <param name="ct">The cancellation token.</param>
+    /// <returns>The series.</returns>
+    Task<HistorySeries> GetHistoryAsync(long from, long to, int points, IReadOnlyList<string> metrics, CancellationToken ct);
 }

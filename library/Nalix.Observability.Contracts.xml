@@ -162,6 +162,56 @@
         <member name="P:Nalix.Observability.Contracts.RuntimeObservation.Length">
             <inheritdoc/>
         </member>
+        <member name="T:Nalix.Observability.Contracts.RuntimeObservationHistory">
+            <summary>
+            JSON property names of the recorded-history exchange
+            (<see cref="F:Nalix.Observability.Contracts.RuntimeObservationStage.HISTORY_REQUEST"/> / <see cref="F:Nalix.Observability.Contracts.RuntimeObservationStage.HISTORY_RESPONSE"/>).
+            </summary>
+            <remarks>
+            <para>Request: <c>{"from":ms,"to":ms,"points":600,"metrics":["Process.WorkingSetBytes", …]}</c>, times in Unix
+            milliseconds. Omitting <c>metrics</c> (or sending an empty list) asks for the catalog instead.</para>
+            <para>Catalog response: <c>{"interval":ms,"days":[{"date":"2026-10-27","from":ms,"to":ms,"samples":n,"bytes":n}],
+            "metrics":["…"]}</c> — the recorded days overlapping the range and every metric name recorded in them.</para>
+            <para>Series response: <c>{"from":ms,"to":ms,"step":ms,"t":[ms,…],"series":{"name":{"avg":[v|null,…],
+            "max":[v|null,…]}}}</c>. The range is cut into at most <c>points</c> buckets of <c>step</c> milliseconds;
+            <c>t</c> holds each bucket's start and a bucket without samples is <c>null</c>.</para>
+            <para>Metric names are dot paths of numeric report fields (<c>Connections.TotalConnections</c>) plus the derived
+            <c>Process.CpuPercent</c>, <c>Process.AllocationBytesPerSecond</c> and <c>Process.GcPerSecond</c>.</para>
+            </remarks>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.From">
+            <summary>Range start, Unix milliseconds.</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.To">
+            <summary>Range end, Unix milliseconds.</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Points">
+            <summary>Maximum number of buckets per series.</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Metrics">
+            <summary>Requested metric names; absent or empty for the catalog.</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Interval">
+            <summary>Recording interval in milliseconds (catalog).</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Days">
+            <summary>Recorded days (catalog).</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Step">
+            <summary>Bucket width in milliseconds (series).</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Times">
+            <summary>Bucket start times (series).</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Series">
+            <summary>Per-metric bucket values (series).</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Average">
+            <summary>Bucket averages.</summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationHistory.Maximum">
+            <summary>Bucket maxima.</summary>
+        </member>
         <member name="T:Nalix.Observability.Contracts.RuntimeObservationSections">
             <summary>
             JSON property names used for each subsystem section inside
@@ -226,12 +276,23 @@
         </member>
         <member name="F:Nalix.Observability.Contracts.RuntimeObservationStage.REQUEST">
             <summary>
-            The packet requests runtime observation data.
+            The packet requests a live snapshot of the selected <see cref="T:Nalix.Observability.Contracts.RuntimeObservationTargets"/>.
             </summary>
         </member>
         <member name="F:Nalix.Observability.Contracts.RuntimeObservationStage.RESPONSE">
             <summary>
-            The packet contains runtime observation data or a failure reason.
+            The packet contains a live snapshot or a failure reason.
+            </summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationStage.HISTORY_REQUEST">
+            <summary>
+            The packet queries recorded history. <see cref="P:Nalix.Observability.Contracts.RuntimeObservation.ObservationData"/> carries a UTF-8 JSON
+            query; see <see cref="T:Nalix.Observability.Contracts.RuntimeObservationHistory"/> for its shape.
+            </summary>
+        </member>
+        <member name="F:Nalix.Observability.Contracts.RuntimeObservationStage.HISTORY_RESPONSE">
+            <summary>
+            The packet contains a recorded-history result or a failure reason.
             </summary>
         </member>
         <member name="T:Nalix.Observability.Contracts.RuntimeObservationTargets">
