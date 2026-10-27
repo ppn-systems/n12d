@@ -99,7 +99,9 @@
   transition-delay: 400ms;
 }
 
-.nx-brand:focus-within .nx-brand__face {
+/* Keyboard focus only: after a mouse click the button keeps focus but stays invisible, and a plain
+   :focus-within would then hide the mark too, leaving the corner blank. */
+.nx-brand:has(.nx-collapse:focus-visible) .nx-brand__face {
   opacity: 0;
 }
 

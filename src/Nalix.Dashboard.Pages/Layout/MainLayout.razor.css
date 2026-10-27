@@ -28,25 +28,156 @@
   border-bottom: 1px solid var(--border-subtle);
 }
 
-.nx-spacer {
+.nx-topbar__title {
   flex: 1;
-}
-
-.nx-endpoint {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-family: var(--mono);
-  font-size: 13px;
-  color: var(--text-muted);
+  font-size: 17px;
+  font-weight: 700;
 }
 
-.nx-meta {
+.nx-topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Tab row: the selected module's pages (AtmosOS .al-tabbar). The active tab is a solid accent pill so
+   "which module" (rail tint) and "which page" (solid) never read as the same control. */
+.nx-tabbar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 42px;
+  padding: 0 16px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  background: var(--surface-page);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nx-tabbar::-webkit-scrollbar {
+  display: none;
+}
+
+.nx-tabbar__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
   font-size: 13px;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-muted);
+  font-weight: 600;
   white-space: nowrap;
+  text-decoration: none;
+}
+
+.nx-tabbar__item ::deep .ui-icon {
+  opacity: .7;
+}
+
+.nx-tabbar__item:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.nx-tabbar__item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring, 0 0 0 2px var(--accent));
+}
+
+.nx-tabbar__item.active {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+}
+
+.nx-tabbar__item.active ::deep .ui-icon {
+  opacity: 1;
+}
+
+/* Overflow menu: secondary actions live here so the topbar stays short (AtmosOS user menu). */
+.nx-menuwrap {
+  position: relative;
+}
+
+.nx-menu__backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dropdown, 20);
+}
+
+.nx-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: calc(var(--z-dropdown, 20) + 1);
+  min-width: 232px;
+  padding: 6px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 30px rgb(16 24 40 / .14);
+}
+
+.nx-menu__head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px 10px;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: 4px;
+}
+
+.nx-menu__label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.nx-menu__endpoint {
+  font-family: var(--mono);
+  font-size: 12.5px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.nx-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13.5px;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.nx-menu__item:hover {
+  background: var(--state-hover);
+}
+
+.nx-menu__item--danger {
+  color: var(--danger);
+}
+
+.nx-menu__sep {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border-subtle);
 }
 
 .nx-icon-btn {
@@ -121,8 +252,12 @@
     padding: 0 14px;
   }
 
-  .nx-endpoint {
-    display: none;
+  .nx-topbar__title {
+    font-size: 15px;
+  }
+
+  .nx-tabbar {
+    padding: 0 10px;
   }
 
   .nx-content {

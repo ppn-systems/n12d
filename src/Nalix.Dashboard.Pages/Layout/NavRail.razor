@@ -22,39 +22,24 @@
         </button>
     </div>
 
-    <nav class="nx-nav" aria-label="Sections" @onclick="() => OnNavigate.InvokeAsync()">
-        <NavLink class="nx-item" href="" Match="NavLinkMatch.All" aria-label="Overview" title="@(Collapsed ? "Overview" : null)">
-            <UiIcon Name="overview" Size="20" /><span class="nx-rail__label">Overview</span>
-        </NavLink>
-
-        <span class="nx-tier" aria-hidden="true">Runtime</span>
-        @foreach (SectionInfo section in Sections.All)
+    <nav class="nx-nav" aria-label="Modules" @onclick="() => OnNavigate.InvokeAsync()">
+        @foreach (NavModule module in NavModel.Modules)
         {
-            <NavLink class="nx-item" href="@("section/" + section.Slug)" aria-label="@section.Title" title="@(Collapsed ? section.Title : null)">
-                <UiIcon Name="@section.Slug" Size="20" /><span class="nx-rail__label">@section.Title</span>
-            </NavLink>
+            bool active = module == SelectedModule;
+            <a class="nx-item @(active ? "active" : null)" href="@module.Pages[0].Href" aria-label="@module.Label"
+               aria-current="@(active ? "true" : null)" title="@(Collapsed ? module.Label : null)">
+                <UiIcon Name="@module.Icon" Size="20" /><span class="nx-rail__label">@module.Label</span>
+                @if (module.Id == "analysis" && Store.Recorder.IsRecording)
+                {
+                    <span class="nx-rec-dot" role="img" aria-label="Recording"></span>
+                }
+            </a>
         }
-
-        <span class="nx-tier" aria-hidden="true">Analysis</span>
-        <NavLink class="nx-item" href="diagnostics" aria-label="Diagnostics" title="@(Collapsed ? "Diagnostics" : null)">
-            <UiIcon Name="diagnostics" Size="20" /><span class="nx-rail__label">Diagnostics</span>
-        </NavLink>
-        <NavLink class="nx-item" href="recordings" aria-label="Recordings" title="@(Collapsed ? "Recordings" : null)">
-            <UiIcon Name="recordings" Size="20" /><span class="nx-rail__label">Recordings</span>
-            @if (Store.Recorder.IsRecording)
-            {
-                <span class="nx-rec-dot" role="img" aria-label="Recording"></span>
-            }
-        </NavLink>
-        <NavLink class="nx-item" href="log" aria-label="Event log" title="@(Collapsed ? "Event log" : null)">
-            <UiIcon Name="log" Size="20" /><span class="nx-rail__label">Event log</span>
-        </NavLink>
     </nav>
-
-    <div class="nx-foot">
-        <NavLink class="nx-item" href="settings" aria-label="Settings" title="@(Collapsed ? "Settings" : null)">
+    <div class="nx-foot" @onclick="() => OnNavigate.InvokeAsync()">
+        <a class="nx-item @(SelectedModule == NavModel.Settings ? "active" : null)" href="settings" aria-label="Settings" title="@(Collapsed ? "Settings" : null)">
             <UiIcon Name="settings" Size="20" /><span class="nx-rail__label">Settings</span>
-        </NavLink>
+        </a>
     </div>
 </aside>
 
@@ -66,6 +51,10 @@
     /// <summary>Gets or sets whether the off-canvas drawer is open (narrow screens only).</summary>
     [Parameter]
     public bool MobileOpen { get; set; }
+
+    /// <summary>Gets or sets the module of the current page.</summary>
+    [Parameter]
+    public NavModule? SelectedModule { get; set; }
 
     /// <summary>Raised when the brand block's collapse control is pressed.</summary>
     [Parameter]
