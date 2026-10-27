@@ -1,0 +1,138 @@
+name: Deploy Dashboard to Cloudflare Pages
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+    paths:
+      - .github/workflows/deploy.yml
+      - src/**
+      - tests/**
+      - library/**
+      - Directory.*.props
+      - Version.props
+      - global.json
+  push:
+    branches:
+      - master
+      - main
+    paths:
+      - .github/workflows/deploy.yml
+      - src/**
+      - tests/**
+      - library/**
+      - Directory.*.props
+      - Version.props
+      - global.json
+
+concurrency:
+  group: deploy-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+
+jobs:
+  deploy:
+    name: Build and deploy to Cloudflare Pages
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore src/Nalix.Dashboard.slnx
+
+      - name: Build
+        run: dotnet build src/Nalix.Dashboard.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet run --project tests/Nalix.Dashboard.Tests --configuration Release --no-build
+
+      - name: Publish dashboard
+        run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-restore --output artifacts/dashboard
+
+      - name: Prepare and verify Cloudflare Pages bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pages_root="artifacts/dashboard/wwwroot"
+
+          test -d "${pages_root}" || { echo "::error::Missing ${pages_root} directory."; exit 1; }
+          test -f "${pages_root}/index.html" || { echo "::error::Missing ${pages_root}/index.html."; exit 1; }
+          test -f "${pages_root}/_headers" || { echo "::error::Missing ${pages_root}/_headers."; exit 1; }
+          test -f "${pages_root}/_redirects" || { echo "::error::Missing ${pages_root}/_redirects."; exit 1; }
+          test -d "${pages_root}/_framework" || { echo "::error::Missing ${pages_root}/_framework directory."; exit 1; }
+
+          if grep -q "fingerprint" "${pages_root}/index.html"; then
+            echo "::error::Blazor fingerprint placeholders were not replaced during publish." >&2
+            exit 1
+          fi
+
+          # Cloudflare Pages compresses assets (Brotli/gzip) at the edge automatically;
+          # remove SDK pre-compressed sidecar files to keep the uploaded bundle clean.
+          find "${pages_root}" -type f \( -name "*.br" -o -name "*.gz" \) -delete
+
+      - name: Check Cloudflare Secrets
+        id: cf_check
+        shell: bash
+        run: |
+          if [ -n "${{ secrets.CLOUDFLARE_API_TOKEN }}" ]; then
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CLOUDFLARE_API_TOKEN secret is not configured in repository settings. Cloudflare Pages deploy step will be skipped."
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        id: cf_deploy
+        if: steps.cf_check.outputs.has_token == 'true'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID || secrets.ACCOUNT_ID }}
+          command: pages deploy artifacts/dashboard/wwwroot --project-name=n12d --branch=${{ github.head_ref || github.ref_name }}
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deployment Summary
+        if: always()
+        shell: bash
+        run: |
+          BRANCH="${{ github.head_ref || github.ref_name }}"
+          echo "### 🚀 Cloudflare Pages Deployment Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Project:** \`n12d\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Branch:** \`$BRANCH\`" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.cf_check.outputs.has_token }}" = "true" ]; then
+            if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "main" ]; then
+              echo "- **Environment:** Production (https://n12d.pages.dev)" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "- **Environment:** Preview Deployment (\`https://<alias>.n12d.pages.dev\`)" >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            echo "- **Environment:** Deployment skipped (pending secrets in repository settings)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Required Secrets:**" >> "$GITHUB_STEP_SUMMARY"
+            echo "  - \`CLOUDFLARE_API_TOKEN\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "  - \`CLOUDFLARE_ACCOUNT_ID\` (or \`ACCOUNT_ID\`)" >> "$GITHUB_STEP_SUMMARY"
+            echo "- **Setup Link:** https://github.com/${{ github.repository }}/settings/secrets/actions" >> "$GITHUB_STEP_SUMMARY"
+          fi

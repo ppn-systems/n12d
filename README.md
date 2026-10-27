@@ -45,7 +45,7 @@ Open the printed URL, enter host, port, path and the access key. The key is kept
 when the browser closes) unless you tick *Remember the key on this device*.
 
 The published build is a static site (`dotnet publish src/Nalix.Dashboard -c Release`); the
-[pages workflow](.github/workflows/pages.yml) deploys it to GitHub Pages.
+[deploy workflow](.github/workflows/deploy.yml) deploys it to Cloudflare Pages.
 
 ## Build and test
 
