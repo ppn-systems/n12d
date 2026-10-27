@@ -124,7 +124,7 @@ jobs:
           echo "- **Project:** \`n12d\`" >> "$GITHUB_STEP_SUMMARY"
           echo "- **Branch:** \`$BRANCH\`" >> "$GITHUB_STEP_SUMMARY"
           if [ "${{ steps.cf_check.outputs.has_token }}" = "true" ]; then
-            if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "main" ]; then
+            if [ "$BRANCH" = "master" ] || [ "$BRANCH" = "master" ]; then
               echo "- **Environment:** Production (https://n12d.pages.dev)" >> "$GITHUB_STEP_SUMMARY"
             else
               echo "- **Environment:** Preview Deployment (\`https://<alias>.n12d.pages.dev\`)" >> "$GITHUB_STEP_SUMMARY"
