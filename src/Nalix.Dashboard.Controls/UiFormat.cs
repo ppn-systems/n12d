@@ -238,8 +238,17 @@ public static class UiFormat
         }
 
         string[] words = spaced.ToString().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+        // The unit suffix is dropped because Auto() already renders it with the value ("Uptime" → "20.6 s",
+        // not "Uptime ms" → "20.6 s").
+        int count = words.Length;
+        if (count > 1 && s_unitSuffixes.Contains(words[count - 1]))
+        {
+            count--;
+        }
+
         StringBuilder result = new(spaced.Length);
-        for (int w = 0; w < words.Length; w++)
+        for (int w = 0; w < count; w++)
         {
             if (w > 0)
             {
@@ -247,7 +256,7 @@ public static class UiFormat
             }
 
             string word = words[w];
-            result.Append(IsAcronym(word) ? word : word.ToLowerInvariant());
+            result.Append(IsAcronym(word) ? word : s_acronyms.Contains(word) ? word.ToUpperInvariant() : word.ToLowerInvariant());
         }
 
         if (result.Length > 0)
@@ -257,6 +266,16 @@ public static class UiFormat
 
         return result.ToString();
     }
+
+    private static readonly HashSet<string> s_unitSuffixes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Ms", "Bytes", "MB", "Seconds", "Days", "Percent",
+    };
+
+    private static readonly HashSet<string> s_acronyms = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Os", "Cpu", "Gc", "Utc", "Id", "Ip", "Tcp", "Udp", "Ttl", "Url", "Io", "Api", "Ws", "P95", "P99",
+    };
 
     private static bool IsAcronym(string word)
     {

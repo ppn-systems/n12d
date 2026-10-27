@@ -34,9 +34,11 @@
     </UiCard>
 
     <UiCard Title="Connection">
-        <p class="ui-muted">Connected to <span class="ui-mono">@Store.Settings.Endpoint</span>. Disconnecting forgets the stored access key.</p>
-        <div class="ui-row">
-            <UiButton Variant="UiButtonVariant.Danger" OnClick="Store.DisconnectAsync"><UiIcon Name="unplug" /> Disconnect</UiButton>
+        <div class="ui-stack">
+            <p class="ui-muted">Connected to <span class="ui-mono">@Store.Settings.Endpoint</span>. Disconnecting forgets the stored access key.</p>
+            <div class="ui-row">
+                <UiButton Variant="UiButtonVariant.Danger" OnClick="Store.DisconnectAsync"><UiIcon Name="unplug" /> Disconnect</UiButton>
+            </div>
         </div>
     </UiCard>
 </div>

@@ -6,7 +6,7 @@
 
 @if (ShowApp)
 {
-    <div class="nx-shell">
+    <div class="nx-shell @(_railCollapsed ? "is-rail-collapsed" : null)">
         <NavRail Collapsed="_railCollapsed" MobileOpen="_navOpen" SelectedModule="_module" OnToggleCollapsed="ToggleRail" OnNavigate="CloseNav" />
         <div class="nx-main">
             <header class="nx-topbar">
@@ -14,7 +14,7 @@
                         aria-expanded="@(_navOpen ? "true" : "false")" @onclick="ToggleNav">
                     <UiIcon Name="menu" Size="20" />
                 </button>
-                <div class="nx-topbar__title">@(_page?.Label ?? _module.Label)</div>
+                <div class="nx-topbar__title">@_module.Label</div>
                 <div class="nx-topbar__actions">
                     <StatusPill />
                     <button class="nx-icon-btn" type="button" title="@(Store.IsPaused ? "Resume sampling" : "Pause sampling")"

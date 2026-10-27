@@ -54,7 +54,7 @@
     background: none;
     font: inherit;
     font-variant-numeric: tabular-nums;
-    color: var(--accent);
+    color: var(--text-primary);
     text-align: left;
     text-decoration: underline;
     text-decoration-color: transparent;
@@ -63,6 +63,7 @@
 }
 
 .ui-report__link:hover {
+    color: var(--accent);
     text-decoration-color: currentColor;
 }
 
