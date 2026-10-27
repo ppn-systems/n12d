@@ -1,0 +1,351 @@
+/* Copyright (c) 2026 PPN Corporation. All rights reserved. Licensed under the Apache License, Version 2.0. */
+
+/* ============================================================
+   Design tokens — AtmosOS palette (generic design-system subset).
+   ------------------------------------------------------------
+   Source: AtmosOS wwwroot/css/tokens.css. Domain blocks (categories, workflow,
+   ratings, tags, avatars) are deliberately not carried over.
+
+   Theme hooks:
+   - explicit: <html data-theme="dark"> or <html data-theme="light">
+   - system:   no attribute; the OS preference decides (prefers-color-scheme)
+   Light is the default block; the dark block applies under the media query
+   unless data-theme="light" is set, and always under data-theme="dark" / .dark.
+   Aliases for the older n12d names are at the end of this file.
+   ============================================================ */
+
+/* Font family token — default IBM Plex Sans stack; the vi locale overrides below. */
+:root {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+    "Noto Color Emoji";
+}
+
+/* Layer order. Every stacked component should use one of these, not a literal. */
+:root {
+  --z-sticky: 5;       /* sticky table headers/footers within a page */
+  --z-dropdown: 20;    /* inline dropdown/menu, no backdrop */
+  --z-modal-backdrop: 999;
+  --z-modal: 1000;     /* modal and anything else with a full-page backdrop */
+  --z-popover: 1100;   /* a popup that must render above a modal */
+  --z-toast: 2000;     /* toast host, above everything except a true alert */
+}
+
+/* Brand colour: the product's primary. Used for focus rings and brand accents. */
+:root {
+  --brand: hsl(var(--primary));
+}
+
+/* Media scrims: theme-independent, they sit on photos and video. */
+:root {
+  --scrim: rgba(0, 0, 0, 0.6);
+  --scrim-soft: rgba(0, 0, 0, 0.45);
+  --scrim-strong: rgba(0, 0, 0, 0.65);
+  --on-scrim: #ffffff;
+}
+
+/* Vietnamese locale: prefer Be Vietnam Pro, fall back to the default stack. */
+html[lang="vi"] {
+  --font-sans: "Be Vietnam Pro", "IBM Plex Sans", ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* ============================================================
+   Light theme (default)
+   ============================================================ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* shadcn core: HSL triplets, used as hsl(var(--token)). */
+  --background: 210 30.8% 94.9%;
+  --foreground: 215 18.2% 12.9%;
+  --card: 210 40% 98%;
+  --card-foreground: 216 18.5% 10.6%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 216 18.5% 10.6%;
+  --primary: 210 66% 32%;               /* navy #1B5286 */
+  --primary-foreground: 0 0% 100%;      /* white on --primary in both themes */
+  --secondary: 212.7 31.4% 93.1%;
+  --secondary-foreground: 216 18.5% 10.6%;
+  --muted: 210 16.7% 95.3%;
+  --muted-foreground: 216 9.1% 43.1%;
+  --accent-hsl: 210 16.7% 95.3%;
+  --accent-hsl-foreground: 216 18.5% 10.6%;
+  --destructive: 0 72.2% 50.6%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214.3 21.9% 87.5%;          /* HSL triplet: use --border-subtle as a colour */
+  --input: 213.3 13.7% 61.4%;
+  --ring: 210 66% 32%;
+  --radius: 0.5rem;
+
+  /* Ui-kit helper channels */
+  --ui-border: 214.3 14.3% 90.4%;
+  --ui-ring: 210 66% 32%;
+
+  /* Layered surfaces by lightness: page darkest, cards lighter, modals lightest. */
+  --surface-1: #f8fafc;   /* cards / sidebar */
+  --surface-2: #e8edf3;   /* raised / hover */
+  --surface-3: #ffffff;   /* modal / popover (sits on a dimmed page) */
+  --surface-page: #f0f2f5;
+  --border-subtle: #d8dee6;
+  --border-strong: #c5ced9;
+  --control-bg: #f8fafc;
+  --control-bg-hover: #ffffff;
+  --control-border: #8f9baa;
+  --control-border-hover: #667386;
+  --control-ring-bg: #f8fafc;
+  --state-hover: #e8edf3;
+  --state-selected: #E8EFF6;
+  --nav-active-bg: #E8EFF6;
+  --nav-active-hover: #D9E4F0;
+  --nav-active-fg: #1B5286;             /* the solid accent, read as text on its own tint */
+  --icon-tile-bg: #E8EFF6;
+
+  --text-primary:   #1b2027;
+  --text-secondary: #5f6976;
+  --text-muted:     #8a94a3;
+  --accent-hover:   #163F66;
+  --accent-soft:    #E8EFF6;
+
+  --c-teal: #17B2AB; --c-amber: #F4B01E; --c-coral: #EF4136;
+  --success: #16a34a; --success-soft: #e8f6ec;
+  --warning: #d97706; --warning-soft: #fdf1e1;
+  --danger:  #dc2626; --danger-soft:  #fdecec;
+  --info:    #1D4ED8; --info-soft:    #E6EEFD;
+
+  /* Chart series. The slot ORDER is the colour-vision-deficiency safety mechanism:
+     always take the slots in sequence. Status tones are never series colours. Colour
+     never carries meaning alone: always pair it with a label or a table. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+  --chart-3: #1baf7a;
+  --chart-4: #eda100;
+  --chart-5: #e87ba4;
+  --chart-6: #008300;
+  --chart-7: #4a3aa7;
+  --chart-1-soft: #d7e5f6;
+  --chart-2-soft: #f6e3dc;
+  --chart-3-soft: #d5eee7;
+  --chart-4-soft: #f6ecd4;
+  --chart-5-soft: #f5e6ee;
+  --chart-6-soft: #d0e7d4;
+  --chart-7-soft: #dcdbee;
+  --chart-track: #d3dae3;
+  --chart-muted: var(--text-muted);
+  --chart-bar-muted: hsl(var(--primary) / .4);
+
+  --radius-lg: 14px;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px;
+  --shadow:    0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.08);
+  --shadow-lg: 0 12px 30px rgba(16, 24, 40, 0.12);
+  --focus-ring: 0 0 0 2px var(--control-ring-bg), 0 0 0 4px hsl(var(--ui-ring) / 0.55);
+
+  /* Sidebar */
+  --sidebar-background: 210 66% 14%;
+  --sidebar-foreground: 210 40% 98%;
+  --sidebar-primary: 210 55% 51%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 210 50% 20%;
+  --sidebar-border: 210 50% 20%;
+  --sidebar-ring: 210 55% 51%;
+}
+
+/* ============================================================
+   Dark theme, when the OS prefers dark and no explicit theme is set.
+   ============================================================ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+
+    --background: 210 16.7% 2.4%;
+    --foreground: 212.7 20.8% 90%;
+    --card: 216 21.7% 6.1%;
+    --card-foreground: 216 11.6% 91.6%;
+    --popover: 210 8.7% 9%;
+    --popover-foreground: 216 11.6% 91.6%;
+    --primary: 207.8 48.5% 48%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 216 21.4% 8.2%;
+    --secondary-foreground: 210 17% 91.6%;
+    --muted: 216 15% 17.1%;
+    --muted-foreground: 216.7 9.8% 63.9%;
+    --accent-hsl: 210 8.3% 14.1%;
+    --accent-hsl-foreground: 216 11.6% 91.6%;
+    --destructive: 0 90.6% 70.8%;
+    --destructive-foreground: 36 62.5% 6.3%;
+    --border: 213.3 17.6% 20%;
+    --input: 213.3 12.8% 41.4%;
+    --ring: 210 55% 51%;
+    --ui-border: 213.3 17.6% 20%;
+    --ui-ring: 210 55% 51%;
+
+    --surface-1: #0d1014;
+    --surface-2: #101419;
+    --surface-3: #181e25;
+    --surface-page: #050607;
+    --border-subtle: #2a333c;
+    --border-strong: #343f4a;
+    --control-bg: #11161c;
+    --control-bg-hover: #181e25;
+    --control-border: #5c6877;
+    --control-border-hover: #657385;
+    --control-ring-bg: #0d1014;
+    --state-hover: #101419;
+    --state-selected: #10263a;
+    --nav-active-bg: #1b3d5d;
+    --nav-active-hover: #214a70;
+    --nav-active-fg: #ffffff;
+    --icon-tile-bg: #0d2235;
+
+    --text-primary:   #e0e5eb;
+    --text-secondary: #9aa4b0;
+    --text-muted:     #6f7a88;
+    --accent-hover:   #5b9bcf;
+    --accent-soft:    #0d2235;
+
+    --c-teal: #2DD4BF; --c-amber: #FBBF24; --c-coral: #F87171;
+    --success: #4ade80; --success-soft: #14271a;
+    --warning: #fbbf24; --warning-soft: #2a200d;
+    --danger:  #f87171; --danger-soft:  #3a1d1d;
+    --info:    #60A5FA; --info-soft:    #0e1e30;
+
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --chart-3: #199e70;
+    --chart-4: #c98500;
+    --chart-5: #d55181;
+    --chart-6: #008300;
+    --chart-7: #9085e9;
+    --chart-1-soft: #182d46;
+    --chart-2-soft: #3e2218;
+    --chart-3-soft: #10322a;
+    --chart-4-soft: #3a2c0f;
+    --chart-5-soft: #3d202e;
+    --chart-6-soft: #0a2c0f;
+    --chart-7-soft: #2c2c47;
+    --chart-track: var(--border-subtle);
+    --chart-bar-muted: hsl(var(--primary) / .5);
+
+    --shadow:    0 1px 2px rgba(0, 0, 0, 0.50), 0 8px 18px rgba(0, 0, 0, 0.28);
+    --shadow-lg: 0 18px 52px rgba(0, 0, 0, 0.66);
+  }
+}
+
+/* ============================================================
+   Dark theme, when set explicitly. Same values as the media block above.
+   ============================================================ */
+:root[data-theme="dark"],
+[data-theme="dark"],
+.dark {
+  color-scheme: dark;
+
+  --background: 210 16.7% 2.4%;
+  --foreground: 212.7 20.8% 90%;
+  --card: 216 21.7% 6.1%;
+  --card-foreground: 216 11.6% 91.6%;
+  --popover: 210 8.7% 9%;
+  --popover-foreground: 216 11.6% 91.6%;
+  --primary: 207.8 48.5% 48%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 216 21.4% 8.2%;
+  --secondary-foreground: 210 17% 91.6%;
+  --muted: 216 15% 17.1%;
+  --muted-foreground: 216.7 9.8% 63.9%;
+  --accent-hsl: 210 8.3% 14.1%;
+  --accent-hsl-foreground: 216 11.6% 91.6%;
+  --destructive: 0 90.6% 70.8%;
+  --destructive-foreground: 36 62.5% 6.3%;
+  --border: 213.3 17.6% 20%;
+  --input: 213.3 12.8% 41.4%;
+  --ring: 210 55% 51%;
+  --ui-border: 213.3 17.6% 20%;
+  --ui-ring: 210 55% 51%;
+
+  --surface-1: #0d1014;
+  --surface-2: #101419;
+  --surface-3: #181e25;
+  --surface-page: #050607;
+  --border-subtle: #2a333c;
+  --border-strong: #343f4a;
+  --control-bg: #11161c;
+  --control-bg-hover: #181e25;
+  --control-border: #5c6877;
+  --control-border-hover: #657385;
+  --control-ring-bg: #0d1014;
+  --state-hover: #101419;
+  --state-selected: #10263a;
+  --nav-active-bg: #1b3d5d;
+  --nav-active-hover: #214a70;
+  --nav-active-fg: #ffffff;
+  --icon-tile-bg: #0d2235;
+
+  --text-primary:   #e0e5eb;
+  --text-secondary: #9aa4b0;
+  --text-muted:     #6f7a88;
+  --accent-hover:   #5b9bcf;
+  --accent-soft:    #0d2235;
+
+  --c-teal: #2DD4BF; --c-amber: #FBBF24; --c-coral: #F87171;
+  --success: #4ade80; --success-soft: #14271a;
+  --warning: #fbbf24; --warning-soft: #2a200d;
+  --danger:  #f87171; --danger-soft:  #3a1d1d;
+  --info:    #60A5FA; --info-soft:    #0e1e30;
+
+  --chart-1: #3987e5;
+  --chart-2: #d95926;
+  --chart-3: #199e70;
+  --chart-4: #c98500;
+  --chart-5: #d55181;
+  --chart-6: #008300;
+  --chart-7: #9085e9;
+  --chart-1-soft: #182d46;
+  --chart-2-soft: #3e2218;
+  --chart-3-soft: #10322a;
+  --chart-4-soft: #3a2c0f;
+  --chart-5-soft: #3d202e;
+  --chart-6-soft: #0a2c0f;
+  --chart-7-soft: #2c2c47;
+  --chart-track: var(--border-subtle);
+  --chart-bar-muted: hsl(var(--primary) / .5);
+
+  --shadow:    0 1px 2px rgba(0, 0, 0, 0.50), 0 8px 18px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 18px 52px rgba(0, 0, 0, 0.66);
+}
+
+/* ============================================================
+   n12d compatibility aliases. Existing component CSS keeps working.
+   A custom property resolves on the element that declares it, so these sit on
+   :root with the palette they point at. n12d only sets data-theme on <html>.
+   ============================================================ */
+:root {
+  --bg: var(--surface-page);                 /* page background */
+  --surface: var(--surface-1);               /* card / panel surface */
+  /* --surface-2 is already the same name in AtmosOS: nothing to alias. */
+  --line: var(--border-subtle);              /* hairline border colour (use this, not --border, which is an HSL triplet) */
+  --text: var(--text-primary);               /* primary text colour */
+  --accent: hsl(var(--primary));             /* solid accent colour */
+  --accent-contrast: hsl(var(--primary-foreground)); /* text on --accent */
+  --ok: var(--success);                      /* short name for --success */
+  --warn: var(--warning);                    /* short name for --warning */
+  --font: var(--font-sans);                  /* short name for --font-sans */
+  --mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", Menlo, Consolas, monospace;
+  --radius-sm: 6px;                          /* overrides the AtmosOS value above */
+  --gap: 16px;                               /* default gap between blocks */
+  --shadow: 0 1px 2px rgb(16 24 40 / .06), 0 1px 3px rgb(16 24 40 / .08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 1px 3px rgb(0 0 0 / .3); /* deeper shadow in dark */
+  }
+}
+
+:root[data-theme="dark"],
+[data-theme="dark"],
+.dark {
+  --shadow: 0 1px 2px rgb(0 0 0 / .4), 0 1px 3px rgb(0 0 0 / .3);
+}

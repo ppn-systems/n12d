@@ -1,85 +1,59 @@
-# Nalix Observability
+# n12d — Nalix Dashboard
 
-[![GitHub repository](https://img.shields.io/badge/GitHub-ppn--systems%2Fn12d-blue?logo=github)](https://github.com/ppn-systems/n12d)
 [![.NET](https://img.shields.io/badge/.NET-10.0-blueviolet?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com)
-[![LICENSE](https://img.shields.io/github/license/ppn-systems/nalix?style=flat-square)](License)
+[![License](https://img.shields.io/github/license/ppn-systems/n12d?style=flat-square)](LICENSE)
 
-[![Nalix Observability](docs/media/overview.png)](docs/media/overview.png)
+A live monitoring dashboard for [Nalix](https://github.com/ppn-systems/nalix) servers, built with Blazor WebAssembly.
+It talks to the server over the same encrypted Nalix WebSocket channel the application already uses — no
+extra HTTP endpoint, no agent, no metrics database.
 
-Small observability bundle for Nalix apps:
+- **One request per tick.** The server samples every subsystem the open views need into a single JSON payload
+  (compressed by the Nalix frame pipeline), instead of one round-trip per report.
+- **Every report, no hand-written parsers.** Reports render generically from their JSON, so new server-side
+  fields show up without a dashboard release. Click any number to chart its history.
+- **Diagnostics in the browser.** Rolling z-score spike detection and least-squares leak detection (with a
+  Student-t p-value) run over the kept history.
+- **Recordings.** Capture every metric of every sample and export a wide CSV.
+- **No third-party packages.** Only the Blazor WebAssembly runtime and the first-party `Nalix.SDK`. Controls,
+  SVG charts, styling and statistics are written in this repository.
 
-- `Nalix.Observability.Contracts`: packets shared by backend and clients.
-- `Nalix.Observability.Handlers`: backend handlers that expose access and runtime reports.
-- `Nalix.Dashboard`: Blazor WebAssembly dashboard for reading reports over WebSocket.
+## Server setup
 
----
-
-## 🗺️ Documentation Index
-
-To help you get the most out of Nalix Observability, we have structured our documentation into three core guides:
-
-* **📐 [Architecture & System Design](docs/ARCHITECTURE.md):** Learn how the telemetry events are defined, collected, transmitted via WebSockets, and analyzed.
-* **🖥️ [Dashboard User Guide](docs/DASHBOARD_GUIDE.md):** A visual tour of the Blazor WebAssembly UI, detailing how to interpret metrics (Dispatch, Buffers, Object Pools, Tasks, etc.).
-* **📈 [Telemetry Diagnostics Analyzer (Python)](analyzer/README.md):** Offline diagnostics engine utilizing rolling Z-scores and linear regressions to automate regression checks and pinpoint leaks.
-* **📜 [Analyzer Developer Guidelines](analyzer/DEVELOPMENT.md):** Development rules covering column contracts, rolling Z-score math safeguards, and parsing arity cleanups.
----
-
-## 📦 Project Ecosystem
-
-The suite consists of the following components:
-
-| Component | Path / Location | Tech Stack | Role |
-| :--- | :--- | :--- | :--- |
-| **Contracts** | `src/Nalix.Observability.Contracts/` | C# (.NET) | Shared packet payloads and telemetry events. |
-| **Handlers** | `src/Nalix.Observability.Handlers/` | C# (.NET) | Low-overhead instrumentation engines capturing runtime data. |
-| **Dashboard** | `src/Nalix.Dashboard/` | Blazor WebAssembly | Interactive Web UI rendering live metrics via WebSocket. |
-| **Analyzer** | `analyzer/` | Python 3.10+ | Mathematical diagnostics script (CLI & Streamlit WebApp). |
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-This repository relies on Nalix core package dependencies from NuGet, version `12.5.0` (including `Nalix.SDK`, `Nalix.Codec`, `Nalix.Runtime`, and `Nalix.Framework`).
-
-### 1. Build C# Solution
-
-```powershell
-dotnet restore src\Nalix.Observability.sln
-dotnet build src\Nalix.Observability.sln
-```
-
-## Example Use
-
-Backend setup:
+Add the [`Nalix.Observability`](https://github.com/ppn-systems/nalix/tree/master/extensions/Nalix.Observability)
+extension to the server and expose a WebSocket listener:
 
 ```csharp
-using Nalix.Hosting;
-using Nalix.Observability.Handlers;
-
 NetworkApplication host = NetworkApplication.CreateBuilder()
-    .AddHandler<ObservabilityAccessHandlers>()
-    .AddHandler<RuntimeObservationHandlers>()
-    .BindWebSocket<DefaultProtocol>()
+    .UseObservability()
+    .ListenWebSocket<DefaultProtocol>()
         .OnPort(57207)
         .WithPath("/ws/")
         .Bind()
     .Build();
 ```
 
-Dashboard:
+On first start the server writes a random 64-character hex access key to `observability.private` in its
+configuration directory. That key grants supervisor access; treat it like a password.
 
-```powershell
-dotnet run --project .\src\Nalix.Dashboard\Nalix.Dashboard.csproj
+## Run the dashboard
+
+```bash
+dotnet run --project src/Nalix.Dashboard
 ```
 
-Open the shown URL, enter the 64-character observability key, then point the dashboard to the backend host, port, and WebSocket path.
+Open the printed URL, enter host, port, path and the access key. The key is kept in session storage (forgotten
+when the browser closes) unless you tick *Remember the key on this device*.
 
----
+The published build is a static site (`dotnet publish src/Nalix.Dashboard -c Release`); the
+[pages workflow](.github/workflows/pages.yml) deploys it to GitHub Pages.
 
-## 🛠️ Developer Resources
+## Build and test
 
-If you are extending or modifying the Nalix Diagnostics Engine:
+```bash
+dotnet build src/Nalix.Dashboard.slnx -c Release
+dotnet run --project tests/Nalix.Dashboard.Tests -c Release
+```
 
-* Please review the **[Development Rules & Guidelines](analyzer/DEVELOPMENT.md)** to understand our strict column renaming contracts, rolling Z-score shifted window rules, $p$-value statistical thresholds, and type pool name formatting conventions.
+The test runner is dependency-free; exit code 0 means every test passed.
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the project layout and data flow.

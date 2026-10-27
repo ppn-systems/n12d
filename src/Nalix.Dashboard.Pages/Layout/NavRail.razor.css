@@ -1,0 +1,343 @@
+/* Module rail. 224px expanded, 68px icon-only; an off-canvas drawer at 768px and below.
+   NavLink renders its own <a>, so item styles reach it through ::deep. */
+
+/* Fixed, not sticky: sticky only pins while its flex parent is in view, so on long pages the rail
+   scrolled away and left the page background showing under it. The shell offsets the content instead. */
+.nx-rail {
+  position: fixed;
+  inset: 0 auto 0 0;
+  z-index: var(--z-sticky, 10);
+  display: flex;
+  flex-direction: column;
+  width: 224px;
+  min-width: 224px;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--surface-1);
+  border-right: 1px solid var(--border-subtle);
+  transition: width 200ms cubic-bezier(0.4, 0, 0.2, 1), min-width 200ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.nx-rail.is-collapsed {
+  width: 68px;
+  min-width: 68px;
+}
+
+/* Brand block: the mark is the face, the collapse button sits on top of it and is revealed on intent. */
+
+.nx-brand {
+  position: relative;
+  height: 56px;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nx-brand__face {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  height: 100%;
+  padding: 0 16px;
+  opacity: 1;
+  transition: opacity 140ms ease 0ms;
+  pointer-events: none;
+}
+
+.nx-brand__mark {
+  display: block;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+}
+
+.nx-brand__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.nx-brand__text small {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--text-muted);
+}
+
+.nx-collapse {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 140ms ease 0ms;
+}
+
+.nx-brand:hover .nx-collapse {
+  opacity: 1;
+  pointer-events: auto;
+  transition-delay: 400ms;
+}
+
+.nx-brand:hover .nx-brand__face {
+  opacity: 0;
+  transition-delay: 400ms;
+}
+
+/* Keyboard focus only: after a mouse click the button keeps focus but stays invisible, and a plain
+   :focus-within would then hide the mark too, leaving the corner blank. */
+.nx-brand:has(.nx-collapse:focus-visible) .nx-brand__face {
+  opacity: 0;
+}
+
+.nx-collapse:hover {
+  color: var(--text-primary);
+  background: var(--state-hover);
+}
+
+.nx-collapse:focus-visible {
+  opacity: 1;
+  pointer-events: auto;
+  outline: none;
+  box-shadow: var(--focus-ring, 0 0 0 2px var(--accent));
+}
+
+@media (hover: none) {
+  .nx-collapse {
+    opacity: 1;
+    pointer-events: auto;
+    background: var(--state-hover);
+  }
+
+  .nx-brand__face {
+    opacity: 0;
+  }
+}
+
+/* Navigation */
+
+.nx-nav {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 10px 14px;
+  overflow-y: auto;
+}
+
+.nx-tier {
+  padding: 14px 12px 5px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.nx-rail ::deep .nx-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.nx-rail ::deep .nx-item:hover {
+  background: var(--state-hover);
+  color: var(--text-primary);
+}
+
+.nx-rail ::deep .nx-item:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring, 0 0 0 2px var(--accent));
+}
+
+.nx-rail ::deep .nx-item.active {
+  background: var(--nav-active-bg, var(--accent));
+  color: var(--nav-active-fg, var(--accent-contrast));
+  font-weight: 700;
+}
+
+.nx-rail ::deep .nx-item.active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--nav-active-fg, var(--accent-contrast));
+}
+
+.nx-rail ::deep .nx-item.active:hover {
+  background: var(--nav-active-hover, var(--accent-hover));
+}
+
+.nx-rail__label {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nx-rec-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-left: auto;
+  border-radius: 50%;
+  background: var(--danger);
+  animation: nx-pulse 1.2s ease-in-out infinite;
+}
+
+.nx-foot {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+/* Collapsed: icons only, tier headings hidden. */
+
+.nx-rail.is-collapsed .nx-rail__label,
+.nx-rail.is-collapsed .nx-brand__text {
+  display: none;
+}
+
+.nx-rail.is-collapsed .nx-tier {
+  display: none;
+}
+
+.nx-rail.is-collapsed .nx-brand__face {
+  justify-content: center;
+  padding: 0;
+}
+
+.nx-rail.is-collapsed .nx-collapse {
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+}
+
+.nx-rail.is-collapsed ::deep .nx-item {
+  justify-content: center;
+  padding: 0;
+  gap: 0;
+}
+
+.nx-rail.is-collapsed .nx-rec-dot {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  margin: 0;
+}
+
+.nx-backdrop {
+  display: none;
+}
+
+@keyframes nx-pulse {
+  50% { opacity: 0.35; }
+}
+
+/* Narrow screens: off-canvas drawer with labels always visible. */
+
+@media (max-width: 768px) {
+  .nx-rail {
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: var(--z-modal, 1200);
+    width: 268px;
+    min-width: 268px;
+    transform: translateX(-100%);
+    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .nx-rail.is-mobile-open {
+    transform: translateX(0);
+    box-shadow: var(--shadow);
+  }
+
+  .nx-rail.is-collapsed.is-mobile-open {
+    width: 268px;
+    min-width: 268px;
+  }
+
+  .nx-rail.is-collapsed.is-mobile-open .nx-rail__label {
+    display: block;
+  }
+
+  .nx-rail.is-collapsed.is-mobile-open .nx-brand__text {
+    display: flex;
+  }
+
+  .nx-rail.is-collapsed.is-mobile-open .nx-tier {
+    display: block;
+  }
+
+  .nx-rail.is-collapsed.is-mobile-open .nx-brand__face {
+    justify-content: flex-start;
+    padding: 0 16px;
+  }
+
+  .nx-rail.is-collapsed.is-mobile-open ::deep .nx-item {
+    justify-content: flex-start;
+    padding: 0 12px;
+    gap: 12px;
+  }
+
+  .nx-rail.is-collapsed.is-mobile-open .nx-rec-dot {
+    position: relative;
+    top: auto;
+    right: auto;
+    margin-left: auto;
+  }
+
+  .nx-rail ::deep .nx-item {
+    height: 46px;
+  }
+
+  .nx-collapse {
+    display: none;
+  }
+
+  .nx-brand__face,
+  .nx-brand:hover .nx-brand__face {
+    opacity: 1;
+    transition-delay: 0ms;
+  }
+
+  .nx-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: var(--z-modal-backdrop, 1150);
+    background: rgb(0 0 0 / 42%);
+  }
+}

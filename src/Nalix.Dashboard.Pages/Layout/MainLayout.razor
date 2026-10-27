@@ -1,0 +1,170 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject DashboardStore Store
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+@if (ShowApp)
+{
+    <div class="nx-shell @(_railCollapsed ? "is-rail-collapsed" : null)">
+        <NavRail Collapsed="_railCollapsed" MobileOpen="_navOpen" SelectedModule="_module" OnToggleCollapsed="ToggleRail" OnNavigate="CloseNav" />
+        <div class="nx-main">
+            <header class="nx-topbar">
+                <button class="nx-icon-btn nx-hamburger" type="button" title="Menu" aria-label="Navigation"
+                        aria-expanded="@(_navOpen ? "true" : "false")" @onclick="ToggleNav">
+                    <UiIcon Name="menu" Size="20" />
+                </button>
+                <div class="nx-topbar__title">@_module.Label</div>
+                <div class="nx-topbar__actions">
+                    <StatusPill />
+                    <button class="nx-icon-btn" type="button" title="@(Store.IsPaused ? "Resume sampling" : "Pause sampling")"
+                            aria-label="@(Store.IsPaused ? "Resume sampling" : "Pause sampling")" @onclick="TogglePause">
+                        <UiIcon Name="@(Store.IsPaused ? "play" : "pause")" Size="18" />
+                    </button>
+                    <button class="nx-icon-btn @(Store.Recorder.IsRecording ? "is-recording" : null)" type="button"
+                            title="@(Store.Recorder.IsRecording ? "Stop recording" : "Start recording")"
+                            aria-label="@(Store.Recorder.IsRecording ? "Stop recording" : "Start recording")" @onclick="ToggleRecording">
+                        <UiIcon Name="@(Store.Recorder.IsRecording ? "stop" : "record")" Size="18" />
+                    </button>
+                    <div class="nx-menuwrap">
+                        <button class="nx-icon-btn" type="button" title="More" aria-label="More" aria-haspopup="menu"
+                                aria-expanded="@(_menuOpen ? "true" : "false")" @onclick="ToggleMenu">
+                            <UiIcon Name="more" Size="18" />
+                        </button>
+                        @if (_menuOpen)
+                        {
+                            <div class="nx-menu__backdrop" @onclick="CloseMenu"></div>
+                            <div class="nx-menu" role="menu">
+                                <div class="nx-menu__head">
+                                    <span class="nx-menu__label">Connected to</span>
+                                    <span class="nx-menu__endpoint">@Store.Settings.Endpoint</span>
+                                </div>
+                                <button class="nx-menu__item" role="menuitem" type="button" @onclick="ToggleTheme">
+                                    <UiIcon Name="@(IsDark ? "sun" : "moon")" Size="16" />@(IsDark ? "Light theme" : "Dark theme")
+                                </button>
+                                <a class="nx-menu__item" role="menuitem" href="settings" @onclick="CloseMenu">
+                                    <UiIcon Name="settings" Size="16" />Settings
+                                </a>
+                                <div class="nx-menu__sep"></div>
+                                <button class="nx-menu__item nx-menu__item--danger" role="menuitem" type="button" @onclick="Disconnect">
+                                    <UiIcon Name="unplug" Size="16" />Disconnect
+                                </button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </header>
+            @if (_module.Pages.Count > 1)
+            {
+                <nav class="nx-tabbar" aria-label="@(_module.Label + " pages")">
+                    @foreach (NavPage tab in _module.Pages)
+                    {
+                        bool active = tab == _page;
+                        <a class="nx-tabbar__item @(active ? "active" : null)" href="@tab.Href" aria-current="@(active ? "page" : null)">
+                            <UiIcon Name="@tab.Icon" Size="16" /><span>@tab.Label</span>
+                        </a>
+                    }
+                </nav>
+            }
+            @if (Store.Error is { } error && Store.Status != ConnectionStatus.Connected)
+            {
+                <div class="nx-banner" role="status">
+                    <span class="nx-banner__icon"><UiIcon Name="alert" Size="18" /></span>
+                    <span>@error@(Store.IsReconnecting ? " — reconnecting…" : null)</span>
+                </div>
+            }
+            <main class="nx-content">
+                @Body
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    <ConnectPanel />
+}
+
+@code {
+    private bool _navOpen;
+    private bool _railCollapsed;
+    private bool _themeApplied;
+    private bool _menuOpen;
+    private NavModule _module = NavModel.Modules[0];
+    private NavPage? _page;
+
+    private bool ShowApp => Store.Status == ConnectionStatus.Connected || Store.IsReconnecting;
+
+    private bool IsDark => Store.Settings.Theme == "dark";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.Changed += OnChanged;
+        Navigation.LocationChanged += OnLocationChanged;
+        SyncLocation();
+        await Store.InitializeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_themeApplied)
+        {
+            _themeApplied = true;
+            await JS.InvokeVoidAsync("n12d.setTheme", Store.Settings.Theme);
+        }
+    }
+
+    public void Dispose()
+    {
+        Store.Changed -= OnChanged;
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        SyncLocation();
+        _menuOpen = false;
+        _ = InvokeAsync(StateHasChanged);
+    }
+
+    private void SyncLocation() => (_module, _page) = NavModel.Resolve(Navigation.ToBaseRelativePath(Navigation.Uri));
+
+    private void ToggleMenu() => _menuOpen = !_menuOpen;
+
+    private void CloseMenu() => _menuOpen = false;
+
+    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void ToggleRail() => _railCollapsed = !_railCollapsed;
+
+    private void ToggleNav() => _navOpen = !_navOpen;
+
+    private void CloseNav() => _navOpen = false;
+
+    private void TogglePause() => Store.SetPaused(!Store.IsPaused);
+
+    private void ToggleRecording()
+    {
+        if (Store.Recorder.IsRecording)
+        {
+            Store.StopRecording();
+        }
+        else
+        {
+            Store.StartRecording();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        _menuOpen = false;
+        string theme = IsDark ? "light" : "dark";
+        await Store.UpdateSettingsAsync(Store.Settings with { Theme = theme });
+        await JS.InvokeVoidAsync("n12d.setTheme", theme);
+    }
+
+    private Task Disconnect()
+    {
+        _menuOpen = false;
+        return Store.DisconnectAsync();
+    }
+}

@@ -1,0 +1,26 @@
+/* UiSparkline: a tiny trend line with the last point marked. */
+
+.uispark {
+    display: block;
+    width: 100%;
+    max-width: 7.5rem;
+    height: auto;
+    overflow: visible;
+}
+
+.uispark__line {
+    fill: none;
+    stroke: var(--uispark-c, var(--accent));
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.uispark__area {
+    fill: var(--uispark-c, var(--accent));
+    fill-opacity: 0.12;
+}
+
+.uispark__dot {
+    fill: var(--uispark-c, var(--accent));
+}

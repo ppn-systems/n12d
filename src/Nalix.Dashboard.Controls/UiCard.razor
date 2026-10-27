@@ -1,0 +1,56 @@
+<section class="ui-card @Class">
+    @if (Header is not null || Title is not null || Subtitle is not null || Actions is not null)
+    {
+        <header class="ui-card__header">
+            <div class="ui-card__titles">
+                @if (Header is not null)
+                {
+                    @Header
+                }
+                else
+                {
+                    @if (Title is not null)
+                    {
+                        <h3 class="ui-card__title">@Title</h3>
+                    }
+                    @if (Subtitle is not null)
+                    {
+                        <p class="ui-card__subtitle">@Subtitle</p>
+                    }
+                }
+            </div>
+            @if (Actions is not null)
+            {
+                <div class="ui-card__actions">@Actions</div>
+            }
+        </header>
+    }
+    <div class="ui-card__content">@ChildContent</div>
+    @if (Footer is not null)
+    {
+        <div class="ui-card__footer">@Footer</div>
+    }
+</section>
+
+@code {
+    /// <summary>Gets or sets the heading. Ignored when <see cref="Header"/> is set.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Gets or sets the muted line under the heading. Ignored when <see cref="Header"/> is set.</summary>
+    [Parameter] public string? Subtitle { get; set; }
+
+    /// <summary>Gets or sets custom header content that replaces the title and subtitle.</summary>
+    [Parameter] public RenderFragment? Header { get; set; }
+
+    /// <summary>Gets or sets controls rendered at the top right of the card.</summary>
+    [Parameter] public RenderFragment? Actions { get; set; }
+
+    /// <summary>Gets or sets the card body.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets the content of the footer row below the body.</summary>
+    [Parameter] public RenderFragment? Footer { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+}

@@ -1,0 +1,72 @@
+@using Nalix.Dashboard.Controls.Icons
+@inject NavigationManager Navigation
+@if (_assetUrl is null)
+{
+    <span class="ui-icon @Class"
+          style="--ui-icon-size: @(Size)px;"
+          role="@(Label is null ? null : "img")"
+          aria-label="@Label"
+          aria-hidden="@(Label is null ? "true" : null)">@((MarkupString)_svg)</span>
+}
+else
+{
+    <span class="ui-icon ui-icon-mask @Class"
+          style="--ui-icon-size: @(Size)px; --ui-icon-url: url('@_assetUrl');"
+          role="@(Label is null ? null : "img")"
+          aria-label="@Label"
+          aria-hidden="@(Label is null ? "true" : null)"></span>
+}
+
+@code {
+    // Shown for a name that resolves to nothing, so a typo is visible rather than blank.
+    private const string FallbackBody = "<circle cx='12' cy='12' r='4'/>";
+
+    private string _svg = string.Empty;
+    private string? _assetUrl;
+
+    /// <summary>
+    /// Gets or sets the icon name. Resolution order: a <see cref="NavIcons"/> kebab-case name (for example
+    /// <c>shield-check</c>), then a shared asset path containing a slash (for example <c>shared/x</c>), then the
+    /// n12d alias table (for example <c>overview</c>, <c>close</c>). Unknown names render a dot.
+    /// </summary>
+    [EditorRequired]
+    [Parameter]
+    public string Name { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the width and height in pixels.</summary>
+    [Parameter] public int Size { get; set; } = 18;
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <summary>
+    /// Gets or sets an accessible label. When set the icon is exposed as an image with this name; when null it is
+    /// decorative and hidden from assistive technology.
+    /// </summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        string name = Name ?? string.Empty;
+
+        if (NavIcons.TryGetBody(name, out string body) || UiIconAliases.TryResolveBody(name, out body))
+        {
+            _svg = NavIcons.Svg(Size, body);
+            _assetUrl = null;
+            return;
+        }
+
+        string assetPath = name.Contains('/') ? name : string.Empty;
+        if (assetPath.Length > 0 || UiIconAliases.TryResolveAsset(name, out assetPath))
+        {
+            _svg = string.Empty;
+            // Absolute: a relative url() inside a custom property resolves against the stylesheet that uses it.
+            _assetUrl = Navigation.BaseUri + "_content/Nalix.Dashboard.Controls/icons/" + assetPath + ".svg";
+            return;
+        }
+
+        _svg = NavIcons.Svg(Size, FallbackBody);
+        _assetUrl = null;
+    }
+}

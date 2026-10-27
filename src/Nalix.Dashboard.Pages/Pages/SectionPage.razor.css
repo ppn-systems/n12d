@@ -1,0 +1,7 @@
+.raw {
+  margin: 0;
+  max-height: 70vh;
+  overflow: auto;
+  white-space: pre;
+  font-size: 12.5px;
+}

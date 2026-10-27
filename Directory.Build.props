@@ -1,0 +1,40 @@
+<Project>
+  <Import Project="Version.props" Condition="Exists('$(MSBuildThisFileDirectory)Version.props')" />
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <IsPackable>false</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+
+    <!-- Blazor WebAssembly runs in the interpreter; trimming is what shrinks the download. -->
+    <IsTrimmable>true</IsTrimmable>
+
+    <Authors>PPN Corporation</Authors>
+    <Company>PPN Corporation</Company>
+    <Copyright>Copyright (c) 2026 PPN Corporation. All rights reserved.</Copyright>
+  </PropertyGroup>
+
+  <!-- The publish output is downloaded by every visitor: keep symbols and doc XML out of it. -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(GITHUB_ACTIONS)' == 'true'">true</ContinuousIntegrationBuild>
+    <CopyOutputSymbolsToPublishDirectory>false</CopyOutputSymbolsToPublishDirectory>
+    <AllowedReferenceRelatedFileExtensions>none</AllowedReferenceRelatedFileExtensions>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+  </PropertyGroup>
+
+  <!-- Nalix.Observability.Contracts is not on NuGet: every project references the vendored build (library/README.md).
+       A HintPath reference does not flow through ProjectReference, hence the repo-wide item. -->
+  <ItemGroup>
+    <Reference Include="Nalix.Observability.Contracts">
+      <HintPath>$(MSBuildThisFileDirectory)library/Nalix.Observability.Contracts.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+</Project>

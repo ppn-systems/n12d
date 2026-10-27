@@ -1,0 +1,18 @@
+/* Icon box. The size comes from --ui-icon-size, set inline by UiIcon.
+   Inline SVGs are centred by flex so the box carries no baseline gap. */
+.ui-icon {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    width: var(--ui-icon-size, 18px);
+    height: var(--ui-icon-size, 18px);
+}
+
+/* Monochrome shared icons: painted with currentColor through a CSS mask, so they follow the text colour. */
+.ui-icon-mask {
+    background-color: currentColor;
+    -webkit-mask: var(--ui-icon-url) no-repeat center / contain;
+    mask: var(--ui-icon-url) no-repeat center / contain;
+}

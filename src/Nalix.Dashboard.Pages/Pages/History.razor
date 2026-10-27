@@ -1,0 +1,751 @@
+@page "/history"
+@inherits StoreComponent
+@using Nalix.Dashboard.Abstractions.History
+
+<PageTitle>History · Nalix</PageTitle>
+
+<div class="ad-page__head">
+    <div>
+        <h1 class="ad-page__title">History</h1>
+        <p class="ad-page__hint">Metrics recorded on the server, kept for the last days. Read straight from disk on demand.</p>
+    </div>
+</div>
+
+<div class="nx-toolbar" role="toolbar" aria-label="History range">
+    <UiSegmented Options="@s_rangeOptions" Value="@_range" ValueChanged="SetRange" />
+    @if (string.Equals(_range, CustomKey, StringComparison.Ordinal))
+    {
+        <label class="history-field">
+            <span>From</span>
+            <UiTextInput Type="datetime-local" Value="@_customFrom" ValueChanged="OnCustomFrom" />
+        </label>
+        <label class="history-field">
+            <span>To</span>
+            <UiTextInput Type="datetime-local" Value="@_customTo" ValueChanged="OnCustomTo" />
+        </label>
+    }
+    <UiButton Variant="UiButtonVariant.Secondary" Size="icon" Title="Refresh" Busy="@(_catalogLoading || _seriesLoading)" OnClick="RefreshAsync">
+        <UiIcon Name="refresh" />
+    </UiButton>
+    <span class="nx-toolbar__meta">@MetaText</span>
+</div>
+
+@if (_rangeError is not null)
+{
+    <p class="history-error" role="alert">@_rangeError</p>
+}
+
+@if (_catalogError is not null)
+{
+    <UiEmpty Title="History unavailable" Message="@_catalogError" />
+}
+else
+{
+    <div class="nx-grid">
+        <div class="nx-cell nx-span-12">
+            <UiCard Title="Metrics" Subtitle="Pick up to 6">
+                @if (_catalog is null)
+                {
+                    <UiSkeleton Height="7rem" />
+                }
+                else
+                {
+                    @if (_selected.Count == 0)
+                    {
+                        <p class="history-chips-empty ui-muted">No metrics selected.</p>
+                    }
+                    else
+                    {
+                        <ul class="history-chips">
+                            @for (int c = 0; c < _selected.Count; c++)
+                            {
+                                string chip = _selected[c];
+                                <li>
+                                    <button type="button" class="history-chip" title="Remove @chip" @onclick="() => ToggleMetric(chip)">
+                                        <span class="history-swatch" style="background: var(--chart-@(c + 1))" aria-hidden="true"></span>
+                                        <span class="ui-mono">@chip</span>
+                                        <UiIcon Name="close" Size="12" />
+                                    </button>
+                                </li>
+                            }
+                        </ul>
+                    }
+
+                    <div class="history-filter">
+                        <UiTextInput Value="@_filter" ValueChanged="OnFilter" Placeholder="Filter metrics" Monospace="true" AutoComplete="off" />
+                    </div>
+
+                    <div class="history-list">
+                        @if (_catalog.Metrics.Count == 0)
+                        {
+                            <UiEmpty Title="No metrics recorded" Message="The server has not recorded any metric in the last 30 days." />
+                        }
+                        else if (_groups.Count == 0)
+                        {
+                            <p class="ui-muted">No metric matches the filter.</p>
+                        }
+                        else
+                        {
+                            <div class="history-groups">
+                                @foreach (MetricGroup group in _groups)
+                                {
+                                    <section class="history-group">
+                                        <h4 class="history-group__title">@group.Section</h4>
+                                        @foreach (string path in group.Paths)
+                                        {
+                                            int slot = _selected.IndexOf(path);
+                                            bool selected = slot >= 0;
+                                            bool blocked = !selected && _selected.Count >= MaxSelected;
+                                            <button type="button"
+                                                    class="history-metric @(selected ? "is-selected" : null)"
+                                                    aria-pressed="@(selected ? "true" : "false")"
+                                                    disabled="@blocked"
+                                                    @onclick="() => ToggleMetric(path)">
+                                                <span class="history-metric__box" aria-hidden="true">
+                                                    @if (selected)
+                                                    {
+                                                        <UiIcon Name="check" Size="12" />
+                                                    }
+                                                </span>
+                                                <span class="history-metric__name ui-mono">@path</span>
+                                                @if (selected)
+                                                {
+                                                    <UiBadge Tone="UiTone.Accent">@(slot + 1)</UiBadge>
+                                                }
+                                            </button>
+                                        }
+                                    </section>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </UiCard>
+        </div>
+
+        @if (_seriesError is not null)
+        {
+            <div class="nx-cell nx-span-12">
+                <UiEmpty Title="Could not read history" Message="@_seriesError" />
+            </div>
+        }
+        else if (_selected.Count == 0)
+        {
+            <div class="nx-cell nx-span-12">
+                <UiEmpty Title="No metrics selected" Message="Pick up to six metrics above to chart them." />
+            </div>
+        }
+
+        @foreach (string path in _selected)
+        {
+            <div class="nx-cell @(_selected.Count == 1 ? "nx-span-12" : "nx-span-6")">
+                <UiCard Class="history-card" Title="@path" Subtitle="@ChartSubtitle">
+                    @if (_charts.GetValueOrDefault(path) is { } chart)
+                    {
+                        <UiLineChart Series="@chart.Series" Height="220" Formatter="@chart.Format" AriaLabel="@path" />
+                        <dl class="nx-facts history-summary">
+                            <div><dt>Min</dt><dd>@chart.Min</dd></div>
+                            <div><dt>Average</dt><dd>@chart.Avg</dd></div>
+                            <div><dt>Max</dt><dd>@chart.Max</dd></div>
+                            <div><dt>Max at</dt><dd>@chart.Peak</dd></div>
+                        </dl>
+                    }
+                    else if (_seriesLoading)
+                    {
+                        <UiSkeleton Height="220px" />
+                    }
+                    else
+                    {
+                        <p class="ui-muted">Nothing recorded for this metric in the range.</p>
+                    }
+                </UiCard>
+            </div>
+        }
+
+        <div class="nx-cell nx-span-12">
+            <UiCard Title="Days" Subtitle="Newest first. Click a day to chart all of it.">
+                @if (_catalog is null)
+                {
+                    <UiSkeleton Height="6rem" />
+                }
+                else if (_catalog.Days.Count == 0)
+                {
+                    <UiEmpty Title="No days on disk" Message="The server has not recorded any samples in the last 30 days." />
+                }
+                else
+                {
+                    <div class="history-table-wrap">
+                        <table class="history-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Recorded</th>
+                                    <th scope="col" class="history-num">Samples</th>
+                                    <th scope="col" class="history-num">Size</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (int d = _catalog.Days.Count - 1; d >= 0; d--)
+                                {
+                                    HistoryDay day = _catalog.Days[d];
+                                    <tr>
+                                        <td><button type="button" class="history-day ui-mono" @onclick="() => PickDay(day)">@day.Date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)</button></td>
+                                        <td class="ui-mono">@UiFormat.Time(day.From) – @UiFormat.Time(day.To)</td>
+                                        <td class="history-num">@UiFormat.Number(day.Samples)</td>
+                                        <td class="history-num">@UiFormat.Bytes(day.Bytes)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </UiCard>
+        </div>
+    </div>
+}
+
+@code {
+    private const int MaxSelected = 6;
+    private const int Points = 600;
+    private const int SelectionDebounceMs = 250;
+    private const string CustomKey = "custom";
+    private const long HourMs = 3_600_000L;
+    private const long DayMs = 86_400_000L;
+    private const long CatalogSpanMs = 30L * DayMs;
+
+    private static readonly IReadOnlyList<KeyValuePair<string, string>> s_rangeOptions =
+    [
+        new("1h", "1 h"),
+        new("6h", "6 h"),
+        new("24h", "24 h"),
+        new("7d", "7 d"),
+        new(CustomKey, "Custom"),
+    ];
+
+    private static readonly string[] s_preselect =
+    [
+        "Process.CpuPercent",
+        "Process.WorkingSetBytes",
+        "Connections.TotalConnections",
+    ];
+
+    private static readonly string[] s_inputFormats = ["yyyy-MM-dd'T'HH:mm", "yyyy-MM-dd'T'HH:mm:ss"];
+
+    private readonly List<string> _selected = [];
+    private readonly Dictionary<string, MetricChart> _charts = new(StringComparer.Ordinal);
+    private List<MetricGroup> _groups = [];
+    private HistoryCatalog? _catalog;
+    private string? _catalogError;
+    private bool _catalogLoading;
+    private bool _preselected;
+    private string _filter = string.Empty;
+    private string _range = "24h";
+    private string _customFrom = string.Empty;
+    private string _customTo = string.Empty;
+    private string? _rangeError;
+    private long _stepMs;
+    private bool _seriesLoading;
+    private string? _seriesError;
+    private int _requestId;
+    private CancellationTokenSource? _requestCts;
+    private CancellationTokenSource? _debounce;
+    private bool _dirty = true;
+    private bool _leaving;
+
+    private string MetaText => _catalog is not null
+        ? $"recorded every {UiFormat.Duration(_catalog.IntervalMs)} · {_catalog.Days.Count} days on disk"
+        : _catalogLoading ? "Loading…" : string.Empty;
+
+    private string ChartSubtitle => _stepMs > 0
+        ? "avg / max per " + UiFormat.Duration(_stepMs)
+        : "avg / max";
+
+    /// <summary>Only the page's own state changes render it; store ticks do not (they would re-chart every tick).</summary>
+    protected override bool ShouldRender()
+    {
+        if (!_dirty)
+        {
+            return false;
+        }
+
+        _dirty = false;
+        return true;
+    }
+
+    /// <inheritdoc/>
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await LoadCatalogAsync();
+        }
+    }
+
+    /// <inheritdoc/>
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _leaving = true;
+            _debounce?.Cancel();
+            _debounce?.Dispose();
+            CancelInFlight();
+        }
+
+        base.Dispose(disposing);
+    }
+
+    private void SetRange(string key)
+    {
+        if (string.Equals(key, _range, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (string.Equals(key, CustomKey, StringComparison.Ordinal) && ResolveRange(out long from, out long to))
+        {
+            _customFrom = ToInput(from);
+            _customTo = ToInput(to);
+        }
+
+        _range = key;
+        _rangeError = null;
+        Touch();
+
+        if (_catalog is null)
+        {
+            EnsureCatalog();
+        }
+        else
+        {
+            ScheduleLoad(0);
+        }
+    }
+
+    private void OnCustomFrom(string value)
+    {
+        _customFrom = value;
+        Touch();
+        ScheduleLoad(SelectionDebounceMs);
+    }
+
+    private void OnCustomTo(string value)
+    {
+        _customTo = value;
+        Touch();
+        ScheduleLoad(SelectionDebounceMs);
+    }
+
+    private void OnFilter(string value)
+    {
+        _filter = value;
+        RebuildGroups();
+        Touch();
+    }
+
+    private void ToggleMetric(string path)
+    {
+        if (!_selected.Remove(path))
+        {
+            if (_selected.Count >= MaxSelected)
+            {
+                return;
+            }
+
+            _selected.Add(path);
+        }
+
+        Touch();
+        ScheduleLoad(SelectionDebounceMs);
+    }
+
+    private void PickDay(HistoryDay day)
+    {
+        // The day file is a UTC day, so the window is that UTC day, shown in local time.
+        long from = new DateTimeOffset(day.Date.ToDateTime(TimeOnly.MinValue, DateTimeKind.Utc)).ToUnixTimeMilliseconds();
+        _range = CustomKey;
+        _customFrom = ToInput(from);
+        _customTo = ToInput(from + DayMs);
+        _rangeError = null;
+        Touch();
+        ScheduleLoad(0);
+    }
+
+    private Task RefreshAsync() => LoadCatalogAsync();
+
+    private void EnsureCatalog()
+    {
+        if (!_catalogLoading)
+        {
+            _ = LoadCatalogAsync();
+        }
+    }
+
+    /// <summary>Lists the last 30 days. The result is cached until the refresh button runs this again.</summary>
+    private async Task LoadCatalogAsync()
+    {
+        if (_catalogLoading || _leaving)
+        {
+            return;
+        }
+
+        _catalogLoading = true;
+        _catalogError = null;
+        Touch();
+
+        try
+        {
+            long now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            HistoryCatalog catalog = await Store.GetHistoryCatalogAsync(now - CatalogSpanMs, now);
+            if (_leaving)
+            {
+                return;
+            }
+
+            _catalog = catalog;
+            if (!_preselected)
+            {
+                _preselected = true;
+                Preselect(catalog);
+            }
+
+            RebuildGroups();
+            ScheduleLoad(0);
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            _catalogError = ex.Message;
+        }
+        finally
+        {
+            _catalogLoading = false;
+            Touch();
+        }
+    }
+
+    private void Preselect(HistoryCatalog catalog)
+    {
+        for (int i = 0; i < s_preselect.Length && _selected.Count < MaxSelected; i++)
+        {
+            if (HasMetric(catalog.Metrics, s_preselect[i]))
+            {
+                _selected.Add(s_preselect[i]);
+            }
+        }
+    }
+
+    /// <summary>Groups the catalog's metrics by first path segment, keeping the catalog order and applying the filter.</summary>
+    private void RebuildGroups()
+    {
+        List<MetricGroup> groups = [];
+        if (_catalog is not null)
+        {
+            foreach (string metric in _catalog.Metrics)
+            {
+                if (_filter.Length > 0 && metric.IndexOf(_filter, StringComparison.OrdinalIgnoreCase) < 0)
+                {
+                    continue;
+                }
+
+                string section = SectionName(metric);
+                if (groups.Count == 0 || !string.Equals(groups[^1].Section, section, StringComparison.Ordinal))
+                {
+                    groups.Add(new MetricGroup(section, new List<string>()));
+                }
+
+                groups[^1].Paths.Add(metric);
+            }
+        }
+
+        _groups = groups;
+    }
+
+    /// <summary>
+    /// Debounces a load. Each call replaces the pending one, so a burst of selection changes issues one request.
+    /// </summary>
+    private void ScheduleLoad(int delayMs)
+    {
+        if (_leaving)
+        {
+            return;
+        }
+
+        _debounce?.Cancel();
+        _debounce?.Dispose();
+        CancellationTokenSource cts = new();
+        _debounce = cts;
+        _ = RunScheduledAsync(delayMs, cts.Token);
+    }
+
+    private async Task RunScheduledAsync(int delayMs, CancellationToken ct)
+    {
+        try
+        {
+            if (delayMs > 0)
+            {
+                await Task.Delay(delayMs, ct);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (!ct.IsCancellationRequested)
+        {
+            await LoadSeriesAsync();
+        }
+    }
+
+    /// <summary>Fetches every selected metric in one request. A newer request cancels this one and stale results are dropped.</summary>
+    private async Task LoadSeriesAsync()
+    {
+        CancelInFlight();
+        if (_leaving)
+        {
+            return;
+        }
+
+        if (_selected.Count == 0)
+        {
+            _charts.Clear();
+            _seriesError = null;
+            Touch();
+            return;
+        }
+
+        if (!ResolveRange(out long from, out long to))
+        {
+            _charts.Clear();
+            Touch();
+            return;
+        }
+
+        CancellationTokenSource cts = new();
+        _requestCts = cts;
+        CancellationToken ct = cts.Token;
+        int id = _requestId;
+        string[] metrics = _selected.ToArray();
+
+        _seriesLoading = true;
+        _seriesError = null;
+        Touch();
+
+        try
+        {
+            // No more buckets than recorded samples: finer buckets would only come back empty.
+            long interval = Math.Max(1, _catalog?.IntervalMs ?? 1);
+            int points = (int)Math.Clamp((to - from) / interval, 2, Points);
+            HistorySeries series = await Store.GetHistoryAsync(from, to, points, metrics, ct);
+            if (id == _requestId)
+            {
+                Apply(series, metrics);
+            }
+        }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return;
+        }
+        catch (Exception ex) when (ex is not OutOfMemoryException)
+        {
+            if (id == _requestId)
+            {
+                _charts.Clear();
+                _seriesError = ex.Message;
+            }
+        }
+
+        if (id == _requestId)
+        {
+            _seriesLoading = false;
+            Touch();
+        }
+    }
+
+    /// <summary>Cancels the request in flight and makes its result stale.</summary>
+    private void CancelInFlight()
+    {
+        _requestId++;
+        _requestCts?.Cancel();
+        _requestCts?.Dispose();
+        _requestCts = null;
+        _seriesLoading = false;
+    }
+
+    private void Apply(HistorySeries series, string[] metrics)
+    {
+        _charts.Clear();
+        _stepMs = series.StepMs;
+        for (int i = 0; i < metrics.Length; i++)
+        {
+            HistoryMetric? metric = FindMetric(series, metrics[i]);
+            if (metric is not null)
+            {
+                _charts[metrics[i]] = BuildChart(metrics[i], series.Times, metric, i + 1);
+            }
+        }
+    }
+
+    /// <summary>Resolves the request range: presets end at now; custom uses the two local fields.</summary>
+    private bool ResolveRange(out long from, out long to)
+    {
+        _rangeError = null;
+        if (string.Equals(_range, CustomKey, StringComparison.Ordinal))
+        {
+            from = 0;
+            to = 0;
+            if (!TryParseLocal(_customFrom, out from) || !TryParseLocal(_customTo, out to))
+            {
+                _rangeError = "Enter both a start and an end time.";
+                return false;
+            }
+
+            if (from >= to)
+            {
+                _rangeError = "The end must be after the start.";
+                return false;
+            }
+
+            return true;
+        }
+
+        to = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        from = to - PresetSpanMs(_range);
+
+        // A preset reaching back before the first recorded sample is trimmed to it, so the buckets cover
+        // real data instead of mostly empty time (the chart would otherwise show a handful of points).
+        if (_catalog is { Days.Count: > 0 } catalog && catalog.Days[0].From > from && catalog.Days[0].From < to)
+        {
+            from = catalog.Days[0].From;
+        }
+
+        return true;
+    }
+
+    private static long PresetSpanMs(string key) => key switch
+    {
+        "1h" => HourMs,
+        "6h" => 6L * HourMs,
+        "7d" => 7L * DayMs,
+        _ => DayMs,
+    };
+
+    private static bool TryParseLocal(string text, out long unixMilliseconds)
+    {
+        if (DateTimeOffset.TryParseExact(text, s_inputFormats, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out DateTimeOffset value))
+        {
+            unixMilliseconds = value.ToUnixTimeMilliseconds();
+            return true;
+        }
+
+        unixMilliseconds = 0;
+        return false;
+    }
+
+    private static string ToInput(long unixMilliseconds) =>
+        DateTimeOffset.FromUnixTimeMilliseconds(unixMilliseconds).ToLocalTime().ToString("yyyy-MM-dd'T'HH:mm", CultureInfo.InvariantCulture);
+
+    private static MetricChart BuildChart(string path, long[] times, HistoryMetric metric, int slot)
+    {
+        string name = LeafOf(path);
+        int count = Math.Min(times.Length, metric.Average.Length);
+        double low = double.PositiveInfinity;
+        double high = double.NegativeInfinity;
+        double sum = 0d;
+        int valid = 0;
+        long peakTime = 0;
+        for (int i = 0; i < count; i++)
+        {
+            double value = metric.Average[i];
+            if (!double.IsFinite(value))
+            {
+                continue;
+            }
+
+            valid++;
+            sum += value;
+            low = Math.Min(low, value);
+            if (value > high)
+            {
+                high = value;
+                peakTime = times[i];
+            }
+        }
+
+        List<UiChartSeries> lines =
+        [
+            new UiChartSeries("avg", times, metric.Average, UiTone.Accent, slot),
+            new UiChartSeries("max", times, metric.Maximum, UiTone.Neutral, 7),
+        ];
+
+        return valid == 0
+            ? new MetricChart(lines, v => UiFormat.Auto(name, v), UiFormat.Dash, UiFormat.Dash, UiFormat.Dash, UiFormat.Dash)
+            : new MetricChart(
+                lines,
+                v => UiFormat.Auto(name, v),
+                UiFormat.Auto(name, low),
+                UiFormat.Auto(name, sum / valid),
+                UiFormat.Auto(name, high),
+                UiFormat.Time(peakTime));
+    }
+
+    private static HistoryMetric? FindMetric(HistorySeries series, string path)
+    {
+        for (int i = 0; i < series.Metrics.Count; i++)
+        {
+            if (string.Equals(series.Metrics[i].Name, path, StringComparison.Ordinal))
+            {
+                return series.Metrics[i];
+            }
+        }
+
+        return null;
+    }
+
+    private static bool HasMetric(IReadOnlyList<string> metrics, string path)
+    {
+        for (int i = 0; i < metrics.Count; i++)
+        {
+            if (string.Equals(metrics[i], path, StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string SectionName(string path)
+    {
+        int dot = path.IndexOf('.', StringComparison.Ordinal);
+        return dot < 0 ? path : path[..dot];
+    }
+
+    private static string LeafOf(string path)
+    {
+        int dot = path.LastIndexOf('.');
+        return dot < 0 ? path : path[(dot + 1)..];
+    }
+
+    /// <summary>Re-renders on this page's own state changes only.</summary>
+    private void Touch()
+    {
+        if (_leaving)
+        {
+            return;
+        }
+
+        _dirty = true;
+        StateHasChanged();
+    }
+
+    private sealed record MetricGroup(string Section, List<string> Paths);
+
+    private sealed record MetricChart(
+        List<UiChartSeries> Series,
+        Func<double, string> Format,
+        string Min,
+        string Avg,
+        string Max,
+        string Peak);
+}

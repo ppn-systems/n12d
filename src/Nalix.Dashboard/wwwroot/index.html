@@ -1,31 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nalix</title>
-    <base href="/" />
-    <link rel="preload" id="webassembly" />
-    <link rel="stylesheet" href="_content/MudBlazor/MudBlazor.min.css" />
-    <link rel="stylesheet" href="app.css" />
-    <link rel="stylesheet" href="Nalix.Dashboard.styles.css" />
-    <link rel="icon" href="favicon.png" />
-    <script type="importmap"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#0a0a0a" />
+  <title>Nalix observability</title>
+  <base href="/" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="brand/icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="brand/apple-touch-icon.png" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_content/Nalix.Dashboard.Controls/fonts/ibm-plex-sans-400.woff2" />
+  <link rel="stylesheet" href="_content/Nalix.Dashboard.Controls/fonts.css" />
+  <link rel="stylesheet" href="_content/Nalix.Dashboard.Controls/tokens.css" />
+  <link rel="stylesheet" href="_content/Nalix.Dashboard.Controls/ui.css" />
+  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="Nalix.Dashboard.styles.css" />
+  <script type="importmap"></script>
+  <script>
+    // Apply the stored theme before first paint to avoid a light flash in dark mode.
+    try {
+      var s = JSON.parse(localStorage.getItem("n12d.settings") || "{}");
+      if (s.theme === "light" || s.theme === "dark") document.documentElement.dataset.theme = s.theme;
+    } catch (e) { }
+  </script>
 </head>
 <body>
-    <div id="app">
-        <div class="wasm-loading">
-            <p>Loading Nalix…</p>
-        </div>
+  <div id="app">
+    <div class="boot" role="status" aria-label="Loading">
+      <img class="boot-mark" src="_content/Nalix.Dashboard.Controls/brand/nalix-mark.svg" width="56" height="56" alt="" />
+      <div class="boot-bar" aria-hidden="true"><span></span></div>
     </div>
-    <div id="blazor-error-ui">
-        An unhandled error has occurred.
-        <a href="" class="reload">Reload</a>
-        <span class="dismiss">&#x2715;</span>
-    </div>
-    <script src="adminStorage.js"></script>
-    <script src="downloadHelper.js"></script>
-    <script src="_content/MudBlazor/MudBlazor.min.js"></script>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+  </div>
+  <div id="blazor-error-ui" role="alert">
+    Something went wrong.<a href="." class="reload">Reload</a>
+    <button type="button" class="dismiss" aria-label="Dismiss">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <script src="js/n12d.js"></script>
+  <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
 </body>
 </html>

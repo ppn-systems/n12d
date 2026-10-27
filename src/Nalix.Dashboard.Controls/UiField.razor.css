@@ -1,0 +1,30 @@
+/* UiField: a label, its control, and a hint or error line. */
+
+.ui-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    min-width: 0;
+}
+
+.ui-field__label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--text-primary);
+}
+
+.ui-field__hint,
+.ui-field__error {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.4;
+}
+
+.ui-field__hint {
+    color: var(--text-muted);
+}
+
+.ui-field__error {
+    color: var(--danger);
+}

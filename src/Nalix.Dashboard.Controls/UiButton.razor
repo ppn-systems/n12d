@@ -1,0 +1,56 @@
+<button type="@Type"
+        class="@CssClass"
+        disabled="@IsDisabled"
+        aria-busy="@(Busy ? "true" : "false")"
+        title="@Title"
+        @onclick="OnClick">
+    @if (Busy)
+    {
+        <span class="ui-btn__spinner" aria-hidden="true"></span>
+    }
+    @ChildContent
+</button>
+
+@code {
+    /// <summary>Gets or sets the visual weight.</summary>
+    [Parameter] public UiButtonVariant Variant { get; set; } = UiButtonVariant.Primary;
+
+    /// <summary>Gets or sets the size: <c>default</c>, <c>sm</c> or <c>icon</c>.</summary>
+    [Parameter] public string Size { get; set; } = "default";
+
+    /// <summary>Gets or sets the button type attribute.</summary>
+    [Parameter] public string Type { get; set; } = "button";
+
+    /// <summary>Gets or sets a value that disables the button.</summary>
+    [Parameter] public bool Disabled { get; set; }
+
+    /// <summary>Gets or sets a value that shows a spinner and disables the button while work runs.</summary>
+    [Parameter] public bool Busy { get; set; }
+
+    /// <summary>Gets or sets the click handler.</summary>
+    [Parameter] public EventCallback<MouseEventArgs> OnClick { get; set; }
+
+    /// <summary>Gets or sets the tooltip text.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Gets or sets the button label.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    private bool IsDisabled => Disabled || Busy;
+
+    private string CssClass => string.IsNullOrEmpty(Class)
+        ? "ui-btn " + VariantClass + " ui-btn--size-" + Size
+        : "ui-btn " + VariantClass + " ui-btn--size-" + Size + " " + Class;
+
+    private string VariantClass => Variant switch
+    {
+        UiButtonVariant.Primary => "ui-btn--primary",
+        UiButtonVariant.Secondary => "ui-btn--secondary",
+        UiButtonVariant.Ghost => "ui-btn--ghost",
+        UiButtonVariant.Danger => "ui-btn--danger",
+        _ => "ui-btn--primary",
+    };
+}

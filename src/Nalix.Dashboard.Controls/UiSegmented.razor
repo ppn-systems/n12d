@@ -1,0 +1,31 @@
+<div class="ui-segmented @Class" role="group">
+    @foreach (KeyValuePair<string, string> option in Options)
+    {
+        bool active = string.Equals(option.Key, Value, StringComparison.Ordinal);
+        <button type="button"
+                class="ui-segmented__btn @(active ? "is-active" : null)"
+                aria-pressed="@(active ? "true" : "false")"
+                @onclick="() => Select(option.Key)">@option.Value</button>
+    }
+</div>
+
+@code {
+    /// <summary>Gets or sets the segments as key to label pairs.</summary>
+    [Parameter] public IReadOnlyList<KeyValuePair<string, string>> Options { get; set; } = [];
+
+    /// <summary>Gets or sets the key of the selected segment.</summary>
+    [Parameter] public string Value { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the callback invoked with the key of a newly selected segment.</summary>
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    private Task Select(string key)
+    {
+        return string.Equals(key, Value, StringComparison.Ordinal)
+            ? Task.CompletedTask
+            : ValueChanged.InvokeAsync(key);
+    }
+}

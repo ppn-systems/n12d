@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Nalix.Dashboard.Transport</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nalix.Dashboard.Abstractions\Nalix.Dashboard.Abstractions.csproj" />
+  </ItemGroup>
+</Project>

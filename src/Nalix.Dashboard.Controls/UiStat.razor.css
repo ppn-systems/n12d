@@ -1,0 +1,121 @@
+/* UiStat: one KPI figure. It has no border or background of its own; the surrounding UiStatGroup or
+   UiCard is the surface. */
+
+.uistat {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    min-height: 4.3rem;
+    color: inherit;
+    text-decoration: none;
+}
+
+/* A clickable tile is a real button, so it needs the browser box removed. */
+button.uistat {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+}
+
+.uistat--link:hover .uistat__value {
+    text-decoration: underline;
+}
+
+.uistat--link:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+    border-radius: var(--radius);
+}
+
+.uistat__label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    line-height: 1.2;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.uistat__dot {
+    flex: none;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.ui-tone--accent { color: var(--accent); }
+.ui-tone--success { color: var(--success); }
+.ui-tone--warning { color: var(--warning); }
+.ui-tone--danger { color: var(--danger); }
+
+/* A value and its unit stay on one line ("101.0 MiB"); narrow tiles shrink the type instead of wrapping. */
+.uistat__value {
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
+    font-weight: 600;
+    line-height: 1.15;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.uistat__delta {
+    line-height: 1.2;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+}
+
+.uistat__delta--good { color: var(--success); }
+.uistat__delta--warning { color: color-mix(in srgb, var(--warning) 60%, var(--text-primary)); }
+.uistat__delta--bad { color: var(--danger); }
+
+.uistat__sub {
+    line-height: 1.2;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.uistat__sub--warning { color: color-mix(in srgb, var(--warning) 60%, var(--text-primary)); }
+.uistat__sub--danger { color: var(--danger); }
+
+/* The sparkline sits at the bottom of the tile. */
+.uistat__spark {
+    display: block;
+    min-width: 0;
+    margin-top: auto;
+    padding-top: 0.25rem;
+}
+
+/* Optional palette slot: a 4px bar on the left edge, and a soft tint on hover or focus. */
+.uistat--slot {
+    position: relative;
+    padding-left: 0.75rem;
+    border-radius: var(--radius);
+}
+
+.uistat--slot::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 4px;
+    border-radius: 2px;
+    background: var(--uistat-c);
+}
+
+.uistat--slot:hover,
+.uistat--slot:focus-within {
+    background: var(--uistat-soft);
+}

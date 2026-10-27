@@ -1,0 +1,114 @@
+@page "/metric"
+@inherits StoreComponent
+
+<PageTitle>@(Path ?? "Metric") · Nalix</PageTitle>
+
+@if (string.IsNullOrEmpty(Path))
+{
+    <UiEmpty Title="No metric selected" Message="Click any number on a report to chart it here." />
+}
+else
+{
+    <div class="ui-stack">
+        <div class="ad-page__head">
+            <div>
+                <h1 class="ad-page__title ui-mono metric-title">@Path</h1>
+                <p class="ad-page__hint">@(Data is null ? "Waiting for samples…" : $"{Data.Count} samples kept · last at {UiFormat.Time(Data.LatestTime)}")</p>
+            </div>
+        </div>
+
+        @if (Data is { Count: > 0 } data)
+        {
+            <UiStatGroup>
+                <UiStat Label="Latest" Value="@Format(data.Latest)" />
+                <UiStat Label="Minimum" Value="@Format(_min)" />
+                <UiStat Label="Maximum" Value="@Format(_max)" />
+                <UiStat Label="Average" Value="@Format(_mean)" />
+                <UiStat Label="Change" Value="@Format(_delta)" Hint="over the kept window" Tone="@(_delta > 0 ? UiTone.Warn : UiTone.Neutral)" />
+            </UiStatGroup>
+
+            <UiCard Title="History">
+                <UiLineChart Series="@([new UiChartSeries(Name, data.Times, data.Values, UiTone.Accent)])" Height="320" Formatter="@Format" />
+            </UiCard>
+
+            <UiCard Title="Anomalies" Subtitle="Rolling z-score spikes and least-squares trend on this series.">
+                @if (_findings.Count == 0)
+                {
+                    <p class="ui-muted">Nothing unusual in the kept window.</p>
+                }
+                else
+                {
+                    <FindingList Findings="@_findings" />
+                }
+            </UiCard>
+        }
+    </div>
+}
+
+@code {
+    private readonly List<DiagnosticFinding> _findings = [];
+    private double _min = double.NaN;
+    private double _max = double.NaN;
+    private double _mean = double.NaN;
+    private double _delta = double.NaN;
+    private long _analyzedAt;
+
+    [SupplyParameterFromQuery(Name = "p")]
+    public string? Path { get; set; }
+
+    private MetricSeries? Data => Path is null ? null : Series(Path);
+
+    private string Name
+    {
+        get
+        {
+            int dot = Path?.LastIndexOf('.') ?? -1;
+            return dot < 0 ? Path ?? string.Empty : Path![(dot + 1)..];
+        }
+    }
+
+    protected override RuntimeObservationTargets WatchedTargets => SectionOf(Path)?.Target ?? RuntimeObservationTargets.NONE;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        _analyzedAt = 0;
+    }
+
+    protected override bool ShouldRender()
+    {
+        Summarize();
+        return true;
+    }
+
+    private string Format(double value) => UiFormat.Auto(Name, value);
+
+    private void Summarize()
+    {
+        MetricSeries? data = Data;
+        if (data is null || data.Count == 0 || data.LatestTime == _analyzedAt)
+        {
+            return;
+        }
+
+        _analyzedAt = data.LatestTime;
+        long[] times = new long[data.Count];
+        double[] values = new double[data.Count];
+        data.CopyTo(times, values);
+
+        _min = double.PositiveInfinity;
+        _max = double.NegativeInfinity;
+        foreach (double value in values)
+        {
+            _min = Math.Min(_min, value);
+            _max = Math.Max(_max, value);
+        }
+
+        _mean = Nalix.Dashboard.Infrastructure.Statistics.SeriesMath.Mean(values);
+        _delta = values[^1] - values[0];
+
+        _findings.Clear();
+        new Nalix.Dashboard.Infrastructure.Statistics.SpikeDetector().Detect(Path!, times, values, _findings);
+        new Nalix.Dashboard.Infrastructure.Statistics.TrendDetector().Detect(Path!, times, values, _findings);
+    }
+}

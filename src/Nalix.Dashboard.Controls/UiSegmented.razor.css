@@ -1,0 +1,49 @@
+/* UiSegmented: a row of mutually exclusive buttons, used as a filter or a view switch. */
+
+.ui-segmented {
+    display: inline-flex;
+    align-items: stretch;
+    flex-shrink: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    background: var(--surface-2);
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius);
+}
+
+.ui-segmented__btn {
+    padding: 0.3125rem 0.875rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 100ms ease, color 100ms ease;
+}
+
+.ui-segmented__btn + .ui-segmented__btn {
+    border-left: 1px solid var(--border-subtle);
+}
+
+.ui-segmented__btn:hover:not(:disabled) {
+    background: var(--state-hover);
+    color: var(--text-primary);
+}
+
+.ui-segmented__btn.is-active {
+    background: var(--accent);
+    color: var(--accent-contrast);
+}
+
+.ui-segmented__btn.is-active:hover {
+    background: var(--accent-hover);
+    color: var(--accent-contrast);
+}
+
+.ui-segmented__btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: -2px;
+}

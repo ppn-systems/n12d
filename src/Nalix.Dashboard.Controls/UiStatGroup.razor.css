@@ -1,0 +1,22 @@
+/* UiStatGroup: a surface holding a row of UiStat tiles, divided by hairlines. */
+
+.uistatgroup {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    min-width: 0;
+    overflow: hidden;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+/* The hairlines are inset shadows on each tile, so a tile's own hover tint still paints over them. */
+.uistatgroup ::deep .uistat {
+    padding: 1rem 1.25rem;
+    box-shadow: inset -1px 0 0 var(--border-subtle), inset 0 -1px 0 var(--border-subtle);
+}
+
+.uistatgroup ::deep .uistat--link:not(.uistat--slot):hover {
+    background: var(--state-hover);
+}

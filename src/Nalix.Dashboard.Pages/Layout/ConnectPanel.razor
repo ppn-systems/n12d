@@ -1,0 +1,93 @@
+@inherits StoreComponent
+
+<div class="connect">
+    <form class="connect-card" @onsubmit="ConnectAsync" @onsubmit:preventDefault>
+        <div class="connect-head">
+            <img class="connect-mark" src="_content/Nalix.Dashboard.Controls/brand/nalix-mark.svg" width="40" height="40" alt="" />
+            <h1>Nalix observability</h1>
+        </div>
+        <p class="connect-hint">Connect to a server running <span class="connect-code">UseObservability()</span>.</p>
+
+        <div class="connect-grid">
+            <UiField Label="Host" For="host" Class="span-2">
+                <UiTextInput Id="host" @bind-Value="_host" Placeholder="localhost" AutoComplete="url" />
+            </UiField>
+            <UiField Label="Port" For="port">
+                <UiNumberInput Id="port" @bind-Value="_port" Min="1" Max="65535" />
+            </UiField>
+            <UiField Label="WebSocket path" For="path" Class="span-2">
+                <UiTextInput Id="path" @bind-Value="_path" Monospace="true" />
+            </UiField>
+            <UiField Label="Secure" For="tls">
+                <UiSwitch @bind-Value="_tls" Label="wss://" />
+            </UiField>
+            <UiField Label="Access key" For="key" Class="span-3" Hint="The 64-character hex key from the server's observability.private file." Error="@KeyError">
+                <UiTextInput Id="key" @bind-Value="_key" Type="password" Monospace="true" AutoComplete="off" Placeholder="0123…cdef" />
+            </UiField>
+        </div>
+
+        <UiSwitch @bind-Value="_remember" Label="Remember the key on this device" />
+
+        @if (Store.Error is { } error && !Busy)
+        {
+            <div class="connect-error" role="alert"><UiIcon Name="alert" /> @error</div>
+        }
+
+        <UiButton Type="submit" Variant="UiButtonVariant.Primary" Busy="@Busy" Class="connect-submit">
+            <UiIcon Name="plug" /> @(Busy ? StatusText : "Connect")
+        </UiButton>
+    </form>
+</div>
+
+@code {
+    private string _host = "localhost";
+    private int _port = 57207;
+    private string _path = "/ws/";
+    private bool _tls;
+    private string _key = string.Empty;
+    private bool _remember;
+    private bool _touched;
+    private bool _loaded;
+
+    private bool Busy => Store.Status is ConnectionStatus.Connecting or ConnectionStatus.Authorizing;
+
+    private string StatusText => Store.Status == ConnectionStatus.Authorizing ? "Authorizing…" : "Connecting…";
+
+    private string? KeyError => _touched && !IsKeyValid ? "Expected 64 hexadecimal characters." : null;
+
+    private bool IsKeyValid => _key.Trim().Length == 64 && Convert.FromHexString(_key.Trim(), stackalloc byte[32], out _, out _) == System.Buffers.OperationStatus.Done;
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+        if (!_loaded)
+        {
+            _loaded = true;
+            ServerEndpoint endpoint = Store.Settings.Endpoint;
+            _host = endpoint.Host;
+            _port = endpoint.Port;
+            _path = endpoint.Path;
+            _tls = endpoint.UseTls;
+            _remember = Store.Settings.RememberKey;
+        }
+    }
+
+    private async Task ConnectAsync()
+    {
+        _touched = true;
+        if (!IsKeyValid || Busy)
+        {
+            return;
+        }
+
+        ServerEndpoint endpoint = Store.Settings.Endpoint with
+        {
+            Host = _host.Trim(),
+            Port = (ushort)Math.Clamp(_port, 1, 65535),
+            Path = string.IsNullOrWhiteSpace(_path) ? "/" : _path.Trim(),
+            UseTls = _tls,
+        };
+
+        await Store.ConnectAsync(endpoint, _key.Trim(), _remember);
+    }
+}

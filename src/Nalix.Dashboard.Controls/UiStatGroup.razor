@@ -1,0 +1,16 @@
+<div class="uistatgroup @Class" style="@ColumnsStyle">@ChildContent</div>
+
+@code {
+    /// <summary>Gets or sets the <see cref="UiStat"/> tiles.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets a fixed column count. Zero (the default) fills rows with tiles at least 180px wide.</summary>
+    [Parameter] public int Columns { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    private string? ColumnsStyle => Columns > 0
+        ? "grid-template-columns: repeat(" + Columns.ToString(CultureInfo.InvariantCulture) + ", minmax(0, 1fr))"
+        : null;
+}

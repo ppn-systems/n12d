@@ -7,8 +7,11 @@ on:
       - main
     paths:
       - .github/workflows/pages.yml
-      - src/Nalix.Dashboard/**
-      - src/Nalix.Dashboard.sln
+      - src/**
+      - tests/**
+      - library/**
+      - Directory.*.props
+      - global.json
   pull_request:
     types:
       - opened
@@ -17,8 +20,11 @@ on:
       - labeled
     paths:
       - .github/workflows/pages.yml
-      - src/Nalix.Dashboard/**
-      - src/Nalix.Dashboard.sln
+      - src/**
+      - tests/**
+      - library/**
+      - Directory.*.props
+      - global.json
   workflow_dispatch:
 
 permissions:
@@ -27,13 +33,14 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  # Pull requests build in parallel per branch; deployments stay serialized.
+  group: pages-${{ github.event_name == 'pull_request' && github.ref || 'deploy' }}
   cancel-in-progress: false
 
 jobs:
   build:
+    # Build and test run on every pull request; only a push to the default branch deploys.
     name: Build Dashboard
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && (contains(github.event.pull_request.labels.*.name, 'document') || github.event.pull_request.user.login == 'dependabot[bot]'))
     runs-on: ubuntu-latest
 
     steps:
@@ -46,10 +53,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore src/Nalix.Dashboard.sln
+        run: dotnet restore src/Nalix.Dashboard.slnx
 
       - name: Build
-        run: dotnet build src/Nalix.Dashboard.sln --configuration Release --no-restore
+        run: dotnet build src/Nalix.Dashboard.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet run --project tests/Nalix.Dashboard.Tests --configuration Release --no-build
 
       - name: Publish dashboard
         run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-restore --output artifacts/dashboard

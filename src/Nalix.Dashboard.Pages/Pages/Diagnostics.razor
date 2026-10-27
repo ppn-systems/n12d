@@ -1,0 +1,84 @@
+@page "/diagnostics"
+@inherits StoreComponent
+
+<PageTitle>Diagnostics · Nalix</PageTitle>
+
+<div class="ui-stack">
+    <div class="ad-page__head">
+        <div>
+            <h1 class="ad-page__title">Diagnostics</h1>
+            <p class="ad-page__hint">Spikes (rolling z-score against the preceding window) and leaks (least-squares trend with p &lt; 0.05) across key runtime metrics, computed in your browser from the kept history.</p>
+        </div>
+        <span class="ui-spacer"></span>
+        <UiButton Variant="UiButtonVariant.Secondary" OnClick="Analyze"><UiIcon Name="refresh" /> Analyze now</UiButton>
+    </div>
+
+    <UiStatGroup>
+        <UiStat Label="Critical" Value="@Count(FindingSeverity.Critical)" Tone="@(Count(FindingSeverity.Critical) == "0" ? UiTone.Neutral : UiTone.Danger)" />
+        <UiStat Label="Warnings" Value="@Count(FindingSeverity.Warning)" Tone="@(Count(FindingSeverity.Warning) == "0" ? UiTone.Neutral : UiTone.Warn)" />
+        <UiStat Label="Info" Value="@Count(FindingSeverity.Info)" />
+        <UiStat Label="Window" Value="@UiFormat.Duration(WindowMs)" Hint="@($"{Store.History.Count} metrics tracked")" />
+    </UiStatGroup>
+
+    <UiCard Title="Findings" Subtitle="@(_lastRun is null ? null : $"Analyzed at {_lastRun:HH:mm:ss}; refreshes every 10 s while this page is open.")">
+        @if (_findings.Count == 0)
+        {
+            <UiEmpty Title="All clear" Message="No anomalies in the kept history. Detectors need about 30 samples before they report." />
+        }
+        else
+        {
+            <FindingList Findings="@_findings" ShowMetric="true" />
+        }
+    </UiCard>
+</div>
+
+@code {
+    private readonly Nalix.Dashboard.State.Diagnostics.DiagnosticsAnalyzer _analyzer = new();
+    private List<DiagnosticFinding> _findings = [];
+    private DateTimeOffset? _lastRun;
+
+    private double WindowMs
+    {
+        get
+        {
+            MetricSeries? cpu = Series("Process.CpuTimeMs");
+            return cpu is { Count: > 1 } ? cpu.Times[^1] - cpu.Times[0] : 0;
+        }
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Analyze();
+    }
+
+    protected override bool ShouldRender()
+    {
+        if (_lastRun is null || DateTimeOffset.Now - _lastRun.Value >= TimeSpan.FromSeconds(10))
+        {
+            Analyze();
+        }
+
+        return true;
+    }
+
+    private void Analyze()
+    {
+        _findings = _analyzer.Analyze(Store.History);
+        _lastRun = DateTimeOffset.Now;
+    }
+
+    private string Count(FindingSeverity severity)
+    {
+        int count = 0;
+        foreach (DiagnosticFinding finding in _findings)
+        {
+            if (finding.Severity == severity)
+            {
+                count++;
+            }
+        }
+
+        return count.ToString(CultureInfo.InvariantCulture);
+    }
+}

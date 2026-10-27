@@ -1,0 +1,66 @@
+@inherits StoreComponent
+
+@* Module rail, after AtmosOS AdminNavRail: the brand block doubles as the collapse control (it is
+   revealed on hover, and always on touch screens), items are icon + label (icon only when
+   collapsed), and at 768px and below the rail becomes an off-canvas drawer over a backdrop. *@
+
+@if (MobileOpen)
+{
+    <div class="nx-backdrop" @onclick="() => OnNavigate.InvokeAsync()"></div>
+}
+
+<aside class="nx-rail @(Collapsed ? "is-collapsed" : null) @(MobileOpen ? "is-mobile-open" : null)" aria-label="Navigation">
+    <div class="nx-brand">
+        <div class="nx-brand__face">
+            <img class="nx-brand__mark" src="_content/Nalix.Dashboard.Controls/brand/nalix-mark.svg" width="32" height="32" alt="" />
+            <span class="nx-brand__text">Nalix<small>observability</small></span>
+        </div>
+        <button class="nx-collapse" type="button" aria-label="@(Collapsed ? "Expand navigation" : "Collapse navigation")"
+                aria-expanded="@(Collapsed ? "false" : "true")" @onclick="() => OnToggleCollapsed.InvokeAsync()">
+            <UiIcon Name="@(Collapsed ? "chevron-right" : "chevron-left")" Size="20" />
+            <span class="nx-rail__label">@(Collapsed ? "Expand" : "Collapse")</span>
+        </button>
+    </div>
+
+    <nav class="nx-nav" aria-label="Modules" @onclick="() => OnNavigate.InvokeAsync()">
+        @foreach (NavModule module in NavModel.Modules)
+        {
+            bool active = module == SelectedModule;
+            <a class="nx-item @(active ? "active" : null)" href="@module.Pages[0].Href" aria-label="@module.Label"
+               aria-current="@(active ? "true" : null)" title="@(Collapsed ? module.Label : null)">
+                <UiIcon Name="@module.Icon" Size="20" /><span class="nx-rail__label">@module.Label</span>
+                @if (module.Id == "analysis" && Store.Recorder.IsRecording)
+                {
+                    <span class="nx-rec-dot" role="img" aria-label="Recording"></span>
+                }
+            </a>
+        }
+    </nav>
+    <div class="nx-foot" @onclick="() => OnNavigate.InvokeAsync()">
+        <a class="nx-item @(SelectedModule == NavModel.Settings ? "active" : null)" href="settings" aria-label="Settings" title="@(Collapsed ? "Settings" : null)">
+            <UiIcon Name="settings" Size="20" /><span class="nx-rail__label">Settings</span>
+        </a>
+    </div>
+</aside>
+
+@code {
+    /// <summary>Gets or sets whether the rail shows icons only.</summary>
+    [Parameter]
+    public bool Collapsed { get; set; }
+
+    /// <summary>Gets or sets whether the off-canvas drawer is open (narrow screens only).</summary>
+    [Parameter]
+    public bool MobileOpen { get; set; }
+
+    /// <summary>Gets or sets the module of the current page.</summary>
+    [Parameter]
+    public NavModule? SelectedModule { get; set; }
+
+    /// <summary>Raised when the brand block's collapse control is pressed.</summary>
+    [Parameter]
+    public EventCallback OnToggleCollapsed { get; set; }
+
+    /// <summary>Raised when a navigation item or the backdrop is pressed, so the drawer can close.</summary>
+    [Parameter]
+    public EventCallback OnNavigate { get; set; }
+}

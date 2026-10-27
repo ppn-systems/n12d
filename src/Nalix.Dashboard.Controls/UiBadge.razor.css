@@ -1,0 +1,40 @@
+/* UiBadge: a soft tint with strong text, one per tone. */
+
+.ui-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.25;
+    white-space: nowrap;
+}
+
+.ui-badge--neutral {
+    background: var(--surface-2);
+    color: var(--text-secondary);
+}
+
+.ui-badge--accent {
+    background: var(--accent-soft);
+    color: var(--accent);
+}
+
+.ui-badge--success {
+    background: var(--success-soft);
+    color: var(--success);
+}
+
+/* Amber is too faint as 12px text on its own tint, so the text is pushed toward the body colour. */
+.ui-badge--warning {
+    background: var(--warning-soft);
+    color: color-mix(in srgb, var(--warning) 60%, var(--text-primary));
+}
+
+.ui-badge--danger {
+    background: var(--danger-soft);
+    color: var(--danger);
+}

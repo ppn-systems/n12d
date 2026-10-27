@@ -1,0 +1,201 @@
+/* UiLineChart: a time-series line chart in plain SVG.
+   The SVG stretches with preserveAspectRatio="none" and its strokes are non-scaling. It sits absolutely
+   inside a canvas of fixed height, so its 1000x1000 viewBox cannot size the box itself. Text is HTML. */
+
+.uilc {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 0;
+    width: 100%;
+    margin: 0;
+    --uilc-axis: 4rem;
+}
+
+.uilc__empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-size: 0.875rem;
+}
+
+.uilc__plot {
+    display: flex;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.uilc__yaxis {
+    position: relative;
+    flex: none;
+    width: var(--uilc-axis);
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+}
+
+.uilc__ylabel {
+    position: absolute;
+    right: 0;
+    line-height: 1;
+    white-space: nowrap;
+    transform: translateY(-50%);
+}
+
+.uilc__ylabel--top {
+    transform: none;
+}
+
+.uilc__ylabel--bottom {
+    transform: translateY(-100%);
+}
+
+.uilc__canvas {
+    position: relative;
+    flex: 1 1 auto;
+    min-width: 0;
+    border-left: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.uilc__svg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.uilc__grid {
+    stroke: var(--chart-track);
+    stroke-width: 1;
+}
+
+.uilc__line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+/* Hit buckets cover the canvas and catch the pointer. The guide and tooltip come after them in the DOM. */
+.uilc__hits {
+    position: absolute;
+    inset: 0;
+    display: flex;
+}
+
+.uilc__hit {
+    flex: 1 1 0;
+    min-width: 0;
+    height: 100%;
+}
+
+.uilc__guide {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    border-left: 1px dashed var(--text-muted);
+    pointer-events: none;
+}
+
+.uilc__tip {
+    position: absolute;
+    top: 0.5rem;
+    z-index: 1;
+    padding: 0.5rem 0.625rem;
+    white-space: nowrap;
+    pointer-events: none;
+    background: var(--surface-1);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
+}
+
+.uilc__tip--right {
+    transform: translateX(0.75rem);
+}
+
+.uilc__tip--left {
+    transform: translateX(calc(-100% - 0.75rem));
+}
+
+.uilc__tip-time {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.uilc__tip-row {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.uilc__tip-value {
+    margin-left: auto;
+    padding-left: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.uilc__xaxis {
+    display: flex;
+    gap: 0.5rem;
+    font-family: var(--mono);
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+}
+
+.uilc__xaxis > span:first-child {
+    flex: none;
+    width: var(--uilc-axis);
+}
+
+.uilc__xlabels {
+    flex: 1 1 auto;
+    display: flex;
+    justify-content: space-between;
+    min-width: 0;
+}
+
+.uilc__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+}
+
+.uilc__legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.uilc__legend-value {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    color: var(--text-primary);
+}
+
+.uilc__swatch {
+    flex: none;
+    width: 0.625rem;
+    height: 0.625rem;
+    border-radius: 2px;
+}

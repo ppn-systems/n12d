@@ -1,0 +1,12 @@
+<span class="ui-badge @UiCss.BadgeClass(Tone) @Class">@ChildContent</span>
+
+@code {
+    /// <summary>Gets or sets the colour tone.</summary>
+    [Parameter] public UiTone Tone { get; set; } = UiTone.Neutral;
+
+    /// <summary>Gets or sets the badge text.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+}

@@ -1,0 +1,35 @@
+<div class="ui-field @Class">
+    @if (Label is not null)
+    {
+        <label class="ui-field__label" for="@For">@Label</label>
+    }
+    @ChildContent
+    @if (Error is not null)
+    {
+        <p class="ui-field__error" role="alert">@Error</p>
+    }
+    else if (Hint is not null)
+    {
+        <p class="ui-field__hint">@Hint</p>
+    }
+</div>
+
+@code {
+    /// <summary>Gets or sets the label text.</summary>
+    [Parameter] public string? Label { get; set; }
+
+    /// <summary>Gets or sets the helper text shown when there is no error.</summary>
+    [Parameter] public string? Hint { get; set; }
+
+    /// <summary>Gets or sets the validation message.</summary>
+    [Parameter] public string? Error { get; set; }
+
+    /// <summary>Gets or sets the id of the control the label points at.</summary>
+    [Parameter] public string? For { get; set; }
+
+    /// <summary>Gets or sets the control.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+}

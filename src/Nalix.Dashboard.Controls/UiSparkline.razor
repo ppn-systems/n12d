@@ -1,0 +1,135 @@
+@if (_hasTrend)
+{
+    <svg class="uispark @Class" style="@_colorStyle" viewBox="0 0 @Width @Height" role="img" aria-label="@AriaLabel" focusable="false">
+        <title>@AriaLabel</title>
+        @if (_area.Length > 0)
+        {
+            <polygon class="uispark__area" points="@_area" />
+        }
+        <polyline class="uispark__line" points="@_line" />
+        <circle class="uispark__dot" cx="@_lastX" cy="@_lastY" r="2.5" />
+    </svg>
+}
+
+@code {
+    private const double Pad = 3d;
+
+    private readonly StringBuilder _points = new();
+    private string _line = string.Empty;
+    private string _area = string.Empty;
+    private string _lastX = string.Empty;
+    private string _lastY = string.Empty;
+    private string _colorStyle = string.Empty;
+    private bool _hasTrend;
+
+    /// <summary>Gets or sets the series, oldest first. Non-finite points are skipped; fewer than two finite points draw nothing.</summary>
+    [Parameter] public IReadOnlyList<double> Values { get; set; } = [];
+
+    /// <summary>Gets or sets the SVG viewBox width. The rendered width is fluid, capped at 7.5rem.</summary>
+    [Parameter] public int Width { get; set; } = 120;
+
+    /// <summary>Gets or sets the SVG viewBox height. The rendered height follows the width.</summary>
+    [Parameter] public int Height { get; set; } = 24;
+
+    /// <summary>Gets or sets the line colour, used when <see cref="Slot"/> is null.</summary>
+    [Parameter] public UiTone Tone { get; set; } = UiTone.Accent;
+
+    /// <summary>Gets or sets a value that fills the area under the line with a soft tint.</summary>
+    [Parameter] public bool Area { get; set; } = true;
+
+    /// <summary>Gets or sets a palette slot (1 to 7). The line and the last point use <c>--chart-{Slot}</c>.</summary>
+    [Parameter] public int? Slot { get; set; }
+
+    /// <summary>Gets or sets the accessible description of the trend.</summary>
+    [Parameter] public string AriaLabel { get; set; } = "Trend";
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        _colorStyle = "--uispark-c: " + (Slot is { } slot
+            ? "var(--chart-" + Math.Clamp(slot, 1, 7).ToString(CultureInfo.InvariantCulture) + ")"
+            : UiCss.ToneColor(Tone));
+        Build();
+    }
+
+    private void Build()
+    {
+        _line = string.Empty;
+        _area = string.Empty;
+        _hasTrend = false;
+
+        int count = Values.Count;
+        double min = double.PositiveInfinity;
+        double max = double.NegativeInfinity;
+        int finite = 0;
+        int first = -1;
+        int last = -1;
+        for (int i = 0; i < count; i++)
+        {
+            double value = Values[i];
+            if (!double.IsFinite(value))
+            {
+                continue;
+            }
+
+            finite++;
+            min = Math.Min(min, value);
+            max = Math.Max(max, value);
+            if (first < 0)
+            {
+                first = i;
+            }
+
+            last = i;
+        }
+
+        if (finite < 2)
+        {
+            return;
+        }
+
+        _hasTrend = true;
+        double width = Width;
+        double height = Height;
+        double span = max - min;
+        double step = (width - 2 * Pad) / (count - 1);
+
+        double Y(double value) => span > 0
+            ? height - Pad - (value - min) / span * (height - 2 * Pad)
+            : height / 2;
+
+        _points.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            double value = Values[i];
+            if (!double.IsFinite(value))
+            {
+                continue;
+            }
+
+            if (_points.Length > 0)
+            {
+                _points.Append(' ');
+            }
+
+            UiSvg.AppendPoint(_points, Pad + i * step, Y(value));
+        }
+
+        _line = _points.ToString();
+
+        double firstX = Pad + first * step;
+        double lastX = Pad + last * step;
+        _lastX = lastX.ToString("0.0", CultureInfo.InvariantCulture);
+        _lastY = Y(Values[last]).ToString("0.0", CultureInfo.InvariantCulture);
+
+        if (Area && first != last)
+        {
+            _area = _line
+                + " " + lastX.ToString("0.0", CultureInfo.InvariantCulture) + "," + height.ToString("0.0", CultureInfo.InvariantCulture)
+                + " " + firstX.ToString("0.0", CultureInfo.InvariantCulture) + "," + height.ToString("0.0", CultureInfo.InvariantCulture);
+        }
+    }
+}

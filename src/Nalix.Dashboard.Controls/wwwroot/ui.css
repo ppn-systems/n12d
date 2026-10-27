@@ -1,0 +1,258 @@
+/* Copyright (c) 2026 PPN Corporation. All rights reserved. Licensed under the Apache License, Version 2.0. */
+
+/* Base reset, typography, page header, layout utilities and shared form controls (AtmosOS style).
+   Load after tokens.css and fonts.css. Colours come from tokens only; hairlines use --line. */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--surface-page);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, p, ul, ol, figure {
+  margin: 0;
+}
+
+h1, h2, h3 {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+ul, ol {
+  padding: 0;
+  list-style: none;
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+a:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+input, select, textarea {
+  background-color: var(--control-bg);
+  color: var(--text-primary);
+  border-color: var(--control-border);
+}
+
+::selection {
+  background-color: hsl(var(--primary) / 0.28);
+  color: var(--text-primary);
+}
+
+/* Screen-reader only: visually hidden, still announced. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Focus ring for interactive elements that have no component-specific one. */
+:where(a, button, input, select, textarea, summary, [role="button"], [tabindex]:not([tabindex="-1"])):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+
+/* Thin, themed scrollbars (WebKit + Firefox). */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background-color: var(--border-strong);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover { background-color: var(--control-border); }
+
+/* Page header: title, hint line and trailing actions. Copied from AtmosOS admin.css. */
+
+.ad-page__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+  flex-wrap: nowrap;
+}
+
+.ad-page__head > *:first-child { min-width: 0; }
+
+.ad-page__title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.ad-page__title:focus,
+.ad-page__title:focus-visible {
+  outline: none;
+}
+
+.ad-page__hint {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+.ad-page__hint--warn {
+  color: var(--warning);
+}
+
+.ad-page__head-acts {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 0 0 auto;
+}
+
+/* Phones: the actions drop under the title. Literal 768px, as in AtmosOS (tablet step). */
+@media (max-width: 768px) {
+  .ad-page__head { flex-wrap: wrap; gap: 10px; }
+}
+
+/* Layout */
+
+.ui-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr));
+  gap: var(--gap);
+}
+
+.ui-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+  gap: var(--gap);
+}
+
+.ui-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.ui-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.ui-spacer {
+  flex: 1;
+}
+
+/* Text */
+
+.ui-muted {
+  color: var(--text-muted);
+}
+
+.ui-mono {
+  font-family: var(--mono);
+  font-size: 0.95em;
+}
+
+.ui-tone-accent {
+  color: var(--accent);
+}
+
+.ui-tone-ok {
+  color: var(--success);
+}
+
+.ui-tone-warn {
+  color: var(--warning);
+}
+
+.ui-tone-danger {
+  color: var(--danger);
+}
+
+/* Form controls (shared by UiTextInput, UiNumberInput and UiSelect). Same treatment as AtmosOS .ad-input. */
+
+.ui-input,
+.ui-select {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-sm);
+  background: var(--control-bg);
+  color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px var(--border-subtle);
+  transition: background 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.ui-input:hover:not(:disabled),
+.ui-select:hover:not(:disabled) {
+  background: var(--control-bg-hover);
+  border-color: var(--control-border-hover);
+}
+
+.ui-input:focus,
+.ui-select:focus {
+  outline: none;
+  background: var(--control-bg-hover);
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring), inset 0 0 0 1px var(--accent);
+}
+
+.ui-input::placeholder {
+  color: var(--text-muted);
+}
+
+.ui-input:disabled,
+.ui-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 360px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+/* Phones: two stats per row instead of one tall column. Literal 520px, n12d-specific. */
+@media (max-width: 520px) {
+  .ui-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
