@@ -56,13 +56,16 @@ button.uistat {
 .ui-tone--warning { color: var(--warning); }
 .ui-tone--danger { color: var(--danger); }
 
+/* A value and its unit stay on one line ("101.0 MiB"); narrow tiles shrink the type instead of wrapping. */
 .uistat__value {
-    font-size: 1.75rem;
+    font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.75rem);
     font-weight: 600;
     line-height: 1.15;
     font-variant-numeric: tabular-nums;
     color: var(--text-primary);
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .uistat__delta {

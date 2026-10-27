@@ -41,15 +41,11 @@
 }
 
 .nx-brand__mark {
-  display: grid;
-  place-items: center;
+  display: block;
   flex: none;
   width: 32px;
   height: 32px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font: 800 18px/1 var(--font-sans);
+  border-radius: 7px;
 }
 
 .nx-brand__text {

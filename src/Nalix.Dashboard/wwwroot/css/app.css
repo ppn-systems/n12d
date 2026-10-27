@@ -51,14 +51,10 @@ a {
 }
 
 .boot-mark {
-  display: grid;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font: 800 26px/1 var(--font-sans);
+  display: block;
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
   animation: boot-in 240ms ease-out both;
 }
 

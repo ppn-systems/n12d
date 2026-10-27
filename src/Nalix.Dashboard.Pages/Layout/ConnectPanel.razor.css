@@ -37,15 +37,11 @@
 }
 
 .connect-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   flex: none;
   width: 44px;
   height: 44px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font: 800 24px/1 var(--font-sans);
+  border-radius: 9px;
 }
 
 .connect-hint {
