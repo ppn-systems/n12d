@@ -10,5 +10,6 @@ namespace Nalix.Dashboard.Controls;
 /// <param name="Name">The legend label.</param>
 /// <param name="Times">The sample times, in Unix milliseconds.</param>
 /// <param name="Values">The sample values.</param>
-/// <param name="Tone">The line colour.</param>
-public sealed record UiChartSeries(string Name, IReadOnlyList<long> Times, IReadOnlyList<double> Values, UiTone Tone);
+/// <param name="Tone">The line colour, used when <paramref name="Slot"/> is null.</param>
+/// <param name="Slot">An optional palette slot (1 to 7, clamped). When set, the line uses <c>--chart-{Slot}</c>.</param>
+public sealed record UiChartSeries(string Name, IReadOnlyList<long> Times, IReadOnlyList<double> Values, UiTone Tone, int? Slot = null);

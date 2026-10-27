@@ -1,15 +1,15 @@
 @inherits StoreComponent
 
-<UiBadge Tone="@Tone">@Text</UiBadge>
+<span class="nx-pill @Tone" role="status"><span class="nx-pill__dot" aria-hidden="true"></span>@Text</span>
 
 @code {
-    private UiTone Tone => Store.Status switch
+    private string Tone => Store.Status switch
     {
-        ConnectionStatus.Connected when Store.IsPaused => UiTone.Warn,
-        ConnectionStatus.Connected => UiTone.Ok,
-        ConnectionStatus.Faulted => UiTone.Danger,
-        ConnectionStatus.Disconnected => UiTone.Neutral,
-        _ => UiTone.Accent,
+        ConnectionStatus.Connected when Store.IsPaused => "is-warn",
+        ConnectionStatus.Connected => "is-ok",
+        ConnectionStatus.Connecting or ConnectionStatus.Authorizing => "is-info is-busy",
+        ConnectionStatus.Faulted => "is-danger",
+        _ => "is-neutral",
     };
 
     private string Text => Store.Status switch

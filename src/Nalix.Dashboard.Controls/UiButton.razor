@@ -1,19 +1,22 @@
 <button type="@Type"
-        class="ui-button @VariantClass @Class"
+        class="@CssClass"
         disabled="@IsDisabled"
         aria-busy="@(Busy ? "true" : "false")"
         title="@Title"
         @onclick="OnClick">
     @if (Busy)
     {
-        <span class="ui-spinner" aria-hidden="true"></span>
+        <span class="ui-btn__spinner" aria-hidden="true"></span>
     }
-    <span class="ui-button-label">@ChildContent</span>
+    @ChildContent
 </button>
 
 @code {
     /// <summary>Gets or sets the visual weight.</summary>
     [Parameter] public UiButtonVariant Variant { get; set; } = UiButtonVariant.Primary;
+
+    /// <summary>Gets or sets the size: <c>default</c>, <c>sm</c> or <c>icon</c>.</summary>
+    [Parameter] public string Size { get; set; } = "default";
 
     /// <summary>Gets or sets the button type attribute.</summary>
     [Parameter] public string Type { get; set; } = "button";
@@ -38,12 +41,16 @@
 
     private bool IsDisabled => Disabled || Busy;
 
+    private string CssClass => string.IsNullOrEmpty(Class)
+        ? "ui-btn " + VariantClass + " ui-btn--size-" + Size
+        : "ui-btn " + VariantClass + " ui-btn--size-" + Size + " " + Class;
+
     private string VariantClass => Variant switch
     {
-        UiButtonVariant.Primary => "ui-button-primary",
-        UiButtonVariant.Secondary => "ui-button-secondary",
-        UiButtonVariant.Ghost => "ui-button-ghost",
-        UiButtonVariant.Danger => "ui-button-danger",
-        _ => "ui-button-primary",
+        UiButtonVariant.Primary => "ui-btn--primary",
+        UiButtonVariant.Secondary => "ui-btn--secondary",
+        UiButtonVariant.Ghost => "ui-btn--ghost",
+        UiButtonVariant.Danger => "ui-btn--danger",
+        _ => "ui-btn--primary",
     };
 }

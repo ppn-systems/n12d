@@ -1,0 +1,41 @@
+/* UiNumberInput: an integer field. Digits use tabular figures so columns of values line up. */
+
+.ui-input {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    font: inherit;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    background: var(--control-bg);
+    border: 1px solid var(--control-border);
+    border-radius: var(--radius);
+    outline: none;
+    transition: background-color 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.ui-input::placeholder {
+    color: var(--text-muted);
+}
+
+.ui-input:hover:not(:disabled) {
+    background: var(--control-bg-hover);
+    border-color: var(--control-border-hover);
+}
+
+.ui-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+.ui-input:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.ui-input--number {
+    font-variant-numeric: tabular-nums;
+}

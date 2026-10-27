@@ -1,56 +1,80 @@
-<div class="ui-chart @Class">
+<figure class="uilc @Class">
     @if (!_hasData)
     {
-        <div class="ui-chart-empty" style="height: @(Height)px">No data yet</div>
+        <p class="uilc__empty" style="height: @(Height)px" role="status">No data yet</p>
     }
     else
     {
-        <div class="ui-chart-plot" style="height: @(Height)px">
-            <div class="ui-chart-yaxis">
+        <div class="uilc__plot" style="height: @(Height)px">
+            <div class="uilc__yaxis" aria-hidden="true">
                 @for (int g = 0; g < GridLineCount; g++)
                 {
-                    <span class="ui-chart-ylabel" style="top: @_gridPercent[g]%">@_gridLabel[g]</span>
+                    <span class="uilc__ylabel @YLabelClass(g)" style="top: @_gridPercent[g]%">@_gridLabel[g]</span>
                 }
             </div>
-            <div class="ui-chart-canvas">
-                <svg class="ui-chart-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="img" aria-label="Line chart">
+            <div class="uilc__canvas" @onmouseleave="ClearHover">
+                <svg class="uilc__svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="img" aria-label="@AriaLabel" focusable="false">
+                    <title>@AriaLabel</title>
                     @for (int g = 0; g < GridLineCount; g++)
                     {
-                        <line class="ui-chart-grid" x1="0" x2="1000" y1="@_gridY[g]" y2="@_gridY[g]" />
+                        <line class="uilc__grid" x1="0" x2="1000" y1="@_gridY[g]" y2="@_gridY[g]" vector-effect="non-scaling-stroke" />
                     }
                     @for (int s = 0; s < Series.Count; s++)
                     {
                         if (_seriesPoints[s].Length > 0)
                         {
-                            <polyline class="ui-chart-line" points="@_seriesPoints[s]" style="stroke: @UiCss.ToneColor(Series[s].Tone)" />
+                            <polyline class="uilc__line" points="@_seriesPoints[s]" style="stroke: @_seriesColor[s]" vector-effect="non-scaling-stroke" />
                         }
                     }
                 </svg>
+                <div class="uilc__hits" aria-hidden="true">
+                    @for (int b = 0; b < HitCount; b++)
+                    {
+                        int bucket = b;
+                        <span class="uilc__hit" @onmouseenter="() => Hover(bucket)"></span>
+                    }
+                </div>
+                @if (_hover >= 0)
+                {
+                    <span class="uilc__guide" style="left: @_guideLeftText%"></span>
+                    <div class="uilc__tip @(_hover > HitCount / 2 ? "uilc__tip--left" : "uilc__tip--right")" style="left: @_guideLeftText%">
+                        <span class="uilc__tip-time">@_hoverTime</span>
+                        @for (int s = 0; s < Series.Count; s++)
+                        {
+                            <span class="uilc__tip-row">
+                                <span class="uilc__swatch" style="background: @_seriesColor[s]" aria-hidden="true"></span>
+                                <span>@Series[s].Name</span>
+                                <span class="uilc__tip-value">@_hoverValue[s]</span>
+                            </span>
+                        }
+                    </div>
+                }
             </div>
         </div>
-        <div class="ui-chart-xaxis">
+        <div class="uilc__xaxis" aria-hidden="true">
             <span></span>
-            <span class="ui-chart-xlabels">
+            <span class="uilc__xlabels">
                 <span>@_startLabel</span>
                 <span>@_middleLabel</span>
                 <span>@_endLabel</span>
             </span>
         </div>
-        <ul class="ui-chart-legend">
+        <ul class="uilc__legend">
             @for (int s = 0; s < Series.Count; s++)
             {
-                <li class="ui-chart-legend-item">
-                    <span class="ui-chart-swatch" style="background: @UiCss.ToneColor(Series[s].Tone)"></span>
+                <li class="uilc__legend-item">
+                    <span class="uilc__swatch" style="background: @_seriesColor[s]" aria-hidden="true"></span>
                     <span>@Series[s].Name</span>
-                    <span class="ui-mono ui-muted">@_latest[s]</span>
+                    <span class="uilc__legend-value">@_latest[s]</span>
                 </li>
             }
         </ul>
     }
-</div>
+</figure>
 
 @code {
     private const int GridLineCount = 4;
+    private const int HitCount = 120;
     private const double ViewSize = 1000d;
 
     private readonly StringBuilder _points = new();
@@ -58,11 +82,19 @@
     private readonly string[] _gridPercent = new string[GridLineCount];
     private readonly string[] _gridLabel = new string[GridLineCount];
     private string[] _seriesPoints = [];
+    private string[] _seriesColor = [];
     private string[] _latest = [];
+    private string[] _hoverValue = [];
     private string _startLabel = string.Empty;
     private string _middleLabel = string.Empty;
     private string _endLabel = string.Empty;
+    private string _hoverTime = string.Empty;
+    private string _guideLeftText = "0";
+    private long _minTime;
+    private long _maxTime;
+    private int _hover = -1;
     private bool _hasData;
+    private Func<double, string> _format = FormatDefault;
 
     /// <summary>Gets or sets the lines to draw.</summary>
     [Parameter] public IReadOnlyList<UiChartSeries> Series { get; set; } = [];
@@ -70,8 +102,11 @@
     /// <summary>Gets or sets the plot height in pixels.</summary>
     [Parameter] public int Height { get; set; } = 220;
 
-    /// <summary>Gets or sets the value formatter for the axis and legend. Defaults to <see cref="UiFormat.Number(double)"/>.</summary>
+    /// <summary>Gets or sets the value formatter for the axis, tooltip and legend. Defaults to <see cref="UiFormat.Number(double)"/>.</summary>
     [Parameter] public Func<double, string>? Formatter { get; set; }
+
+    /// <summary>Gets or sets the accessible name of the chart.</summary>
+    [Parameter] public string AriaLabel { get; set; } = "Line chart";
 
     /// <summary>Gets or sets extra CSS classes for the root element.</summary>
     [Parameter] public string? Class { get; set; }
@@ -84,12 +119,107 @@
 
     private static string FormatDefault(double value) => UiFormat.Number(value);
 
+    private static string YLabelClass(int gridLine) => gridLine switch
+    {
+        0 => "uilc__ylabel--top",
+        GridLineCount - 1 => "uilc__ylabel--bottom",
+        _ => string.Empty,
+    };
+
+    private static string ColorOf(UiChartSeries series)
+    {
+        if (series.Slot is { } slot)
+        {
+            return "var(--chart-" + Math.Clamp(slot, 1, 7).ToString(CultureInfo.InvariantCulture) + ")";
+        }
+
+        return series.Tone switch
+        {
+            UiTone.Accent => "var(--chart-1)",
+            UiTone.Ok => "var(--chart-3)",
+            UiTone.Warn => "var(--chart-4)",
+            UiTone.Danger => "var(--danger)",
+            _ => "var(--chart-muted)",
+        };
+    }
+
+    /// <summary>Hovering a hit bucket puts the guide at its centre; the tooltip reads each series at that time.</summary>
+    private void Hover(int bucket)
+    {
+        if (!_hasData)
+        {
+            return;
+        }
+
+        _hover = bucket;
+        Readout();
+    }
+
+    private void ClearHover()
+    {
+        _hover = -1;
+    }
+
+    private void Readout()
+    {
+        double fraction = (_hover + 0.5d) / HitCount;
+        long time = _minTime + (long)Math.Round(fraction * (_maxTime - _minTime));
+        _guideLeftText = (fraction * 100d).ToString("0.###", CultureInfo.InvariantCulture);
+        _hoverTime = UiFormat.Time(time);
+
+        for (int s = 0; s < Series.Count; s++)
+        {
+            UiChartSeries series = Series[s];
+            int count = Math.Min(series.Times.Count, series.Values.Count);
+            if (count == 0)
+            {
+                _hoverValue[s] = UiFormat.Dash;
+                continue;
+            }
+
+            double value = series.Values[NearestIndex(series.Times, count, time)];
+            _hoverValue[s] = double.IsFinite(value) ? _format(value) : UiFormat.Dash;
+        }
+    }
+
+    /// <summary>The index of the sample whose time is closest to <paramref name="target"/>; times are ascending.</summary>
+    private static int NearestIndex(IReadOnlyList<long> times, int count, long target)
+    {
+        int low = 0;
+        int high = count - 1;
+        while (low < high)
+        {
+            int mid = (low + high) / 2;
+            if (times[mid] < target)
+            {
+                low = mid + 1;
+            }
+            else
+            {
+                high = mid;
+            }
+        }
+
+        if (low > 0 && Math.Abs(times[low - 1] - target) <= Math.Abs(times[low] - target))
+        {
+            return low - 1;
+        }
+
+        return low;
+    }
+
     private void Build()
     {
-        Func<double, string> format = Formatter ?? FormatDefault;
+        _format = Formatter ?? FormatDefault;
         int seriesCount = Series.Count;
         _seriesPoints = new string[seriesCount];
+        _seriesColor = new string[seriesCount];
         _latest = new string[seriesCount];
+        _hoverValue = new string[seriesCount];
+        for (int s = 0; s < seriesCount; s++)
+        {
+            _seriesColor[s] = ColorOf(Series[s]);
+        }
 
         double min = double.PositiveInfinity;
         double max = double.NegativeInfinity;
@@ -110,31 +240,17 @@
 
                 long time = series.Times[i];
                 any = true;
-                if (value < min)
-                {
-                    min = value;
-                }
-
-                if (value > max)
-                {
-                    max = value;
-                }
-
-                if (time < minTime)
-                {
-                    minTime = time;
-                }
-
-                if (time > maxTime)
-                {
-                    maxTime = time;
-                }
+                min = Math.Min(min, value);
+                max = Math.Max(max, value);
+                minTime = Math.Min(minTime, time);
+                maxTime = Math.Max(maxTime, time);
             }
         }
 
         _hasData = any;
         if (!any)
         {
+            _hover = -1;
             for (int s = 0; s < seriesCount; s++)
             {
                 _seriesPoints[s] = string.Empty;
@@ -144,10 +260,13 @@
             return;
         }
 
+        _minTime = minTime;
+        _maxTime = maxTime;
+
         double range = max - min;
         double pad = range > 0 ? range * 0.05 : Math.Max(Math.Abs(max) * 0.05, 1d);
-        // Non-negative metrics (bytes, counts, percentages) never get an axis below zero.
-        double low = min >= 0 ? Math.Max(0d, min - pad) : min - pad;
+        // Non-negative metrics (bytes, counts, percentages) are anchored at zero, as AtmosOS charts are.
+        double low = min >= 0 ? 0d : min - pad;
         double high = max + pad;
         double span = high - low;
         double timeSpan = maxTime - minTime;
@@ -157,7 +276,7 @@
             double fraction = (double)g / (GridLineCount - 1);
             _gridY[g] = (fraction * ViewSize).ToString("0.0", CultureInfo.InvariantCulture);
             _gridPercent[g] = (fraction * 100d).ToString("0.0", CultureInfo.InvariantCulture);
-            _gridLabel[g] = format(high - fraction * span);
+            _gridLabel[g] = _format(high - fraction * span);
         }
 
         for (int s = 0; s < seriesCount; s++)
@@ -190,11 +309,16 @@
             }
 
             _seriesPoints[s] = _points.ToString();
-            _latest[s] = hasLast ? format(lastValue) : UiFormat.Dash;
+            _latest[s] = hasLast ? _format(lastValue) : UiFormat.Dash;
         }
 
         _startLabel = UiFormat.Time(minTime);
         _middleLabel = UiFormat.Time(minTime + (maxTime - minTime) / 2);
         _endLabel = UiFormat.Time(maxTime);
+
+        if (_hover >= 0)
+        {
+            Readout();
+        }
     }
 }

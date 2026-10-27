@@ -5,19 +5,19 @@
 <PageTitle>Recordings · Nalix</PageTitle>
 
 <div class="ui-stack">
-    <div class="page-head">
+    <div class="ad-page__head">
         <div>
-            <h1>Recordings</h1>
-            <p class="ui-muted">While recording, every tick samples all sections and keeps every metric value (up to @UiFormat.Number(Nalix.Dashboard.State.Recording.MetricRecorder.MaxRows) samples). Export as a wide CSV: one row per sample, one column per metric.</p>
+            <h1 class="ad-page__title">Recordings</h1>
+            <p class="ad-page__hint">While recording, every tick samples all sections and keeps every metric value (up to @UiFormat.Number(Nalix.Dashboard.State.Recording.MetricRecorder.MaxRows) samples). Export as a wide CSV: one row per sample, one column per metric.</p>
         </div>
     </div>
 
-    <div class="ui-grid">
+    <UiStatGroup>
         <UiStat Label="State" Value="@(Recorder.IsRecording ? "Recording" : "Idle")" Tone="@(Recorder.IsRecording ? UiTone.Danger : UiTone.Neutral)" />
         <UiStat Label="Samples" Value="@UiFormat.Number(Recorder.RowCount)" />
         <UiStat Label="Metrics" Value="@UiFormat.Number(Recorder.ColumnCount)" />
         <UiStat Label="Duration" Value="@Duration" />
-    </div>
+    </UiStatGroup>
 
     <div class="ui-row">
         @if (Recorder.IsRecording)

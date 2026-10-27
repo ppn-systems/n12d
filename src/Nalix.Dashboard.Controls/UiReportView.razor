@@ -1,53 +1,47 @@
 @if (Depth > MaxDepth)
 {
-    <span class="ui-mono ui-muted">{…}</span>
+    <span class="ui-report__muted">{…}</span>
 }
 else
 {
     <div class="ui-report @Class">
         @if (_tileCount > 0)
         {
-            <div class="ui-report-tiles">
+            <dl class="ui-report__defs">
                 @for (int i = 0; i < Node.Children.Count; i++)
                 {
                     ReportNode child = Node.Children[i];
                     if (!child.IsContainer)
                     {
                         string path = JoinPath(PathPrefix, child.Name);
-                        if (child.Kind == ReportNodeKind.Number && OnMetricClick.HasDelegate)
-                        {
-                            <button type="button" class="ui-tile ui-tile-button" @onclick="@(() => OnMetricClick.InvokeAsync(path))">
-                                <span class="ui-tile-label">@UiFormat.Humanize(child.Name)</span>
-                                <span class="ui-tile-value">@UiFormat.Auto(child.Name, child.Number)</span>
-                            </button>
-                        }
-                        else
-                        {
-                            <div class="ui-tile">
-                                <span class="ui-tile-label">@UiFormat.Humanize(child.Name)</span>
-                                <span class="ui-tile-value">
-                                    @if (child.Kind == ReportNodeKind.Boolean)
-                                    {
-                                        <UiBadge Tone="@(child.Number != 0 ? UiTone.Ok : UiTone.Neutral)">@(child.Number != 0 ? "yes" : "no")</UiBadge>
-                                    }
-                                    else if (child.Kind == ReportNodeKind.String)
-                                    {
-                                        <span class="ui-mono ui-tile-text">@child.Text</span>
-                                    }
-                                    else if (child.Kind == ReportNodeKind.Number)
-                                    {
-                                        <span>@UiFormat.Auto(child.Name, child.Number)</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="ui-muted">—</span>
-                                    }
-                                </span>
-                            </div>
-                        }
+                        <div class="ui-report__def">
+                            <dt class="ui-report__term">@UiFormat.Humanize(child.Name)</dt>
+                            <dd class="ui-report__value">
+                                @if (child.Kind == ReportNodeKind.Number && OnMetricClick.HasDelegate)
+                                {
+                                    <button type="button" class="ui-report__link" @onclick="@(() => OnMetricClick.InvokeAsync(path))">@UiFormat.Auto(child.Name, child.Number)</button>
+                                }
+                                else if (child.Kind == ReportNodeKind.Boolean)
+                                {
+                                    <UiBadge Tone="@(child.Number != 0 ? UiTone.Ok : UiTone.Neutral)">@(child.Number != 0 ? "yes" : "no")</UiBadge>
+                                }
+                                else if (child.Kind == ReportNodeKind.String)
+                                {
+                                    <span class="ui-report__text">@child.Text</span>
+                                }
+                                else if (child.Kind == ReportNodeKind.Number)
+                                {
+                                    <span>@UiFormat.Auto(child.Name, child.Number)</span>
+                                }
+                                else
+                                {
+                                    <span class="ui-report__muted">—</span>
+                                }
+                            </dd>
+                        </div>
                     }
                 }
-            </div>
+            </dl>
         }
 
         @for (int i = 0; i < Node.Children.Count; i++)
@@ -55,18 +49,21 @@ else
             ReportNode child = Node.Children[i];
             if (child.Kind == ReportNodeKind.Object)
             {
-                <details class="ui-report-section" open>
-                    <summary>@UiFormat.Humanize(child.Name)</summary>
+                <details class="ui-report__section" open>
+                    <summary class="ui-report__summary">
+                        <span class="ui-report__chevron" aria-hidden="true"><UiIcon Name="chevron-right" Size="14" /></span>
+                        <span>@UiFormat.Humanize(child.Name)</span>
+                    </summary>
                     <UiReportView Node="child" PathPrefix="@JoinPath(PathPrefix, child.Name)" Depth="Depth + 1" OnMetricClick="OnMetricClick" />
                 </details>
             }
             else if (child.Kind == ReportNodeKind.Array)
             {
-                <div class="ui-report-array">
-                    <h4 class="ui-report-array-title">@UiFormat.Humanize(child.Name)</h4>
+                <div class="ui-report__array">
+                    <h4 class="ui-report__array-title">@UiFormat.Humanize(child.Name)</h4>
                     @if (child.Children.Count == 0)
                     {
-                        <p class="ui-muted">empty</p>
+                        <p class="ui-report__muted">empty</p>
                     }
                     else if (HasContainerItems(child))
                     {
@@ -74,7 +71,7 @@ else
                     }
                     else
                     {
-                        <p class="ui-report-list">@ListText(child)</p>
+                        <p class="ui-report__list">@ListText(child)</p>
                     }
                 </div>
             }

@@ -5,52 +5,48 @@
 
 @if (ShowApp)
 {
-    <div class="shell @(_navOpen ? "nav-open" : null)">
-        <aside class="rail" aria-label="Navigation">
-            <a class="brand" href="">
-                <span class="brand-mark">n</span>
-                <span class="brand-text">Nalix<small>observability</small></span>
-            </a>
-            <nav @onclick="CloseNav">
-                <NavLink class="rail-link" href="" Match="NavLinkMatch.All"><UiIcon Name="overview" /><span>Overview</span></NavLink>
-                <div class="rail-group">Runtime</div>
-                @foreach (SectionInfo section in Sections.All)
-                {
-                    <NavLink class="rail-link" href="@("section/" + section.Slug)"><UiIcon Name="@SectionIcons.Of(section)" /><span>@section.Title</span></NavLink>
-                }
-                <div class="rail-group">Analysis</div>
-                <NavLink class="rail-link" href="diagnostics"><UiIcon Name="diagnostics" /><span>Diagnostics</span></NavLink>
-                <NavLink class="rail-link" href="recordings"><UiIcon Name="recordings" /><span>Recordings</span>@if (Store.Recorder.IsRecording) {<span class="rec-dot" title="Recording"></span>}</NavLink>
-                <NavLink class="rail-link" href="log"><UiIcon Name="log" /><span>Event log</span></NavLink>
-                <NavLink class="rail-link" href="settings"><UiIcon Name="settings" /><span>Settings</span></NavLink>
-            </nav>
-        </aside>
+    <div class="nx-shell">
+        <NavRail Collapsed="_railCollapsed" MobileOpen="_navOpen" OnToggleCollapsed="ToggleRail" OnNavigate="CloseNav" />
 
-        <div class="main">
-            <header class="topbar">
-                <button class="icon-btn nav-toggle" type="button" title="Menu" @onclick="ToggleNav"><UiIcon Name="menu" /></button>
+        <div class="nx-main">
+            <header class="nx-topbar">
+                <button class="nx-icon-btn nx-hamburger" type="button" title="Menu" aria-label="Navigation"
+                        aria-expanded="@(_navOpen ? "true" : "false")" @onclick="ToggleNav">
+                    <UiIcon Name="menu" Size="20" />
+                </button>
                 <StatusPill />
-                <span class="endpoint ui-mono ui-muted">@Store.Settings.Endpoint</span>
-                <span class="ui-spacer"></span>
+                <span class="nx-endpoint">@Store.Settings.Endpoint</span>
+                <span class="nx-spacer"></span>
                 @if (Store.Latest is { } latest)
                 {
-                    <span class="ui-muted topbar-meta" title="Round-trip of the last sample">@UiFormat.Duration(latest.RoundTripMs)</span>
+                    <span class="nx-meta" title="Round-trip of the last sample">@UiFormat.Duration(latest.RoundTripMs)</span>
                 }
-                <button class="icon-btn" type="button" title="@(Store.IsPaused ? "Resume sampling" : "Pause sampling")" @onclick="TogglePause">
-                    <UiIcon Name="@(Store.IsPaused ? "play" : "pause")" />
+                <button class="nx-icon-btn" type="button" title="@(Store.IsPaused ? "Resume sampling" : "Pause sampling")"
+                        aria-label="@(Store.IsPaused ? "Resume sampling" : "Pause sampling")" @onclick="TogglePause">
+                    <UiIcon Name="@(Store.IsPaused ? "play" : "pause")" Size="18" />
                 </button>
-                <button class="icon-btn @(Store.Recorder.IsRecording ? "recording" : null)" type="button"
-                        title="@(Store.Recorder.IsRecording ? "Stop recording" : "Start recording")" @onclick="ToggleRecording">
-                    <UiIcon Name="@(Store.Recorder.IsRecording ? "stop" : "record")" />
+                <button class="nx-icon-btn @(Store.Recorder.IsRecording ? "is-recording" : null)" type="button"
+                        title="@(Store.Recorder.IsRecording ? "Stop recording" : "Start recording")"
+                        aria-label="@(Store.Recorder.IsRecording ? "Stop recording" : "Start recording")" @onclick="ToggleRecording">
+                    <UiIcon Name="@(Store.Recorder.IsRecording ? "stop" : "record")" Size="18" />
                 </button>
-                <button class="icon-btn" type="button" title="Toggle theme" @onclick="ToggleTheme"><UiIcon Name="@(IsDark ? "sun" : "moon")" /></button>
-                <button class="icon-btn" type="button" title="Disconnect" @onclick="Disconnect"><UiIcon Name="unplug" /></button>
+                <button class="nx-icon-btn" type="button" title="Toggle theme" aria-label="Toggle theme" @onclick="ToggleTheme">
+                    <UiIcon Name="@(IsDark ? "sun" : "moon")" Size="18" />
+                </button>
+                <button class="nx-icon-btn" type="button" title="Disconnect" aria-label="Disconnect" @onclick="Disconnect">
+                    <UiIcon Name="unplug" Size="18" />
+                </button>
             </header>
+
             @if (Store.Error is { } error && Store.Status != ConnectionStatus.Connected)
             {
-                <div class="banner" role="status"><UiIcon Name="alert" /> @error @(Store.IsReconnecting ? " — reconnecting…" : null)</div>
+                <div class="nx-banner" role="status">
+                    <span class="nx-banner__icon"><UiIcon Name="alert" Size="18" /></span>
+                    <span>@error@(Store.IsReconnecting ? " — reconnecting…" : null)</span>
+                </div>
             }
-            <main class="content">
+
+            <main class="nx-content">
                 @Body
             </main>
         </div>
@@ -63,6 +59,7 @@ else
 
 @code {
     private bool _navOpen;
+    private bool _railCollapsed;
     private bool _themeApplied;
 
     private bool ShowApp => Store.Status == ConnectionStatus.Connected || Store.IsReconnecting;
@@ -87,6 +84,8 @@ else
     public void Dispose() => Store.Changed -= OnChanged;
 
     private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void ToggleRail() => _railCollapsed = !_railCollapsed;
 
     private void ToggleNav() => _navOpen = !_navOpen;
 

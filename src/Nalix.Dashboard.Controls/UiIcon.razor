@@ -1,19 +1,34 @@
-<svg class="ui-icon @Class"
-     width="@Size"
-     height="@Size"
-     viewBox="0 0 24 24"
-     fill="none"
-     stroke="currentColor"
-     stroke-width="1.8"
-     stroke-linecap="round"
-     stroke-linejoin="round"
-     aria-hidden="true"
-     focusable="false">@((MarkupString)_paths)</svg>
+@using Nalix.Dashboard.Controls.Icons
+@inject NavigationManager Navigation
+@if (_assetUrl is null)
+{
+    <span class="ui-icon @Class"
+          style="--ui-icon-size: @(Size)px;"
+          role="@(Label is null ? null : "img")"
+          aria-label="@Label"
+          aria-hidden="@(Label is null ? "true" : null)">@((MarkupString)_svg)</span>
+}
+else
+{
+    <span class="ui-icon ui-icon-mask @Class"
+          style="--ui-icon-size: @(Size)px; --ui-icon-url: url('@_assetUrl');"
+          role="@(Label is null ? null : "img")"
+          aria-label="@Label"
+          aria-hidden="@(Label is null ? "true" : null)"></span>
+}
 
 @code {
-    private string _paths = string.Empty;
+    // Shown for a name that resolves to nothing, so a typo is visible rather than blank.
+    private const string FallbackBody = "<circle cx='12' cy='12' r='4'/>";
 
-    /// <summary>Gets or sets the icon name, for example <c>overview</c> or <c>chevron-down</c>. Unknown names render a dot.</summary>
+    private string _svg = string.Empty;
+    private string? _assetUrl;
+
+    /// <summary>
+    /// Gets or sets the icon name. Resolution order: a <see cref="NavIcons"/> kebab-case name (for example
+    /// <c>shield-check</c>), then a shared asset path containing a slash (for example <c>shared/x</c>), then the
+    /// n12d alias table (for example <c>overview</c>, <c>close</c>). Unknown names render a dot.
+    /// </summary>
     [EditorRequired]
     [Parameter]
     public string Name { get; set; } = string.Empty;
@@ -24,49 +39,34 @@
     /// <summary>Gets or sets extra CSS classes for the root element.</summary>
     [Parameter] public string? Class { get; set; }
 
+    /// <summary>
+    /// Gets or sets an accessible label. When set the icon is exposed as an image with this name; when null it is
+    /// decorative and hidden from assistive technology.
+    /// </summary>
+    [Parameter] public string? Label { get; set; }
+
     /// <inheritdoc />
     protected override void OnParametersSet()
     {
-        _paths = PathsFor(Name);
-    }
+        string name = Name ?? string.Empty;
 
-    private static string PathsFor(string name) => name switch
-    {
-        "overview" => "<rect x='3' y='3' width='7' height='7' rx='1.5'/><rect x='14' y='3' width='7' height='7' rx='1.5'/><rect x='3' y='14' width='7' height='7' rx='1.5'/><rect x='14' y='14' width='7' height='7' rx='1.5'/>",
-        "process" => "<rect x='6' y='6' width='12' height='12' rx='2'/><path d='M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4'/>",
-        "dispatch" => "<path d='M4 7h11M4 12h16M4 17h11'/><path d='M12 4l3 3-3 3M12 14l3 3-3 3'/>",
-        "connections" => "<circle cx='6' cy='6' r='2.5'/><circle cx='18' cy='6' r='2.5'/><circle cx='12' cy='18' r='2.5'/><path d='M8.2 7.2l2.6 8.6M15.8 7.2l-2.6 8.6M8.5 6h7'/>",
-        "sessions" => "<circle cx='12' cy='8' r='4'/><path d='M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6'/>",
-        "tasks" => "<path d='M9 6h11M9 12h11M9 18h11'/><path d='M4 6l1.5 1.5L8 5M4 12l1.5 1.5L8 11M4 18l1.5 1.5L8 17'/>",
-        "buffers" => "<ellipse cx='12' cy='6' rx='8' ry='3'/><path d='M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6'/>",
-        "object-pools" => "<path d='M12 3l8 4-8 4-8-4 8-4z'/><path d='M4 7v10l8 4 8-4V7M12 11v10'/>",
-        "listeners" => "<circle cx='12' cy='12' r='2'/><path d='M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8'/>",
-        "protocols" => "<path d='M7 8l-4 4 4 4M17 8l4 4-4 4M14 4l-4 16'/>",
-        "connection-guard" => "<path d='M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6l8-3z'/><path d='M9 12l2 2 4-4'/>",
-        "concurrency-gate" => "<path d='M4 20V8l8-4 8 4v12'/><path d='M9 20v-6h6v6'/>",
-        "policy-rate-limiter" => "<path d='M4 16a8 8 0 1 1 16 0'/><path d='M12 16l4-5'/><circle cx='12' cy='16' r='1.2'/>",
-        "token-bucket-limiter" => "<path d='M5 8h14l-1.5 12h-11L5 8z'/><path d='M9 8a3 3 0 0 1 6 0'/>",
-        "instances" => "<rect x='4' y='3' width='16' height='7' rx='1.5'/><rect x='4' y='14' width='16' height='7' rx='1.5'/><path d='M8 6.5h.01M8 17.5h.01'/>",
-        "diagnostics" => "<path d='M3 12h4l2-5 4 10 2-5h6'/>",
-        "recordings" => "<rect x='3' y='6' width='13' height='12' rx='2'/><path d='M16 10l5-3v10l-5-3'/>",
-        "settings" => "<circle cx='12' cy='12' r='3'/><path d='M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1'/>",
-        "log" => "<path d='M6 3h8l4 4v14H6z'/><path d='M9 12h6M9 16h6M9 8h2'/>",
-        "play" => "<path d='M7 5l12 7-12 7z'/>",
-        "pause" => "<path d='M8 5v14M16 5v14'/>",
-        "stop" => "<rect x='6' y='6' width='12' height='12' rx='1.5'/>",
-        "record" => "<circle cx='12' cy='12' r='7'/><circle cx='12' cy='12' r='2.5'/>",
-        "download" => "<path d='M12 4v11M7 10l5 5 5-5M5 20h14'/>",
-        "plug" => "<path d='M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0V8zM12 16v5'/>",
-        "unplug" => "<path d='M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0V8z'/><path d='M3 3l18 18'/>",
-        "sun" => "<circle cx='12' cy='12' r='4'/><path d='M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4'/>",
-        "moon" => "<path d='M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z'/>",
-        "menu" => "<path d='M4 7h16M4 12h16M4 17h16'/>",
-        "chevron-right" => "<path d='M9 6l6 6-6 6'/>",
-        "chevron-down" => "<path d='M6 9l6 6 6-6'/>",
-        "alert" => "<path d='M12 4l9 16H3z'/><path d='M12 10v4M12 17.5v.01'/>",
-        "check" => "<path d='M5 12.5l4.5 4.5L19 7.5'/>",
-        "close" => "<path d='M6 6l12 12M18 6L6 18'/>",
-        "refresh" => "<path d='M20 11a8 8 0 1 0-2.3 5.7'/><path d='M20 4v7h-7'/>",
-        _ => "<circle cx='12' cy='12' r='4'/>",
-    };
+        if (NavIcons.TryGetBody(name, out string body) || UiIconAliases.TryResolveBody(name, out body))
+        {
+            _svg = NavIcons.Svg(Size, body);
+            _assetUrl = null;
+            return;
+        }
+
+        string assetPath = name.Contains('/') ? name : string.Empty;
+        if (assetPath.Length > 0 || UiIconAliases.TryResolveAsset(name, out assetPath))
+        {
+            _svg = string.Empty;
+            // Absolute: a relative url() inside a custom property resolves against the stylesheet that uses it.
+            _assetUrl = Navigation.BaseUri + "_content/Nalix.Dashboard.Controls/icons/" + assetPath + ".svg";
+            return;
+        }
+
+        _svg = NavIcons.Svg(Size, FallbackBody);
+        _assetUrl = null;
+    }
 }

@@ -4,21 +4,21 @@
 <PageTitle>Diagnostics · Nalix</PageTitle>
 
 <div class="ui-stack">
-    <div class="page-head">
+    <div class="ad-page__head">
         <div>
-            <h1>Diagnostics</h1>
-            <p class="ui-muted">Spikes (rolling z-score against the preceding window) and leaks (least-squares trend with p &lt; 0.05) across key runtime metrics, computed in your browser from the kept history.</p>
+            <h1 class="ad-page__title">Diagnostics</h1>
+            <p class="ad-page__hint">Spikes (rolling z-score against the preceding window) and leaks (least-squares trend with p &lt; 0.05) across key runtime metrics, computed in your browser from the kept history.</p>
         </div>
         <span class="ui-spacer"></span>
         <UiButton Variant="UiButtonVariant.Secondary" OnClick="Analyze"><UiIcon Name="refresh" /> Analyze now</UiButton>
     </div>
 
-    <div class="ui-grid">
+    <UiStatGroup>
         <UiStat Label="Critical" Value="@Count(FindingSeverity.Critical)" Tone="@(Count(FindingSeverity.Critical) == "0" ? UiTone.Neutral : UiTone.Danger)" />
         <UiStat Label="Warnings" Value="@Count(FindingSeverity.Warning)" Tone="@(Count(FindingSeverity.Warning) == "0" ? UiTone.Neutral : UiTone.Warn)" />
         <UiStat Label="Info" Value="@Count(FindingSeverity.Info)" />
         <UiStat Label="Window" Value="@UiFormat.Duration(WindowMs)" Hint="@($"{Store.History.Count} metrics tracked")" />
-    </div>
+    </UiStatGroup>
 
     <UiCard Title="Findings" Subtitle="@(_lastRun is null ? null : $"Analyzed at {_lastRun:HH:mm:ss}; refreshes every 10 s while this page is open.")">
         @if (_findings.Count == 0)

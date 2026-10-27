@@ -3,65 +3,80 @@
 
 <PageTitle>Overview · Nalix</PageTitle>
 
-<div class="ui-stack">
-    <div class="page-head">
-        <div>
-            <h1>Overview</h1>
-            <p class="ui-muted">@Subtitle</p>
-        </div>
+<div class="ad-page__head">
+    <div>
+        <h1 class="ad-page__title">Overview</h1>
+        <p class="ad-page__hint">@Subtitle</p>
+    </div>
+</div>
+
+<div class="nx-toolbar" role="toolbar" aria-label="Chart window">
+    <UiSegmented Options="@ChartWindow.Options" Value="@_window" ValueChanged="SetWindow" />
+    <span class="nx-toolbar__meta">
+        <span class="nx-live-dot @(Store.IsPaused ? "is-paused" : null)" aria-hidden="true"></span>
+        @(Store.IsPaused ? "Paused" : $"Every {UiFormat.Duration(Store.Settings.IntervalMs)}")
+    </span>
+</div>
+
+<div class="nx-grid">
+    <div class="nx-cell nx-span-12">
+        <UiStatGroup>
+            <UiStat Slot="1" Label="CPU" Value="@UiFormat.Percent(Latest(MetricPaths.CpuPercent))" Hint="@($"{Show("Process.ProcessorCount")} cores")" Tone="@CpuTone" Series="@Series(MetricPaths.CpuPercent)?.Values" OnClick="@(() => Open(MetricPaths.CpuPercent))" />
+            <UiStat Slot="2" Label="Working set" Value="@Show("Process.WorkingSetBytes")" Hint="@("heap " + Show("Process.ManagedHeapBytes"))" Series="@Series("Process.WorkingSetBytes")?.Values" OnClick="@(() => Open("Process.WorkingSetBytes"))" />
+            <UiStat Slot="3" Label="Allocation rate" Value="@(UiFormat.Bytes(Latest(MetricPaths.AllocationBytesPerSecond)) + "/s")" Hint="@($"{UiFormat.Number(Latest(MetricPaths.GcPerSecond))} GC/s · pause {Show("Process.GcPauseTimePercent")}")" Series="@Series(MetricPaths.AllocationBytesPerSecond)?.Values" OnClick="@(() => Open(MetricPaths.AllocationBytesPerSecond))" />
+            <UiStat Slot="4" Label="Thread pool" Value="@Show("Process.ThreadPoolThreads")" Hint="@(Show("Process.ThreadPoolPendingItems") + " queued")" Tone="@QueueTone" Series="@Series("Process.ThreadPoolPendingItems")?.Values" OnClick="@(() => Open("Process.ThreadPoolPendingItems"))" />
+            <UiStat Slot="5" Label="Connections" Value="@Show("Connections.TotalConnections")" Hint="@($"in {UiFormat.Bytes(Latest("Connections.IngressBytesPerSecond"))}/s · out {UiFormat.Bytes(Latest("Connections.EgressBytesPerSecond"))}/s")" Series="@Series("Connections.TotalConnections")?.Values" OnClick="@(() => Open("Connections.TotalConnections"))" />
+            <UiStat Slot="6" Label="Dispatch queue" Value="@Show("Dispatch.TotalPackets")" Hint="@($"peak {Show("Dispatch.PeakPackets")} · {Show("Dispatch.PipelineMetrics.ActiveExecutions")} running")" Series="@Series("Dispatch.TotalPackets")?.Values" OnClick="@(() => Open("Dispatch.TotalPackets"))" />
+            <UiStat Slot="7" Label="Handler time" Value="@Show("Dispatch.PipelineMetrics.AverageTimeMs")" Hint="@($"max {Show("Dispatch.PipelineMetrics.MaxTimeMs")} · {Show("Dispatch.PipelineMetrics.TotalErrors")} errors")" Tone="@ErrorTone" Series="@Series("Dispatch.PipelineMetrics.AverageTimeMs")?.Values" OnClick="@(() => Open("Dispatch.PipelineMetrics.AverageTimeMs"))" />
+        </UiStatGroup>
     </div>
 
-    <div class="ui-grid">
-        <UiStat Label="CPU" Value="@UiFormat.Percent(Latest(MetricPaths.CpuPercent))" Tone="@CpuTone" Series="@Series(MetricPaths.CpuPercent)?.Values" OnClick="@(() => Open(MetricPaths.CpuPercent))" />
-        <UiStat Label="Working set" Value="@Show("Process.WorkingSetBytes")" Series="@Series("Process.WorkingSetBytes")?.Values" OnClick="@(() => Open("Process.WorkingSetBytes"))" />
-        <UiStat Label="Managed heap" Value="@Show("Process.ManagedHeapBytes")" Series="@Series("Process.ManagedHeapBytes")?.Values" OnClick="@(() => Open("Process.ManagedHeapBytes"))" />
-        <UiStat Label="Allocation rate" Value="@(UiFormat.Bytes(Latest(MetricPaths.AllocationBytesPerSecond)) + "/s")" Series="@Series(MetricPaths.AllocationBytesPerSecond)?.Values" OnClick="@(() => Open(MetricPaths.AllocationBytesPerSecond))" />
-        <UiStat Label="GC / s" Value="@UiFormat.Number(Latest(MetricPaths.GcPerSecond))" Hint="@("pause " + Show("Process.GcPauseTimePercent"))" Series="@Series(MetricPaths.GcPerSecond)?.Values" OnClick="@(() => Open(MetricPaths.GcPerSecond))" />
-        <UiStat Label="Thread pool" Value="@Show("Process.ThreadPoolThreads")" Hint="@(Show("Process.ThreadPoolPendingItems") + " queued")" Tone="@QueueTone" Series="@Series("Process.ThreadPoolThreads")?.Values" OnClick="@(() => Open("Process.ThreadPoolPendingItems"))" />
-        <UiStat Label="Connections" Value="@Show("Connections.TotalConnections")" Series="@Series("Connections.TotalConnections")?.Values" OnClick="@(() => Open("Connections.TotalConnections"))" />
-        <UiStat Label="Ingress" Value="@(UiFormat.Bytes(Latest("Connections.IngressBytesPerSecond")) + "/s")" Series="@Series("Connections.IngressBytesPerSecond")?.Values" OnClick="@(() => Open("Connections.IngressBytesPerSecond"))" />
-        <UiStat Label="Egress" Value="@(UiFormat.Bytes(Latest("Connections.EgressBytesPerSecond")) + "/s")" Series="@Series("Connections.EgressBytesPerSecond")?.Values" OnClick="@(() => Open("Connections.EgressBytesPerSecond"))" />
-        <UiStat Label="Dispatch queue" Value="@Show("Dispatch.TotalPackets")" Hint="@("peak " + Show("Dispatch.PeakPackets"))" Series="@Series("Dispatch.TotalPackets")?.Values" OnClick="@(() => Open("Dispatch.TotalPackets"))" />
-        <UiStat Label="Handler time" Value="@Show("Dispatch.PipelineMetrics.AverageTimeMs")" Hint="@("max " + Show("Dispatch.PipelineMetrics.MaxTimeMs"))" Series="@Series("Dispatch.PipelineMetrics.AverageTimeMs")?.Values" OnClick="@(() => Open("Dispatch.PipelineMetrics.AverageTimeMs"))" />
-        <UiStat Label="Handler errors" Value="@Show("Dispatch.PipelineMetrics.TotalErrors")" Tone="@ErrorTone" Series="@Series("Dispatch.PipelineMetrics.TotalErrors")?.Values" OnClick="@(() => Open("Dispatch.PipelineMetrics.TotalErrors"))" />
+    <div class="nx-cell nx-span-6">
+        <UiCard Title="CPU" Subtitle="Process CPU across all cores">
+            <UiLineChart Series="@Chart(("CPU", MetricPaths.CpuPercent, 1))" Formatter="@UiFormat.Percent" />
+        </UiCard>
     </div>
-
-    <div class="ui-grid-wide">
-        <UiCard Title="CPU">
-            <UiLineChart Series="@Chart(("CPU %", MetricPaths.CpuPercent, UiTone.Accent))" Formatter="@UiFormat.Percent" />
+    <div class="nx-cell nx-span-6">
+        <UiCard Title="Memory" Subtitle="Working set and managed heap">
+            <UiLineChart Series="@Chart(("Working set", "Process.WorkingSetBytes", 2), ("Managed heap", "Process.ManagedHeapBytes", 3))" Formatter="@UiFormat.Bytes" />
         </UiCard>
-        <UiCard Title="Memory">
-            <UiLineChart Series="@Chart(("Working set", "Process.WorkingSetBytes", UiTone.Accent), ("Managed heap", "Process.ManagedHeapBytes", UiTone.Ok))" Formatter="@UiFormat.Bytes" />
+    </div>
+    <div class="nx-cell nx-span-6">
+        <UiCard Title="Network" Subtitle="Bytes per second across all connections">
+            <UiLineChart Series="@Chart(("Ingress", "Connections.IngressBytesPerSecond", 1), ("Egress", "Connections.EgressBytesPerSecond", 2))" Formatter="@(v => UiFormat.Bytes(v) + "/s")" />
         </UiCard>
-        <UiCard Title="Network">
-            <UiLineChart Series="@Chart(("Ingress", "Connections.IngressBytesPerSecond", UiTone.Accent), ("Egress", "Connections.EgressBytesPerSecond", UiTone.Warn))" Formatter="@(v => UiFormat.Bytes(v) + "/s")" />
-        </UiCard>
-        <UiCard Title="Dispatch">
-            <UiLineChart Series="@Chart(("Queued packets", "Dispatch.TotalPackets", UiTone.Accent), ("Active handlers", "Dispatch.PipelineMetrics.ActiveExecutions", UiTone.Ok))" />
+    </div>
+    <div class="nx-cell nx-span-6">
+        <UiCard Title="Dispatch" Subtitle="Queued packets and handlers in flight">
+            <UiLineChart Series="@Chart(("Queued", "Dispatch.TotalPackets", 6), ("Running", "Dispatch.PipelineMetrics.ActiveExecutions", 3))" />
         </UiCard>
     </div>
 
     @if (Store.GetSection(Sections.Process) is { } process)
     {
-        <UiCard Title="Runtime">
-            <div class="facts">
-                <div><span class="ui-muted">Runtime</span><span>@process.Get("Runtime")?.Text</span></div>
-                <div><span class="ui-muted">OS</span><span>@process.Get("Os")?.Text</span></div>
-                <div><span class="ui-muted">Cores</span><span>@Show("Process.ProcessorCount")</span></div>
-                <div><span class="ui-muted">Uptime</span><span>@Show("Process.UptimeMs")</span></div>
-                <div><span class="ui-muted">Samples</span><span>@UiFormat.Number(Store.SampleCount)</span></div>
-                <div><span class="ui-muted">Payload</span><span>@Show(MetricPaths.PayloadBytes)</span></div>
-            </div>
-        </UiCard>
+        <div class="nx-cell nx-span-12">
+            <UiCard Title="Runtime">
+                <dl class="nx-facts">
+                    <div><dt>Runtime</dt><dd>@process.Get("Runtime")?.Text</dd></div>
+                    <div><dt>Operating system</dt><dd>@process.Get("Os")?.Text</dd></div>
+                    <div><dt>Uptime</dt><dd>@Show("Process.UptimeMs")</dd></div>
+                    <div><dt>Samples</dt><dd>@UiFormat.Number(Store.SampleCount)</dd></div>
+                    <div><dt>Payload</dt><dd>@Show(MetricPaths.PayloadBytes)</dd></div>
+                    <div><dt>Round-trip</dt><dd>@Show(MetricPaths.RoundTripMs)</dd></div>
+                </dl>
+            </UiCard>
+        </div>
     }
 </div>
 
 @code {
+    private string _window = "300";
+
     [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
     private string Subtitle => Store.Latest is { } latest
-        ? $"Live · last sample {UiFormat.Time(latest.SampledAt)} · every {UiFormat.Duration(Store.Settings.IntervalMs)}"
+        ? $"Live runtime health · last sample {UiFormat.Time(latest.SampledAt)}"
         : "Waiting for the first sample…";
 
     private UiTone CpuTone => Latest(MetricPaths.CpuPercent) switch
@@ -75,16 +90,20 @@
 
     private UiTone ErrorTone => Latest("Dispatch.PipelineMetrics.TotalErrors") > 0 ? UiTone.Danger : UiTone.Neutral;
 
+    private int WindowSeconds => int.Parse(_window, CultureInfo.InvariantCulture);
+
+    private void SetWindow(string value) => _window = value;
+
     private void Open(string path) => Navigation.NavigateTo(MetricUrl(path));
 
-    private List<UiChartSeries> Chart(params (string Name, string Path, UiTone Tone)[] lines)
+    private List<UiChartSeries> Chart(params (string Name, string Path, int Slot)[] lines)
     {
         List<UiChartSeries> series = new(lines.Length);
-        foreach ((string name, string path, UiTone tone) in lines)
+        foreach ((string name, string path, int slot) in lines)
         {
-            if (Series(path) is { } data)
+            if (ChartWindow.Slice(Series(path), name, slot, WindowSeconds) is { } data)
             {
-                series.Add(new UiChartSeries(name, data.Times, data.Values, tone));
+                series.Add(data);
             }
         }
 

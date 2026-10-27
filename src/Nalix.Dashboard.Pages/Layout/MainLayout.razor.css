@@ -1,199 +1,131 @@
-.shell {
-  display: grid;
-  grid-template-columns: 232px 1fr;
+/* Shell: module rail (NavRail) beside a topbar and the content, after AtmosOS AdminLayout. */
+
+.nx-shell {
+  display: flex;
   min-height: 100vh;
+  background: var(--surface-page);
+  color: var(--text-primary);
 }
 
-.rail {
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow-y: auto;
-  background: var(--surface);
-  border-right: 1px solid var(--border);
-  padding: 12px 10px 24px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 8px 16px;
-  color: var(--text);
-  text-decoration: none;
-}
-
-.brand-mark {
-  display: grid;
-  place-items: center;
-  width: 30px;
-  height: 30px;
-  border-radius: var(--radius-sm);
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-weight: 700;
-  font-size: 17px;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  font-weight: 650;
-  line-height: 1.1;
-}
-
-.brand-text small {
-  color: var(--text-muted);
-  font-weight: 450;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-}
-
-.rail-group {
-  margin: 16px 10px 6px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-::deep .rail-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  text-decoration: none;
-  font-weight: 500;
-}
-
-::deep .rail-link:hover {
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-::deep .rail-link.active {
-  background: var(--surface-2);
-  color: var(--accent);
-}
-
-.rec-dot {
-  width: 8px;
-  height: 8px;
-  margin-left: auto;
-  border-radius: 50%;
-  background: var(--danger);
-  animation: pulse 1.2s ease-in-out infinite;
-}
-
-.main {
+.nx-main {
+  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-.topbar {
+.nx-topbar {
   position: sticky;
   top: 0;
-  z-index: 5;
+  z-index: var(--z-sticky, 10);
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 20px;
-  background: color-mix(in srgb, var(--bg) 88%, transparent);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--border);
+  height: 56px;
+  padding: 0 22px;
+  flex-shrink: 0;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.endpoint {
+.nx-spacer {
+  flex: 1;
+}
+
+.nx-endpoint {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
-.topbar-meta {
+.nx-meta {
+  font-size: 13px;
   font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
 }
 
-.icon-btn {
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 34px;
-  border: 1px solid var(--border);
+.nx-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
+  background: var(--control-bg);
+  color: var(--text-secondary);
   cursor: pointer;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
 }
 
-.icon-btn:hover {
+.nx-icon-btn:hover {
   background: var(--surface-2);
+  color: var(--text-primary);
+  border-color: var(--control-border-hover);
 }
 
-.icon-btn.recording {
+.nx-icon-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring, 0 0 0 2px var(--accent));
+}
+
+.nx-icon-btn.is-recording {
   color: var(--danger);
-  border-color: var(--danger);
+  background: var(--danger-soft);
+  border-color: color-mix(in srgb, var(--danger) 50%, transparent);
 }
 
-.nav-toggle {
+.nx-hamburger {
   display: none;
 }
 
-.banner {
+.nx-banner {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin: 12px 20px 0;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  background: color-mix(in srgb, var(--warn) 14%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--warn) 40%, transparent);
+  gap: 10px;
+  padding: 8px 22px;
+  flex-shrink: 0;
+  background: var(--warning-soft);
+  border-bottom: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.content {
-  padding: 20px;
+.nx-banner__icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  color: var(--warning);
+}
+
+.nx-content {
+  flex: 1;
   min-width: 0;
+  padding: 24px 22px;
 }
 
-@keyframes pulse {
-  50% { opacity: 0.35; }
-}
-
-@media (max-width: 860px) {
-  .shell {
-    grid-template-columns: 1fr;
+@media (max-width: 768px) {
+  .nx-hamburger {
+    display: inline-flex;
   }
 
-  .rail {
-    position: fixed;
-    inset: 0 auto 0 0;
-    width: 260px;
-    z-index: 20;
-    transform: translateX(-100%);
-    transition: transform 0.18s ease;
-    box-shadow: var(--shadow);
+  .nx-topbar {
+    gap: 8px;
+    padding: 0 14px;
   }
 
-  .nav-open .rail {
-    transform: none;
-  }
-
-  .nav-toggle {
-    display: grid;
-  }
-
-  .endpoint {
+  .nx-endpoint {
     display: none;
   }
 
-  .topbar {
-    padding: 10px 16px;
-  }
-
-  .content {
+  .nx-content {
     padding: 16px;
   }
 }

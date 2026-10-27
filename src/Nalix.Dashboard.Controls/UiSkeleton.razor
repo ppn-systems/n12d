@@ -1,0 +1,12 @@
+<span class="ui-skeleton @Class" style="width: @Width; height: @Height" aria-hidden="true"></span>
+
+@code {
+    /// <summary>Gets or sets the CSS width of the placeholder.</summary>
+    [Parameter] public string Width { get; set; } = "100%";
+
+    /// <summary>Gets or sets the CSS height of the placeholder.</summary>
+    [Parameter] public string Height { get; set; } = "1rem";
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+}

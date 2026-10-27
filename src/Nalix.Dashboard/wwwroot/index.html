@@ -4,9 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="theme-color" content="#1B5286" />
   <title>Nalix observability</title>
   <base href="/" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_content/Nalix.Dashboard.Controls/fonts/ibm-plex-sans-400.woff2" />
+  <link rel="stylesheet" href="_content/Nalix.Dashboard.Controls/fonts.css" />
   <link rel="stylesheet" href="_content/Nalix.Dashboard.Controls/tokens.css" />
   <link rel="stylesheet" href="_content/Nalix.Dashboard.Controls/ui.css" />
   <link rel="stylesheet" href="css/app.css" />
@@ -22,13 +25,16 @@
 </head>
 <body>
   <div id="app">
-    <div class="boot">
-      <div class="boot-mark">n</div>
-      <div class="boot-bar"><span></span></div>
+    <div class="boot" role="status" aria-label="Loading">
+      <div class="boot-mark" aria-hidden="true">n</div>
+      <div class="boot-bar" aria-hidden="true"><span></span></div>
     </div>
   </div>
   <div id="blazor-error-ui" role="alert">
-    Something went wrong. <a href="." class="reload">Reload</a>
+    Something went wrong.<a href="." class="reload">Reload</a>
+    <button type="button" class="dismiss" aria-label="Dismiss">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
   </div>
   <script src="js/n12d.js"></script>
   <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>

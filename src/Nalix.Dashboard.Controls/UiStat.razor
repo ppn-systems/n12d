@@ -1,59 +1,102 @@
-@if (OnClick.HasDelegate)
+@if (!string.IsNullOrWhiteSpace(Href))
 {
-    <button type="button" class="ui-stat ui-stat-button @Class" @onclick="@(() => OnClick.InvokeAsync())">
-        <span class="ui-stat-label">@Label</span>
-        <span class="ui-stat-value @UiCss.ToneClass(Tone)">@Value</span>
-        @if (Hint is not null)
-        {
-            <span class="ui-stat-hint">@Hint</span>
-        }
-        @if (Series is { Count: >= 2 } points)
-        {
-            <span class="ui-stat-spark">
-                <UiSparkline Values="points" Tone="SparkTone" />
-            </span>
-        }
-    </button>
+    <a class="uistat uistat--link @SlotClass @Class" style="@SlotStyle" href="@Href">@Body</a>
+}
+else if (OnClick.HasDelegate)
+{
+    <button type="button" class="uistat uistat--link @SlotClass @Class" style="@SlotStyle" @onclick="@(() => OnClick.InvokeAsync())">@Body</button>
 }
 else
 {
-    <div class="ui-stat @Class">
-        <span class="ui-stat-label">@Label</span>
-        <span class="ui-stat-value @UiCss.ToneClass(Tone)">@Value</span>
-        @if (Hint is not null)
-        {
-            <span class="ui-stat-hint">@Hint</span>
-        }
-        @if (Series is { Count: >= 2 } points)
-        {
-            <span class="ui-stat-spark">
-                <UiSparkline Values="points" Tone="SparkTone" />
-            </span>
-        }
-    </div>
+    <div class="uistat @SlotClass @Class" style="@SlotStyle">@Body</div>
 }
 
 @code {
-    /// <summary>Gets or sets the caption.</summary>
+    private RenderFragment Body => @<text>
+        <span class="uistat__label">
+            @if (Tone != UiTone.Neutral)
+            {
+                <span class="uistat__dot @UiCss.ToneClass(Tone)" aria-hidden="true"></span>
+            }
+            @Label
+        </span>
+        <span class="uistat__value">@Value</span>
+        @if (!string.IsNullOrWhiteSpace(Delta))
+        {
+            <span class="uistat__delta @DeltaClass">@Delta</span>
+        }
+        @if (!string.IsNullOrWhiteSpace(Hint))
+        {
+            <span class="uistat__sub @SubClass">@Hint</span>
+        }
+        @if (Series is { Count: >= 2 } points)
+        {
+            <span class="uistat__spark">
+                <UiSparkline Values="points" Tone="SparkTone" Slot="Slot" AriaLabel="@(Label + " trend")" />
+            </span>
+        }
+    </text>;
+
+    /// <summary>Gets or sets the metric name, shown above the number.</summary>
     [Parameter] public string Label { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the formatted value.</summary>
+    /// <summary>Gets or sets the already-formatted value.</summary>
     [Parameter] public string Value { get; set; } = string.Empty;
 
-    /// <summary>Gets or sets the small text under the value.</summary>
+    /// <summary>Gets or sets the small line under the value. Warn and Danger colour it.</summary>
     [Parameter] public string? Hint { get; set; }
 
-    /// <summary>Gets or sets the value colour.</summary>
+    /// <summary>
+    /// Gets or sets the status tone. Neutral shows no dot; any other tone shows a small coloured dot before the
+    /// label, and Warn or Danger also colour the <see cref="Hint"/> line. The value itself is never coloured.
+    /// </summary>
     [Parameter] public UiTone Tone { get; set; } = UiTone.Neutral;
+
+    /// <summary>Gets or sets an already-formatted change, such as "+12%", shown under the value.</summary>
+    [Parameter] public string? Delta { get; set; }
+
+    /// <summary>
+    /// Gets or sets how a <see cref="Delta"/> is coloured: Ok is good, Warn is a warning and Danger is bad.
+    /// Only the caller knows whether a change is good, so the default is neutral.
+    /// </summary>
+    [Parameter] public UiTone DeltaTone { get; set; } = UiTone.Neutral;
 
     /// <summary>Gets or sets the history drawn as a sparkline when there are at least two points.</summary>
     [Parameter] public IReadOnlyList<double>? Series { get; set; }
 
+    /// <summary>Gets or sets a palette slot (1 to 7). It adds a colour bar on the left and colours the sparkline.</summary>
+    [Parameter] public int? Slot { get; set; }
+
     /// <summary>Gets or sets the click handler. When set, the stat renders as a button.</summary>
     [Parameter] public EventCallback OnClick { get; set; }
+
+    /// <summary>Gets or sets the link target. When set, the stat renders as a link and takes precedence over <see cref="OnClick"/>.</summary>
+    [Parameter] public string? Href { get; set; }
 
     /// <summary>Gets or sets extra CSS classes for the root element.</summary>
     [Parameter] public string? Class { get; set; }
 
     private UiTone SparkTone => Tone == UiTone.Neutral ? UiTone.Accent : Tone;
+
+    private string SlotClass => Slot is null ? string.Empty : "uistat--slot";
+
+    private string? SlotStyle => Slot is { } slot
+        ? "--uistat-c: var(--chart-" + Math.Clamp(slot, 1, 7).ToString(System.Globalization.CultureInfo.InvariantCulture)
+          + "); --uistat-soft: var(--chart-" + Math.Clamp(slot, 1, 7).ToString(System.Globalization.CultureInfo.InvariantCulture) + "-soft)"
+        : null;
+
+    private string SubClass => Tone switch
+    {
+        UiTone.Warn => "uistat__sub--warning",
+        UiTone.Danger => "uistat__sub--danger",
+        _ => string.Empty,
+    };
+
+    private string DeltaClass => DeltaTone switch
+    {
+        UiTone.Ok => "uistat__delta--good",
+        UiTone.Warn => "uistat__delta--warning",
+        UiTone.Danger => "uistat__delta--bad",
+        _ => string.Empty,
+    };
 }

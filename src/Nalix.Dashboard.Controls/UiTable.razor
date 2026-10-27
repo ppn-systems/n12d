@@ -1,6 +1,6 @@
 @if (Rows.Count == 0)
 {
-    <p class="ui-muted @Class">empty</p>
+    <p class="ui-table-empty @Class">empty</p>
 }
 else
 {
@@ -14,7 +14,10 @@ else
                         <th scope="col" class="@(_numeric[c] ? "ui-table-num" : null)" aria-sort="@SortState(column)">
                             <button type="button" class="ui-table-sort" @onclick="@(() => SortBy(column))">
                                 <span>@UiFormat.Humanize(column)</span>
-                                <span class="ui-table-mark" aria-hidden="true">@SortMark(column)</span>
+                                @if (IsSorted(column))
+                                {
+                                    <span class="ui-table-mark @(_sortDescending ? null : "ui-table-mark--asc")" aria-hidden="true"><UiIcon Name="chevron-down" Size="12" /></span>
+                                }
                             </button>
                         </th>
                     }
@@ -32,11 +35,11 @@ else
                             <td class="@(_numeric[c] ? "ui-table-num" : null)">
                                 @if (cell is null || cell.Kind == ReportNodeKind.Null)
                                 {
-                                    <span class="ui-muted">—</span>
+                                    <span class="ui-table-muted">—</span>
                                 }
                                 else if (cell.IsContainer)
                                 {
-                                    <span class="ui-muted">@CountLabel(cell)</span>
+                                    <span class="ui-table-muted">@CountLabel(cell)</span>
                                 }
                                 else if (cell.Kind == ReportNodeKind.Boolean)
                                 {
@@ -52,7 +55,7 @@ else
                                 }
                                 else
                                 {
-                                    <span class="ui-mono ui-table-text">@cell.Text</span>
+                                    <span class="ui-table-text">@cell.Text</span>
                                 }
                             </td>
                         }
@@ -257,15 +260,7 @@ else
         return _sortDescending ? "descending" : "ascending";
     }
 
-    private string SortMark(string column)
-    {
-        if (!string.Equals(_sortColumn, column, StringComparison.Ordinal))
-        {
-            return string.Empty;
-        }
-
-        return _sortDescending ? "↓" : "↑";
-    }
+    private bool IsSorted(string column) => string.Equals(_sortColumn, column, StringComparison.Ordinal);
 
     private static string CountLabel(ReportNode node)
     {

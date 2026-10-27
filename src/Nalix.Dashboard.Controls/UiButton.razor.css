@@ -1,77 +1,112 @@
-.ui-button {
+/* UiButton: the AtmosOS ui-btn family. Colours come from tokens only. */
+
+.ui-btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    min-height: 36px;
-    padding: 6px 14px;
+    gap: 0.5rem;
     border: 1px solid transparent;
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text);
-    font-weight: 500;
+    border-radius: var(--radius);
     cursor: pointer;
-    transition: background-color 0.15s, border-color 0.15s;
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    text-decoration: none;
+    user-select: none;
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, opacity 150ms ease;
 }
 
-.ui-button:disabled {
-    opacity: 0.55;
+.ui-btn:focus-visible {
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+}
+
+.ui-btn:active:not(:disabled) {
+    transform: translateY(1px);
+}
+
+.ui-btn:disabled {
+    opacity: 0.5;
     cursor: not-allowed;
 }
 
-.ui-button-primary {
+/* Sizes. The default height matches the form controls (36px). */
+.ui-btn--size-default {
+    height: 2.25rem;
+    padding: 0 1rem;
+}
+
+.ui-btn--size-sm {
+    height: 2rem;
+    padding: 0 0.75rem;
+    font-size: 0.8125rem;
+}
+
+.ui-btn--size-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+}
+
+.ui-btn--primary {
     background: var(--accent);
     color: var(--accent-contrast);
 }
 
-.ui-button-primary:hover:not(:disabled) {
-    filter: brightness(0.94);
+.ui-btn--primary:hover:not(:disabled) {
+    background: var(--accent-hover);
 }
 
-.ui-button-secondary {
-    background: var(--surface);
-    border-color: var(--border);
+.ui-btn--secondary {
+    background: var(--control-bg);
+    border-color: var(--control-border);
+    color: var(--text-primary);
 }
 
-.ui-button-secondary:hover:not(:disabled) {
-    background: var(--surface-2);
+.ui-btn--secondary:hover:not(:disabled) {
+    background: var(--control-bg-hover);
+    border-color: var(--control-border-hover);
 }
 
-.ui-button-ghost {
-    color: var(--accent);
+.ui-btn--ghost {
+    background: transparent;
+    color: var(--text-primary);
 }
 
-.ui-button-ghost:hover:not(:disabled) {
-    background: var(--surface-2);
+.ui-btn--ghost:hover:not(:disabled) {
+    background: var(--state-hover);
 }
 
-.ui-button-danger {
+/* White label on the danger fill; there is no on-danger token in the palette. */
+.ui-btn--danger {
     background: var(--danger);
-    color: var(--surface);
+    color: #fff;
 }
 
-.ui-button-danger:hover:not(:disabled) {
-    filter: brightness(0.94);
+.ui-btn--danger:hover:not(:disabled) {
+    filter: brightness(0.92);
 }
 
-.ui-spinner {
+.ui-btn__spinner {
     flex: none;
-    width: 14px;
-    height: 14px;
+    width: 0.875rem;
+    height: 0.875rem;
     border: 2px solid currentColor;
     border-right-color: transparent;
     border-radius: 50%;
-    animation: ui-spin 0.7s linear infinite;
+    animation: ui-btn-spin 0.7s linear infinite;
 }
 
-@keyframes ui-spin {
+@keyframes ui-btn-spin {
     to {
         transform: rotate(360deg);
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .ui-spinner {
+    .ui-btn__spinner {
         animation-duration: 2.4s;
     }
 }

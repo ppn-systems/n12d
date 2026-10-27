@@ -1,13 +1,23 @@
-<div class="ui-empty @Class">
+<div class="ui-empty @Class" role="status">
+    <div class="ui-empty__icon" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="7" width="18" height="13" rx="2" />
+            <path d="M3 7l2.5-4h13L21 7" />
+            <path d="M9 12h6" />
+        </svg>
+    </div>
     @if (Title is not null)
     {
-        <p class="ui-empty-title">@Title</p>
+        <p class="ui-empty__title">@Title</p>
     }
     @if (Message is not null)
     {
-        <p class="ui-empty-message">@Message</p>
+        <p class="ui-empty__desc">@Message</p>
     }
-    @ChildContent
+    @if (ChildContent is not null)
+    {
+        <div class="ui-empty__body">@ChildContent</div>
+    }
 </div>
 
 @code {

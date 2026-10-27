@@ -1,16 +1,16 @@
 <div class="ui-field @Class">
     @if (Label is not null)
     {
-        <label class="ui-field-label" for="@For">@Label</label>
+        <label class="ui-field__label" for="@For">@Label</label>
     }
     @ChildContent
     @if (Error is not null)
     {
-        <p class="ui-field-error" role="alert">@Error</p>
+        <p class="ui-field__error" role="alert">@Error</p>
     }
     else if (Hint is not null)
     {
-        <p class="ui-field-hint">@Hint</p>
+        <p class="ui-field__hint">@Hint</p>
     }
 </div>
 

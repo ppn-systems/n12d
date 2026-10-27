@@ -1,0 +1,53 @@
+/* Status badge, after AtmosOS .ad-badge: dot + label on a 16% tint of the tone. */
+
+.nx-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 24px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  background: var(--surface-2);
+  color: var(--text-muted);
+}
+
+.nx-pill__dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.nx-pill.is-ok {
+  background: color-mix(in srgb, var(--success) 16%, transparent);
+  color: var(--success);
+}
+
+/* Amber text on its own tint fails AA at 12px, so the text is pushed toward the body colour (as AtmosOS does). */
+.nx-pill.is-warn {
+  background: color-mix(in srgb, var(--warning) 16%, transparent);
+  color: color-mix(in srgb, var(--warning) 60%, var(--text-primary));
+}
+
+.nx-pill.is-info {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.nx-pill.is-danger {
+  background: color-mix(in srgb, var(--danger) 16%, transparent);
+  color: var(--danger);
+}
+
+.nx-pill.is-busy .nx-pill__dot {
+  animation: nx-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes nx-pulse {
+  50% { opacity: 0.35; }
+}

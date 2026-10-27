@@ -1,0 +1,77 @@
+@inherits StoreComponent
+
+@* Module rail, after AtmosOS AdminNavRail: the brand block doubles as the collapse control (it is
+   revealed on hover, and always on touch screens), items are icon + label (icon only when
+   collapsed), and at 768px and below the rail becomes an off-canvas drawer over a backdrop. *@
+
+@if (MobileOpen)
+{
+    <div class="nx-backdrop" @onclick="() => OnNavigate.InvokeAsync()"></div>
+}
+
+<aside class="nx-rail @(Collapsed ? "is-collapsed" : null) @(MobileOpen ? "is-mobile-open" : null)" aria-label="Navigation">
+    <div class="nx-brand">
+        <div class="nx-brand__face">
+            <span class="nx-brand__mark" aria-hidden="true">n</span>
+            <span class="nx-brand__text">Nalix<small>observability</small></span>
+        </div>
+        <button class="nx-collapse" type="button" aria-label="@(Collapsed ? "Expand navigation" : "Collapse navigation")"
+                aria-expanded="@(Collapsed ? "false" : "true")" @onclick="() => OnToggleCollapsed.InvokeAsync()">
+            <UiIcon Name="@(Collapsed ? "chevron-right" : "chevron-left")" Size="20" />
+            <span class="nx-rail__label">@(Collapsed ? "Expand" : "Collapse")</span>
+        </button>
+    </div>
+
+    <nav class="nx-nav" aria-label="Sections" @onclick="() => OnNavigate.InvokeAsync()">
+        <NavLink class="nx-item" href="" Match="NavLinkMatch.All" aria-label="Overview" title="@(Collapsed ? "Overview" : null)">
+            <UiIcon Name="overview" Size="20" /><span class="nx-rail__label">Overview</span>
+        </NavLink>
+
+        <span class="nx-tier" aria-hidden="true">Runtime</span>
+        @foreach (SectionInfo section in Sections.All)
+        {
+            <NavLink class="nx-item" href="@("section/" + section.Slug)" aria-label="@section.Title" title="@(Collapsed ? section.Title : null)">
+                <UiIcon Name="@section.Slug" Size="20" /><span class="nx-rail__label">@section.Title</span>
+            </NavLink>
+        }
+
+        <span class="nx-tier" aria-hidden="true">Analysis</span>
+        <NavLink class="nx-item" href="diagnostics" aria-label="Diagnostics" title="@(Collapsed ? "Diagnostics" : null)">
+            <UiIcon Name="diagnostics" Size="20" /><span class="nx-rail__label">Diagnostics</span>
+        </NavLink>
+        <NavLink class="nx-item" href="recordings" aria-label="Recordings" title="@(Collapsed ? "Recordings" : null)">
+            <UiIcon Name="recordings" Size="20" /><span class="nx-rail__label">Recordings</span>
+            @if (Store.Recorder.IsRecording)
+            {
+                <span class="nx-rec-dot" role="img" aria-label="Recording"></span>
+            }
+        </NavLink>
+        <NavLink class="nx-item" href="log" aria-label="Event log" title="@(Collapsed ? "Event log" : null)">
+            <UiIcon Name="log" Size="20" /><span class="nx-rail__label">Event log</span>
+        </NavLink>
+    </nav>
+
+    <div class="nx-foot">
+        <NavLink class="nx-item" href="settings" aria-label="Settings" title="@(Collapsed ? "Settings" : null)">
+            <UiIcon Name="settings" Size="20" /><span class="nx-rail__label">Settings</span>
+        </NavLink>
+    </div>
+</aside>
+
+@code {
+    /// <summary>Gets or sets whether the rail shows icons only.</summary>
+    [Parameter]
+    public bool Collapsed { get; set; }
+
+    /// <summary>Gets or sets whether the off-canvas drawer is open (narrow screens only).</summary>
+    [Parameter]
+    public bool MobileOpen { get; set; }
+
+    /// <summary>Raised when the brand block's collapse control is pressed.</summary>
+    [Parameter]
+    public EventCallback OnToggleCollapsed { get; set; }
+
+    /// <summary>Raised when a navigation item or the backdrop is pressed, so the drawer can close.</summary>
+    [Parameter]
+    public EventCallback OnNavigate { get; set; }
+}

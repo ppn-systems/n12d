@@ -10,10 +10,10 @@
 else
 {
     <div class="ui-stack">
-        <div class="page-head">
+        <div class="ad-page__head">
             <div>
-                <h1>@Section.Title</h1>
-                <p class="ui-muted">@Section.Description</p>
+                <h1 class="ad-page__title">@Section.Title</h1>
+                <p class="ad-page__hint">@Section.Description</p>
             </div>
             <span class="ui-spacer"></span>
             <UiButton Variant="UiButtonVariant.Secondary" OnClick="ToggleRaw"><UiIcon Name="@(_raw ? "overview" : "log")" /> @(_raw ? "Formatted" : "Raw JSON")</UiButton>

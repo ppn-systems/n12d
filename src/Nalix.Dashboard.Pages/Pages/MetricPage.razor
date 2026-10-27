@@ -10,22 +10,22 @@
 else
 {
     <div class="ui-stack">
-        <div class="page-head">
+        <div class="ad-page__head">
             <div>
-                <h1 class="ui-mono metric-title">@Path</h1>
-                <p class="ui-muted">@(Data is null ? "Waiting for samples…" : $"{Data.Count} samples kept · last at {UiFormat.Time(Data.LatestTime)}")</p>
+                <h1 class="ad-page__title ui-mono metric-title">@Path</h1>
+                <p class="ad-page__hint">@(Data is null ? "Waiting for samples…" : $"{Data.Count} samples kept · last at {UiFormat.Time(Data.LatestTime)}")</p>
             </div>
         </div>
 
         @if (Data is { Count: > 0 } data)
         {
-            <div class="ui-grid">
+            <UiStatGroup>
                 <UiStat Label="Latest" Value="@Format(data.Latest)" />
                 <UiStat Label="Minimum" Value="@Format(_min)" />
                 <UiStat Label="Maximum" Value="@Format(_max)" />
                 <UiStat Label="Average" Value="@Format(_mean)" />
                 <UiStat Label="Change" Value="@Format(_delta)" Hint="over the kept window" Tone="@(_delta > 0 ? UiTone.Warn : UiTone.Neutral)" />
-            </div>
+            </UiStatGroup>
 
             <UiCard Title="History">
                 <UiLineChart Series="@([new UiChartSeries(Name, data.Times, data.Values, UiTone.Accent)])" Height="320" Formatter="@Format" />

@@ -3,12 +3,10 @@
 <div class="connect">
     <form class="connect-card" @onsubmit="ConnectAsync" @onsubmit:preventDefault>
         <div class="connect-head">
-            <span class="brand-mark">n</span>
-            <div>
-                <h1>Nalix observability</h1>
-                <p class="ui-muted">Connect to a server running <span class="ui-mono">UseObservability()</span>.</p>
-            </div>
+            <span class="connect-mark" aria-hidden="true">n</span>
+            <h1>Nalix observability</h1>
         </div>
+        <p class="connect-hint">Connect to a server running <span class="connect-code">UseObservability()</span>.</p>
 
         <div class="connect-grid">
             <UiField Label="Host" For="host" Class="span-2">
