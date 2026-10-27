@@ -1,0 +1,305 @@
+@if (Rows.Count == 0)
+{
+    <p class="ui-muted @Class">empty</p>
+}
+else
+{
+    <div class="ui-table-wrap @Class">
+        <table class="ui-table">
+            <thead>
+                <tr>
+                    @for (int c = 0; c < _columns.Count; c++)
+                    {
+                        string column = _columns[c];
+                        <th scope="col" class="@(_numeric[c] ? "ui-table-num" : null)" aria-sort="@SortState(column)">
+                            <button type="button" class="ui-table-sort" @onclick="@(() => SortBy(column))">
+                                <span>@UiFormat.Humanize(column)</span>
+                                <span class="ui-table-mark" aria-hidden="true">@SortMark(column)</span>
+                            </button>
+                        </th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (int r = 0; r < VisibleCount; r++)
+                {
+                    ReportNode row = Rows[_order[r]];
+                    <tr>
+                        @for (int c = 0; c < _columns.Count; c++)
+                        {
+                            string column = _columns[c];
+                            ReportNode? cell = CellOf(row, column);
+                            <td class="@(_numeric[c] ? "ui-table-num" : null)">
+                                @if (cell is null || cell.Kind == ReportNodeKind.Null)
+                                {
+                                    <span class="ui-muted">—</span>
+                                }
+                                else if (cell.IsContainer)
+                                {
+                                    <span class="ui-muted">@CountLabel(cell)</span>
+                                }
+                                else if (cell.Kind == ReportNodeKind.Boolean)
+                                {
+                                    <UiBadge Tone="@(cell.Number != 0 ? UiTone.Ok : UiTone.Neutral)">@(cell.Number != 0 ? "yes" : "no")</UiBadge>
+                                }
+                                else if (cell.Kind == ReportNodeKind.Number && HasMetricClick)
+                                {
+                                    <button type="button" class="ui-metric" @onclick="@(() => ClickMetric(MetricPath(row, column)))">@UiFormat.Auto(column, cell.Number)</button>
+                                }
+                                else if (cell.Kind == ReportNodeKind.Number)
+                                {
+                                    <span>@UiFormat.Auto(column, cell.Number)</span>
+                                }
+                                else
+                                {
+                                    <span class="ui-mono ui-table-text">@cell.Text</span>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (VisibleCount < Rows.Count)
+    {
+        <div class="ui-table-more">
+            <UiButton Variant="UiButtonVariant.Ghost" OnClick="ShowAll">Show all @Rows.Count</UiButton>
+        </div>
+    }
+}
+
+@code {
+    private readonly List<string> _columns = new();
+    private int[] _order = [];
+    private bool[] _numeric = [];
+    private bool _scalarMode = true;
+    private bool _showAll;
+    private string? _sortColumn;
+    private bool _sortDescending;
+
+    /// <summary>Gets or sets the rows. Object rows contribute columns; scalar rows render as a single Value column.</summary>
+    [EditorRequired]
+    [Parameter]
+    public IReadOnlyList<ReportNode> Rows { get; set; } = [];
+
+    /// <summary>Gets or sets the number of rows shown before the Show all button.</summary>
+    [Parameter] public int MaxRows { get; set; } = 100;
+
+    /// <summary>Gets or sets the dot path of the array, used to build metric paths for clicks.</summary>
+    private static readonly string[] s_itemKeys = ["Name", "Type", "Id", "Key"];
+
+    [Parameter] public string? PathPrefix { get; set; }
+
+    /// <summary>Gets or sets the callback invoked with the metric path when a numeric cell is clicked.</summary>
+    [Parameter] public EventCallback<string>? OnMetricClick { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    private int VisibleCount => _showAll ? Rows.Count : Math.Min(Rows.Count, MaxRows);
+
+    private bool HasMetricClick => OnMetricClick is { HasDelegate: true };
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        Rebuild();
+    }
+
+    private void Rebuild()
+    {
+        _columns.Clear();
+        _scalarMode = true;
+        for (int r = 0; r < Rows.Count; r++)
+        {
+            ReportNode row = Rows[r];
+            if (row.Kind != ReportNodeKind.Object)
+            {
+                continue;
+            }
+
+            _scalarMode = false;
+            for (int c = 0; c < row.Children.Count; c++)
+            {
+                string name = row.Children[c].Name;
+                if (!_columns.Contains(name))
+                {
+                    _columns.Add(name);
+                }
+            }
+        }
+
+        if (_scalarMode)
+        {
+            _columns.Add("Value");
+        }
+
+        _numeric = new bool[_columns.Count];
+        for (int c = 0; c < _columns.Count; c++)
+        {
+            bool allNumeric = true;
+            bool anyNumber = false;
+            for (int r = 0; r < Rows.Count && allNumeric; r++)
+            {
+                ReportNode? cell = CellOf(Rows[r], _columns[c]);
+                if (cell is null || cell.Kind == ReportNodeKind.Null)
+                {
+                    continue;
+                }
+
+                if (cell.Kind == ReportNodeKind.Number)
+                {
+                    anyNumber = true;
+                }
+                else
+                {
+                    allNumeric = false;
+                }
+            }
+
+            _numeric[c] = allNumeric && anyNumber;
+        }
+
+        _order = new int[Rows.Count];
+        ApplySort();
+    }
+
+    private void ApplySort()
+    {
+        for (int i = 0; i < _order.Length; i++)
+        {
+            _order[i] = i;
+        }
+
+        if (_sortColumn is null)
+        {
+            return;
+        }
+
+        string column = _sortColumn;
+        bool descending = _sortDescending;
+        Array.Sort(_order, (a, b) =>
+        {
+            int result = CompareCells(CellOf(Rows[a], column), CellOf(Rows[b], column), descending);
+            return result != 0 ? result : a.CompareTo(b);
+        });
+    }
+
+    private void SortBy(string column)
+    {
+        if (string.Equals(_sortColumn, column, StringComparison.Ordinal))
+        {
+            _sortDescending = !_sortDescending;
+        }
+        else
+        {
+            _sortColumn = column;
+            _sortDescending = false;
+        }
+
+        ApplySort();
+    }
+
+    private void ShowAll(MouseEventArgs args)
+    {
+        _showAll = true;
+    }
+
+    private ReportNode? CellOf(ReportNode row, string column)
+    {
+        if (_scalarMode)
+        {
+            return row;
+        }
+
+        return row.Kind == ReportNodeKind.Object ? row.Get(column) : null;
+    }
+
+    // Matches the dashboard's metric-history paths: items are keyed by their Name/Type/Id/Key string
+    // when present (stable across samples), otherwise by index — "Prefix[Auth].TotalExecutions".
+    private string MetricPath(ReportNode row, string column)
+    {
+        string item = (PathPrefix ?? string.Empty) + "[" + ItemKey(row) + "]";
+        return _scalarMode ? item : item + "." + column;
+    }
+
+    private static string ItemKey(ReportNode row)
+    {
+        if (row.Kind == ReportNodeKind.Object)
+        {
+            foreach (string key in s_itemKeys)
+            {
+                ReportNode? candidate = row.Get(key);
+                if (candidate is { Kind: ReportNodeKind.String, Text.Length: > 0 })
+                {
+                    return candidate.Text;
+                }
+            }
+        }
+
+        return row.Name;
+    }
+
+    private Task ClickMetric(string path)
+    {
+        return OnMetricClick is { } callback ? callback.InvokeAsync(path) : Task.CompletedTask;
+    }
+
+    private string SortState(string column)
+    {
+        if (!string.Equals(_sortColumn, column, StringComparison.Ordinal))
+        {
+            return "none";
+        }
+
+        return _sortDescending ? "descending" : "ascending";
+    }
+
+    private string SortMark(string column)
+    {
+        if (!string.Equals(_sortColumn, column, StringComparison.Ordinal))
+        {
+            return string.Empty;
+        }
+
+        return _sortDescending ? "↓" : "↑";
+    }
+
+    private static string CountLabel(ReportNode node)
+    {
+        return "{" + node.Children.Count.ToString(CultureInfo.InvariantCulture) + " items}";
+    }
+
+    private static int CompareCells(ReportNode? left, ReportNode? right, bool descending)
+    {
+        if (left is null || left.Kind == ReportNodeKind.Null)
+        {
+            return right is null || right.Kind == ReportNodeKind.Null ? 0 : 1;
+        }
+
+        if (right is null || right.Kind == ReportNodeKind.Null)
+        {
+            return -1;
+        }
+
+        int result = IsNumeric(left) && IsNumeric(right)
+            ? left.Number.CompareTo(right.Number)
+            : string.Compare(SortText(left), SortText(right), StringComparison.OrdinalIgnoreCase);
+
+        return descending ? -result : result;
+    }
+
+    private static bool IsNumeric(ReportNode node)
+    {
+        return node.Kind is ReportNodeKind.Number or ReportNodeKind.Boolean;
+    }
+
+    private static string SortText(ReportNode node) => node.Kind switch
+    {
+        ReportNodeKind.String => node.Text ?? string.Empty,
+        ReportNodeKind.Object or ReportNodeKind.Array => node.Children.Count.ToString(CultureInfo.InvariantCulture),
+        _ => node.Number.ToString(CultureInfo.InvariantCulture),
+    };
+}

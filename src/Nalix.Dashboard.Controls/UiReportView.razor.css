@@ -1,0 +1,80 @@
+.ui-report {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.ui-report-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(160px, 100%), 1fr));
+    gap: 8px;
+}
+
+.ui-tile {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+}
+
+.ui-tile-button {
+    cursor: pointer;
+}
+
+.ui-tile-button:hover {
+    border-color: var(--accent);
+}
+
+.ui-tile-label {
+    color: var(--text-muted);
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.ui-tile-value {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
+.ui-tile-text {
+    font-weight: 500;
+}
+
+.ui-report-section {
+    min-width: 0;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.ui-report-section > summary {
+    padding: 4px 0;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.ui-report-section > .ui-report {
+    margin-top: 8px;
+}
+
+.ui-report-array-title {
+    margin: 8px 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ui-report-list {
+    overflow-wrap: anywhere;
+}

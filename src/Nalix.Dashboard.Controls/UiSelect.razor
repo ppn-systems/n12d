@@ -1,0 +1,28 @@
+<select id="@Id" class="ui-select @Class" @onchange="OnChange">
+    @for (int i = 0; i < Options.Count; i++)
+    {
+        <option value="@Options[i].Key" selected="@(Options[i].Key == Value)">@Options[i].Value</option>
+    }
+</select>
+
+@code {
+    /// <summary>Gets or sets the element id.</summary>
+    [Parameter] public string? Id { get; set; }
+
+    /// <summary>Gets or sets the selected option value.</summary>
+    [Parameter] public string Value { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the callback invoked with the selected option value.</summary>
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+
+    /// <summary>Gets or sets the options as value to label pairs.</summary>
+    [Parameter] public IReadOnlyList<KeyValuePair<string, string>> Options { get; set; } = [];
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    private Task OnChange(ChangeEventArgs args)
+    {
+        return ValueChanged.InvokeAsync(args.Value?.ToString() ?? string.Empty);
+    }
+}

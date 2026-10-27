@@ -1,0 +1,59 @@
+@if (OnClick.HasDelegate)
+{
+    <button type="button" class="ui-stat ui-stat-button @Class" @onclick="@(() => OnClick.InvokeAsync())">
+        <span class="ui-stat-label">@Label</span>
+        <span class="ui-stat-value @UiCss.ToneClass(Tone)">@Value</span>
+        @if (Hint is not null)
+        {
+            <span class="ui-stat-hint">@Hint</span>
+        }
+        @if (Series is { Count: >= 2 } points)
+        {
+            <span class="ui-stat-spark">
+                <UiSparkline Values="points" Tone="SparkTone" />
+            </span>
+        }
+    </button>
+}
+else
+{
+    <div class="ui-stat @Class">
+        <span class="ui-stat-label">@Label</span>
+        <span class="ui-stat-value @UiCss.ToneClass(Tone)">@Value</span>
+        @if (Hint is not null)
+        {
+            <span class="ui-stat-hint">@Hint</span>
+        }
+        @if (Series is { Count: >= 2 } points)
+        {
+            <span class="ui-stat-spark">
+                <UiSparkline Values="points" Tone="SparkTone" />
+            </span>
+        }
+    </div>
+}
+
+@code {
+    /// <summary>Gets or sets the caption.</summary>
+    [Parameter] public string Label { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the formatted value.</summary>
+    [Parameter] public string Value { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the small text under the value.</summary>
+    [Parameter] public string? Hint { get; set; }
+
+    /// <summary>Gets or sets the value colour.</summary>
+    [Parameter] public UiTone Tone { get; set; } = UiTone.Neutral;
+
+    /// <summary>Gets or sets the history drawn as a sparkline when there are at least two points.</summary>
+    [Parameter] public IReadOnlyList<double>? Series { get; set; }
+
+    /// <summary>Gets or sets the click handler. When set, the stat renders as a button.</summary>
+    [Parameter] public EventCallback OnClick { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    private UiTone SparkTone => Tone == UiTone.Neutral ? UiTone.Accent : Tone;
+}

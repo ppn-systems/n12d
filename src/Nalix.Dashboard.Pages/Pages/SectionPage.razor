@@ -1,0 +1,60 @@
+@page "/section/{Slug}"
+@inherits StoreComponent
+
+<PageTitle>@(Section?.Title ?? "Not found") · Nalix</PageTitle>
+
+@if (Section is null)
+{
+    <UiEmpty Title="Unknown section" Message="@($"There is no report called '{Slug}'.")" />
+}
+else
+{
+    <div class="ui-stack">
+        <div class="page-head">
+            <div>
+                <h1>@Section.Title</h1>
+                <p class="ui-muted">@Section.Description</p>
+            </div>
+            <span class="ui-spacer"></span>
+            <UiButton Variant="UiButtonVariant.Secondary" OnClick="ToggleRaw"><UiIcon Name="@(_raw ? "overview" : "log")" /> @(_raw ? "Formatted" : "Raw JSON")</UiButton>
+        </div>
+
+        @if (Store.GetSection(Section) is not { } node)
+        {
+            <UiEmpty Title="No data" Message="@(Store.Latest is null ? "Waiting for the first sample…" : "The server does not register this component, or it has not reported yet.")" />
+        }
+        else if (_raw)
+        {
+            <UiCard><pre class="raw ui-mono">@RawJson(node)</pre></UiCard>
+        }
+        else
+        {
+            <UiReportView Node="@node" PathPrefix="@Section.Key" OnMetricClick="Open" />
+        }
+    </div>
+}
+
+@code {
+    private bool _raw;
+
+    [Parameter]
+    public string? Slug { get; set; }
+
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private SectionInfo? Section => Sections.FindBySlug(Slug);
+
+    protected override RuntimeObservationTargets WatchedTargets => Section?.Target ?? RuntimeObservationTargets.NONE;
+
+    private void ToggleRaw() => _raw = !_raw;
+
+    private void Open(string path) => Navigation.NavigateTo(MetricUrl(path));
+
+    private static string RawJson(ReportNode node)
+    {
+        System.Text.StringBuilder builder = new();
+        ReportText.Write(builder, node, 0);
+        return builder.ToString();
+    }
+}

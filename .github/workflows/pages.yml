@@ -7,8 +7,10 @@ on:
       - main
     paths:
       - .github/workflows/pages.yml
-      - src/Nalix.Dashboard/**
-      - src/Nalix.Dashboard.sln
+      - src/**
+      - library/**
+      - Directory.*.props
+      - global.json
   pull_request:
     types:
       - opened
@@ -17,8 +19,10 @@ on:
       - labeled
     paths:
       - .github/workflows/pages.yml
-      - src/Nalix.Dashboard/**
-      - src/Nalix.Dashboard.sln
+      - src/**
+      - library/**
+      - Directory.*.props
+      - global.json
   workflow_dispatch:
 
 permissions:
@@ -46,10 +50,13 @@ jobs:
           dotnet-version: 10.0.x
 
       - name: Restore
-        run: dotnet restore src/Nalix.Dashboard.sln
+        run: dotnet restore src/Nalix.Dashboard.slnx
 
       - name: Build
-        run: dotnet build src/Nalix.Dashboard.sln --configuration Release --no-restore
+        run: dotnet build src/Nalix.Dashboard.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet run --project tests/Nalix.Dashboard.Tests --configuration Release --no-build
 
       - name: Publish dashboard
         run: dotnet publish src/Nalix.Dashboard/Nalix.Dashboard.csproj --configuration Release --no-restore --output artifacts/dashboard

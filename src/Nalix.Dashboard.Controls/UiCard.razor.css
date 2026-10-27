@@ -1,0 +1,38 @@
+.ui-card {
+    min-width: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 16px;
+}
+
+.ui-card-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.ui-card-titles {
+    flex: 1;
+    min-width: 0;
+}
+
+.ui-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.ui-card-subtitle {
+    margin-top: 2px;
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.ui-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}

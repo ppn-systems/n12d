@@ -1,0 +1,16 @@
+.ui-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.ui-empty-title {
+    color: var(--text);
+    font-size: 15px;
+    font-weight: 600;
+}

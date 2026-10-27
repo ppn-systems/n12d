@@ -1,0 +1,127 @@
+<svg class="ui-sparkline @Class"
+     viewBox="0 0 @Width @Height"
+     preserveAspectRatio="none"
+     style="height: @(Height)px"
+     aria-hidden="true"
+     focusable="false">
+    @if (_area.Length > 0)
+    {
+        <polygon class="ui-sparkline-area" points="@_area" style="fill: @UiCss.ToneColor(Tone)" />
+    }
+    @if (_line.Length > 0)
+    {
+        <polyline class="ui-sparkline-line" points="@_line" style="stroke: @UiCss.ToneColor(Tone)" />
+    }
+</svg>
+
+@code {
+    private const double Padding = 1.5;
+
+    private readonly StringBuilder _points = new();
+    private string _line = string.Empty;
+    private string _area = string.Empty;
+
+    /// <summary>Gets or sets the series. Non-finite points are skipped but keep their horizontal slot.</summary>
+    [Parameter] public IReadOnlyList<double> Values { get; set; } = [];
+
+    /// <summary>Gets or sets the SVG viewBox width.</summary>
+    [Parameter] public int Width { get; set; } = 120;
+
+    /// <summary>Gets or sets the rendered height in pixels.</summary>
+    [Parameter] public int Height { get; set; } = 32;
+
+    /// <summary>Gets or sets the line colour.</summary>
+    [Parameter] public UiTone Tone { get; set; } = UiTone.Accent;
+
+    /// <summary>Gets or sets a value that fills the area under the line.</summary>
+    [Parameter] public bool Area { get; set; } = true;
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        Build();
+    }
+
+    private void Build()
+    {
+        _line = string.Empty;
+        _area = string.Empty;
+
+        int count = Values.Count;
+        double min = double.PositiveInfinity;
+        double max = double.NegativeInfinity;
+        int first = -1;
+        int last = -1;
+        for (int i = 0; i < count; i++)
+        {
+            double value = Values[i];
+            if (!double.IsFinite(value))
+            {
+                continue;
+            }
+
+            if (value < min)
+            {
+                min = value;
+            }
+
+            if (value > max)
+            {
+                max = value;
+            }
+
+            if (first < 0)
+            {
+                first = i;
+            }
+
+            last = i;
+        }
+
+        if (first < 0)
+        {
+            return;
+        }
+
+        double width = Width;
+        double height = Height;
+        double span = max - min;
+        double step = count > 1 ? width / (count - 1) : 0d;
+
+        _points.Clear();
+        for (int i = 0; i < count; i++)
+        {
+            double value = Values[i];
+            if (!double.IsFinite(value))
+            {
+                continue;
+            }
+
+            double x = i * step;
+            double y = span > 0
+                ? height - Padding - (value - min) / span * (height - 2 * Padding)
+                : height / 2;
+
+            if (_points.Length > 0)
+            {
+                _points.Append(' ');
+            }
+
+            UiSvg.AppendPoint(_points, x, y);
+        }
+
+        _line = _points.ToString();
+
+        if (Area && first != last)
+        {
+            _points.Append(' ');
+            UiSvg.AppendPoint(_points, last * step, height);
+            _points.Append(' ');
+            UiSvg.AppendPoint(_points, first * step, height);
+            _area = _points.ToString();
+        }
+    }
+}

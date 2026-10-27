@@ -1,0 +1,77 @@
+.ui-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 6px 14px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.ui-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ui-button-primary {
+    background: var(--accent);
+    color: var(--accent-contrast);
+}
+
+.ui-button-primary:hover:not(:disabled) {
+    filter: brightness(0.94);
+}
+
+.ui-button-secondary {
+    background: var(--surface);
+    border-color: var(--border);
+}
+
+.ui-button-secondary:hover:not(:disabled) {
+    background: var(--surface-2);
+}
+
+.ui-button-ghost {
+    color: var(--accent);
+}
+
+.ui-button-ghost:hover:not(:disabled) {
+    background: var(--surface-2);
+}
+
+.ui-button-danger {
+    background: var(--danger);
+    color: var(--surface);
+}
+
+.ui-button-danger:hover:not(:disabled) {
+    filter: brightness(0.94);
+}
+
+.ui-spinner {
+    flex: none;
+    width: 14px;
+    height: 14px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: ui-spin 0.7s linear infinite;
+}
+
+@keyframes ui-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-spinner {
+        animation-duration: 2.4s;
+    }
+}

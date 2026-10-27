@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <RootNamespace>Nalix.Dashboard.State</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nalix.Dashboard.Abstractions\Nalix.Dashboard.Abstractions.csproj" />
+    <ProjectReference Include="..\Nalix.Dashboard.Infrastructure\Nalix.Dashboard.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

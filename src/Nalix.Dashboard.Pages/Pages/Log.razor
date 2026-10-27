@@ -1,0 +1,44 @@
+@page "/log"
+@inherits StoreComponent
+
+<PageTitle>Event log · Nalix</PageTitle>
+
+<div class="ui-stack">
+    <div class="page-head">
+        <div>
+            <h1>Event log</h1>
+            <p class="ui-muted">Connection and sampling events of this dashboard session.</p>
+        </div>
+        <span class="ui-spacer"></span>
+        <UiButton Variant="UiButtonVariant.Ghost" OnClick="Store.Log.Clear">Clear</UiButton>
+    </div>
+
+    <UiCard>
+        @if (Store.Log.Entries.Count == 0)
+        {
+            <UiEmpty Title="Empty" Message="Nothing has happened yet." />
+        }
+        else
+        {
+            <ul class="log">
+                @foreach (LogEntry entry in Store.Log.Entries)
+                {
+                    <li>
+                        <span class="ui-mono ui-muted">@entry.At.ToString("HH:mm:ss", CultureInfo.InvariantCulture)</span>
+                        <UiBadge Tone="@ToneOf(entry.Level)">@entry.Level</UiBadge>
+                        <span>@entry.Message</span>
+                    </li>
+                }
+            </ul>
+        }
+    </UiCard>
+</div>
+
+@code {
+    private static UiTone ToneOf(LogLevel level) => level switch
+    {
+        LogLevel.Error => UiTone.Danger,
+        LogLevel.Warning => UiTone.Warn,
+        _ => UiTone.Neutral,
+    };
+}

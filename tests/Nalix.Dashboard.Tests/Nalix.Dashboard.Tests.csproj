@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Dependency-free test runner: `dotnet run` on this project. Exit code 0 means all passed. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>Nalix.Dashboard.Tests</RootNamespace>
+    <IsTrimmable>false</IsTrimmable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Nalix.Dashboard.Infrastructure\Nalix.Dashboard.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\Nalix.Dashboard.Transport\Nalix.Dashboard.Transport.csproj" />
+    <ProjectReference Include="..\..\src\Nalix.Dashboard.State\Nalix.Dashboard.State.csproj" />
+  </ItemGroup>
+</Project>

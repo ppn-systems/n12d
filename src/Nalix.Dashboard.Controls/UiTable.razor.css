@@ -1,0 +1,80 @@
+.ui-table-wrap {
+    max-width: 100%;
+    max-height: 480px;
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+}
+
+.ui-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+}
+
+.ui-table th,
+.ui-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.ui-table tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.ui-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--surface-2);
+    font-weight: 600;
+}
+
+.ui-table-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.ui-table-sort {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-weight: 600;
+    color: inherit;
+    cursor: pointer;
+}
+
+.ui-table-mark {
+    min-width: 0.8em;
+    color: var(--accent);
+}
+
+.ui-table-text {
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+.ui-metric {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.ui-table-more {
+    margin-top: 8px;
+}

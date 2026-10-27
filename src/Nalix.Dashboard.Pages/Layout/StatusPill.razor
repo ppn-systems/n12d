@@ -1,0 +1,25 @@
+@inherits StoreComponent
+
+<UiBadge Tone="@Tone">@Text</UiBadge>
+
+@code {
+    private UiTone Tone => Store.Status switch
+    {
+        ConnectionStatus.Connected when Store.IsPaused => UiTone.Warn,
+        ConnectionStatus.Connected => UiTone.Ok,
+        ConnectionStatus.Faulted => UiTone.Danger,
+        ConnectionStatus.Disconnected => UiTone.Neutral,
+        _ => UiTone.Accent,
+    };
+
+    private string Text => Store.Status switch
+    {
+        ConnectionStatus.Connected when Store.IsPaused => "Paused",
+        ConnectionStatus.Connected => "Live",
+        ConnectionStatus.Connecting => "Connecting",
+        ConnectionStatus.Authorizing => "Authorizing",
+        ConnectionStatus.Faulted when Store.IsReconnecting => "Reconnecting",
+        ConnectionStatus.Faulted => "Offline",
+        _ => "Disconnected",
+    };
+}

@@ -1,0 +1,54 @@
+.ui-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    width: 100%;
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+}
+
+.ui-stat-button {
+    cursor: pointer;
+}
+
+.ui-stat-button:hover {
+    background: var(--surface-2);
+    border-color: var(--accent);
+}
+
+.ui-stat-label,
+.ui-stat-value,
+.ui-stat-hint {
+    display: block;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.ui-stat-label {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.ui-stat-value {
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.ui-stat-hint {
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.ui-stat-spark {
+    display: block;
+    margin-top: 6px;
+}

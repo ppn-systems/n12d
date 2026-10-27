@@ -1,0 +1,164 @@
+@if (Depth > MaxDepth)
+{
+    <span class="ui-mono ui-muted">{…}</span>
+}
+else
+{
+    <div class="ui-report @Class">
+        @if (_tileCount > 0)
+        {
+            <div class="ui-report-tiles">
+                @for (int i = 0; i < Node.Children.Count; i++)
+                {
+                    ReportNode child = Node.Children[i];
+                    if (!child.IsContainer)
+                    {
+                        string path = JoinPath(PathPrefix, child.Name);
+                        if (child.Kind == ReportNodeKind.Number && OnMetricClick.HasDelegate)
+                        {
+                            <button type="button" class="ui-tile ui-tile-button" @onclick="@(() => OnMetricClick.InvokeAsync(path))">
+                                <span class="ui-tile-label">@UiFormat.Humanize(child.Name)</span>
+                                <span class="ui-tile-value">@UiFormat.Auto(child.Name, child.Number)</span>
+                            </button>
+                        }
+                        else
+                        {
+                            <div class="ui-tile">
+                                <span class="ui-tile-label">@UiFormat.Humanize(child.Name)</span>
+                                <span class="ui-tile-value">
+                                    @if (child.Kind == ReportNodeKind.Boolean)
+                                    {
+                                        <UiBadge Tone="@(child.Number != 0 ? UiTone.Ok : UiTone.Neutral)">@(child.Number != 0 ? "yes" : "no")</UiBadge>
+                                    }
+                                    else if (child.Kind == ReportNodeKind.String)
+                                    {
+                                        <span class="ui-mono ui-tile-text">@child.Text</span>
+                                    }
+                                    else if (child.Kind == ReportNodeKind.Number)
+                                    {
+                                        <span>@UiFormat.Auto(child.Name, child.Number)</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ui-muted">—</span>
+                                    }
+                                </span>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        }
+
+        @for (int i = 0; i < Node.Children.Count; i++)
+        {
+            ReportNode child = Node.Children[i];
+            if (child.Kind == ReportNodeKind.Object)
+            {
+                <details class="ui-report-section" open>
+                    <summary>@UiFormat.Humanize(child.Name)</summary>
+                    <UiReportView Node="child" PathPrefix="@JoinPath(PathPrefix, child.Name)" Depth="Depth + 1" OnMetricClick="OnMetricClick" />
+                </details>
+            }
+            else if (child.Kind == ReportNodeKind.Array)
+            {
+                <div class="ui-report-array">
+                    <h4 class="ui-report-array-title">@UiFormat.Humanize(child.Name)</h4>
+                    @if (child.Children.Count == 0)
+                    {
+                        <p class="ui-muted">empty</p>
+                    }
+                    else if (HasContainerItems(child))
+                    {
+                        <UiTable Rows="child.Children" PathPrefix="@JoinPath(PathPrefix, child.Name)" OnMetricClick="OnMetricClick" />
+                    }
+                    else
+                    {
+                        <p class="ui-report-list">@ListText(child)</p>
+                    }
+                </div>
+            }
+        }
+    </div>
+}
+
+@code {
+    private const int MaxDepth = 6;
+
+    private int _tileCount;
+
+    /// <summary>Gets or sets the object to render.</summary>
+    [EditorRequired]
+    [Parameter]
+    public ReportNode Node { get; set; } = default!;
+
+    /// <summary>Gets or sets the dot path of <see cref="Node"/>, for example <c>Dispatch</c>.</summary>
+    [Parameter] public string PathPrefix { get; set; } = string.Empty;
+
+    /// <summary>Gets or sets the nesting depth. Objects deeper than six levels render as a placeholder.</summary>
+    [Parameter] public int Depth { get; set; }
+
+    /// <summary>Gets or sets the callback invoked with the metric path when a numeric value is clicked.</summary>
+    [Parameter] public EventCallback<string> OnMetricClick { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        int count = 0;
+        for (int i = 0; i < Node.Children.Count; i++)
+        {
+            if (!Node.Children[i].IsContainer)
+            {
+                count++;
+            }
+        }
+
+        _tileCount = count;
+    }
+
+    private static string JoinPath(string prefix, string name)
+    {
+        return prefix.Length == 0 ? name : prefix + "." + name;
+    }
+
+    private static bool HasContainerItems(ReportNode array)
+    {
+        for (int i = 0; i < array.Children.Count; i++)
+        {
+            if (array.Children[i].IsContainer)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static string ListText(ReportNode array)
+    {
+        StringBuilder text = new();
+        for (int i = 0; i < array.Children.Count; i++)
+        {
+            if (i > 0)
+            {
+                text.Append(", ");
+            }
+
+            text.Append(ScalarText(array.Children[i], array.Name));
+        }
+
+        return text.ToString();
+    }
+
+    private static string ScalarText(ReportNode node, string name) => node.Kind switch
+    {
+        ReportNodeKind.Number => UiFormat.Auto(name, node.Number),
+        ReportNodeKind.Boolean => node.Number != 0 ? "yes" : "no",
+        ReportNodeKind.String => node.Text ?? string.Empty,
+        ReportNodeKind.Null => UiFormat.Dash,
+        _ => "{…}",
+    };
+}

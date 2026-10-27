@@ -1,0 +1,32 @@
+<ul class="findings">
+    @foreach (DiagnosticFinding finding in Findings)
+    {
+        <li class="finding">
+            <UiBadge Tone="@ToneOf(finding.Severity)">@finding.Severity</UiBadge>
+            <UiIcon Name="@(finding.Kind == FindingKind.Spike ? "alert" : "diagnostics")" />
+            <div class="finding-body">
+                @if (ShowMetric)
+                {
+                    <a class="ui-mono" href="@("metric?p=" + Uri.EscapeDataString(finding.Metric))">@finding.Metric</a>
+                }
+                <span>@finding.Message</span>
+            </div>
+            <span class="ui-muted finding-time">@UiFormat.Time(finding.At)</span>
+        </li>
+    }
+</ul>
+
+@code {
+    [Parameter, EditorRequired]
+    public IReadOnlyList<DiagnosticFinding> Findings { get; set; } = [];
+
+    [Parameter]
+    public bool ShowMetric { get; set; }
+
+    private static UiTone ToneOf(FindingSeverity severity) => severity switch
+    {
+        FindingSeverity.Critical => UiTone.Danger,
+        FindingSeverity.Warning => UiTone.Warn,
+        _ => UiTone.Accent,
+    };
+}

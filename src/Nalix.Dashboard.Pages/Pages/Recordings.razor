@@ -1,0 +1,58 @@
+@page "/recordings"
+@inherits StoreComponent
+@inject IFileSaver Files
+
+<PageTitle>Recordings · Nalix</PageTitle>
+
+<div class="ui-stack">
+    <div class="page-head">
+        <div>
+            <h1>Recordings</h1>
+            <p class="ui-muted">While recording, every tick samples all sections and keeps every metric value (up to @UiFormat.Number(Nalix.Dashboard.State.Recording.MetricRecorder.MaxRows) samples). Export as a wide CSV: one row per sample, one column per metric.</p>
+        </div>
+    </div>
+
+    <div class="ui-grid">
+        <UiStat Label="State" Value="@(Recorder.IsRecording ? "Recording" : "Idle")" Tone="@(Recorder.IsRecording ? UiTone.Danger : UiTone.Neutral)" />
+        <UiStat Label="Samples" Value="@UiFormat.Number(Recorder.RowCount)" />
+        <UiStat Label="Metrics" Value="@UiFormat.Number(Recorder.ColumnCount)" />
+        <UiStat Label="Duration" Value="@Duration" />
+    </div>
+
+    <div class="ui-row">
+        @if (Recorder.IsRecording)
+        {
+            <UiButton Variant="UiButtonVariant.Danger" OnClick="Store.StopRecording"><UiIcon Name="stop" /> Stop</UiButton>
+        }
+        else
+        {
+            <UiButton Variant="UiButtonVariant.Primary" OnClick="Store.StartRecording"><UiIcon Name="record" /> Start new recording</UiButton>
+        }
+        <UiButton Variant="UiButtonVariant.Secondary" Disabled="@(Recorder.RowCount == 0)" Busy="@_exporting" OnClick="ExportAsync"><UiIcon Name="download" /> Export CSV</UiButton>
+    </div>
+</div>
+
+@code {
+    private bool _exporting;
+
+    private Nalix.Dashboard.State.Recording.MetricRecorder Recorder => Store.Recorder;
+
+    private string Duration => Recorder.StartedAt is { } started
+        ? UiFormat.Duration((DateTimeOffset.Now - started).TotalMilliseconds)
+        : "—";
+
+    private async Task ExportAsync()
+    {
+        _exporting = true;
+        try
+        {
+            byte[] csv = Recorder.ExportCsv();
+            string name = $"nalix-{Store.Settings.Endpoint.Host}-{DateTimeOffset.Now:yyyyMMdd-HHmmss}.csv";
+            await Files.SaveAsync(name, "text/csv", csv);
+        }
+        finally
+        {
+            _exporting = false;
+        }
+    }
+}

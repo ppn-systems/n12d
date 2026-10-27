@@ -1,0 +1,93 @@
+@page "/"
+@inherits StoreComponent
+
+<PageTitle>Overview · Nalix</PageTitle>
+
+<div class="ui-stack">
+    <div class="page-head">
+        <div>
+            <h1>Overview</h1>
+            <p class="ui-muted">@Subtitle</p>
+        </div>
+    </div>
+
+    <div class="ui-grid">
+        <UiStat Label="CPU" Value="@UiFormat.Percent(Latest(MetricPaths.CpuPercent))" Tone="@CpuTone" Series="@Series(MetricPaths.CpuPercent)?.Values" OnClick="@(() => Open(MetricPaths.CpuPercent))" />
+        <UiStat Label="Working set" Value="@Show("Process.WorkingSetBytes")" Series="@Series("Process.WorkingSetBytes")?.Values" OnClick="@(() => Open("Process.WorkingSetBytes"))" />
+        <UiStat Label="Managed heap" Value="@Show("Process.ManagedHeapBytes")" Series="@Series("Process.ManagedHeapBytes")?.Values" OnClick="@(() => Open("Process.ManagedHeapBytes"))" />
+        <UiStat Label="Allocation rate" Value="@(UiFormat.Bytes(Latest(MetricPaths.AllocationBytesPerSecond)) + "/s")" Series="@Series(MetricPaths.AllocationBytesPerSecond)?.Values" OnClick="@(() => Open(MetricPaths.AllocationBytesPerSecond))" />
+        <UiStat Label="GC / s" Value="@UiFormat.Number(Latest(MetricPaths.GcPerSecond))" Hint="@("pause " + Show("Process.GcPauseTimePercent"))" Series="@Series(MetricPaths.GcPerSecond)?.Values" OnClick="@(() => Open(MetricPaths.GcPerSecond))" />
+        <UiStat Label="Thread pool" Value="@Show("Process.ThreadPoolThreads")" Hint="@(Show("Process.ThreadPoolPendingItems") + " queued")" Tone="@QueueTone" Series="@Series("Process.ThreadPoolThreads")?.Values" OnClick="@(() => Open("Process.ThreadPoolPendingItems"))" />
+        <UiStat Label="Connections" Value="@Show("Connections.TotalConnections")" Series="@Series("Connections.TotalConnections")?.Values" OnClick="@(() => Open("Connections.TotalConnections"))" />
+        <UiStat Label="Ingress" Value="@(UiFormat.Bytes(Latest("Connections.IngressBytesPerSecond")) + "/s")" Series="@Series("Connections.IngressBytesPerSecond")?.Values" OnClick="@(() => Open("Connections.IngressBytesPerSecond"))" />
+        <UiStat Label="Egress" Value="@(UiFormat.Bytes(Latest("Connections.EgressBytesPerSecond")) + "/s")" Series="@Series("Connections.EgressBytesPerSecond")?.Values" OnClick="@(() => Open("Connections.EgressBytesPerSecond"))" />
+        <UiStat Label="Dispatch queue" Value="@Show("Dispatch.TotalPackets")" Hint="@("peak " + Show("Dispatch.PeakPackets"))" Series="@Series("Dispatch.TotalPackets")?.Values" OnClick="@(() => Open("Dispatch.TotalPackets"))" />
+        <UiStat Label="Handler time" Value="@Show("Dispatch.PipelineMetrics.AverageTimeMs")" Hint="@("max " + Show("Dispatch.PipelineMetrics.MaxTimeMs"))" Series="@Series("Dispatch.PipelineMetrics.AverageTimeMs")?.Values" OnClick="@(() => Open("Dispatch.PipelineMetrics.AverageTimeMs"))" />
+        <UiStat Label="Handler errors" Value="@Show("Dispatch.PipelineMetrics.TotalErrors")" Tone="@ErrorTone" Series="@Series("Dispatch.PipelineMetrics.TotalErrors")?.Values" OnClick="@(() => Open("Dispatch.PipelineMetrics.TotalErrors"))" />
+    </div>
+
+    <div class="ui-grid-wide">
+        <UiCard Title="CPU">
+            <UiLineChart Series="@Chart(("CPU %", MetricPaths.CpuPercent, UiTone.Accent))" Formatter="@UiFormat.Percent" />
+        </UiCard>
+        <UiCard Title="Memory">
+            <UiLineChart Series="@Chart(("Working set", "Process.WorkingSetBytes", UiTone.Accent), ("Managed heap", "Process.ManagedHeapBytes", UiTone.Ok))" Formatter="@UiFormat.Bytes" />
+        </UiCard>
+        <UiCard Title="Network">
+            <UiLineChart Series="@Chart(("Ingress", "Connections.IngressBytesPerSecond", UiTone.Accent), ("Egress", "Connections.EgressBytesPerSecond", UiTone.Warn))" Formatter="@(v => UiFormat.Bytes(v) + "/s")" />
+        </UiCard>
+        <UiCard Title="Dispatch">
+            <UiLineChart Series="@Chart(("Queued packets", "Dispatch.TotalPackets", UiTone.Accent), ("Active handlers", "Dispatch.PipelineMetrics.ActiveExecutions", UiTone.Ok))" />
+        </UiCard>
+    </div>
+
+    @if (Store.GetSection(Sections.Process) is { } process)
+    {
+        <UiCard Title="Runtime">
+            <div class="facts">
+                <div><span class="ui-muted">Runtime</span><span>@process.Get("Runtime")?.Text</span></div>
+                <div><span class="ui-muted">OS</span><span>@process.Get("Os")?.Text</span></div>
+                <div><span class="ui-muted">Cores</span><span>@Show("Process.ProcessorCount")</span></div>
+                <div><span class="ui-muted">Uptime</span><span>@Show("Process.UptimeMs")</span></div>
+                <div><span class="ui-muted">Samples</span><span>@UiFormat.Number(Store.SampleCount)</span></div>
+                <div><span class="ui-muted">Payload</span><span>@Show(MetricPaths.PayloadBytes)</span></div>
+            </div>
+        </UiCard>
+    }
+</div>
+
+@code {
+    [Inject]
+    private NavigationManager Navigation { get; set; } = default!;
+
+    private string Subtitle => Store.Latest is { } latest
+        ? $"Live · last sample {UiFormat.Time(latest.SampledAt)} · every {UiFormat.Duration(Store.Settings.IntervalMs)}"
+        : "Waiting for the first sample…";
+
+    private UiTone CpuTone => Latest(MetricPaths.CpuPercent) switch
+    {
+        >= 90 => UiTone.Danger,
+        >= 70 => UiTone.Warn,
+        _ => UiTone.Neutral,
+    };
+
+    private UiTone QueueTone => Latest("Process.ThreadPoolPendingItems") > 100 ? UiTone.Warn : UiTone.Neutral;
+
+    private UiTone ErrorTone => Latest("Dispatch.PipelineMetrics.TotalErrors") > 0 ? UiTone.Danger : UiTone.Neutral;
+
+    private void Open(string path) => Navigation.NavigateTo(MetricUrl(path));
+
+    private List<UiChartSeries> Chart(params (string Name, string Path, UiTone Tone)[] lines)
+    {
+        List<UiChartSeries> series = new(lines.Length);
+        foreach ((string name, string path, UiTone tone) in lines)
+        {
+            if (Series(path) is { } data)
+            {
+                series.Add(new UiChartSeries(name, data.Times, data.Values, tone));
+            }
+        }
+
+        return series;
+    }
+}

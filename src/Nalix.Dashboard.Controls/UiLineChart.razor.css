@@ -1,0 +1,102 @@
+.ui-chart {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.ui-chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+}
+
+.ui-chart-plot {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 8px;
+}
+
+.ui-chart-yaxis {
+    position: relative;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+}
+
+.ui-chart-ylabel {
+    position: absolute;
+    right: 0;
+    transform: translateY(-50%);
+    line-height: 1;
+    white-space: nowrap;
+}
+
+.ui-chart-canvas {
+    position: relative;
+    min-width: 0;
+    border-left: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Absolutely positioned: a 1000x1000 viewBox would otherwise size itself square from the width. */
+.ui-chart-svg {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+}
+
+.ui-chart-grid {
+    stroke: var(--border);
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+}
+
+.ui-chart-line {
+    fill: none;
+    stroke-width: 2;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.ui-chart-xaxis {
+    display: grid;
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 8px;
+    color: var(--text-muted);
+    font-family: var(--mono);
+    font-size: 11px;
+}
+
+.ui-chart-xlabels {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.ui-chart-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 13px;
+}
+
+.ui-chart-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ui-chart-swatch {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+}

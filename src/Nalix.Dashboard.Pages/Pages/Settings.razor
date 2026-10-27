@@ -1,0 +1,74 @@
+@page "/settings"
+@inherits StoreComponent
+
+<PageTitle>Settings · Nalix</PageTitle>
+
+<div class="ui-stack">
+    <div class="page-head">
+        <div>
+            <h1>Settings</h1>
+            <p class="ui-muted">Stored in this browser only.</p>
+        </div>
+    </div>
+
+    <UiCard Title="Sampling">
+        <div class="settings-grid">
+            <UiField Label="Interval (ms)" For="interval" Hint="One request per tick; 250 ms – 60 s.">
+                <UiNumberInput Id="interval" @bind-Value="_interval" Min="250" Max="60000" Step="250" />
+            </UiField>
+            <UiField Label="History (samples)" For="history" Hint="Points kept per metric; changing it clears the history.">
+                <UiNumberInput Id="history" @bind-Value="_history" Min="60" Max="7200" Step="60" />
+            </UiField>
+            <UiField Label="Theme" For="theme">
+                <UiSelect Id="theme" @bind-Value="_theme" Options="@s_themes" />
+            </UiField>
+        </div>
+        <div class="ui-row">
+            <UiButton Variant="UiButtonVariant.Primary" OnClick="SaveAsync"><UiIcon Name="check" /> Save</UiButton>
+            <UiButton Variant="UiButtonVariant.Ghost" OnClick="Store.ClearHistory">Clear history</UiButton>
+            @if (_saved)
+            {
+                <span class="ui-muted">Saved.</span>
+            }
+        </div>
+    </UiCard>
+
+    <UiCard Title="Connection">
+        <p class="ui-muted">Connected to <span class="ui-mono">@Store.Settings.Endpoint</span>. Disconnecting forgets the stored access key.</p>
+        <div class="ui-row">
+            <UiButton Variant="UiButtonVariant.Danger" OnClick="Store.DisconnectAsync"><UiIcon Name="unplug" /> Disconnect</UiButton>
+        </div>
+    </UiCard>
+</div>
+
+@code {
+    private static readonly IReadOnlyList<KeyValuePair<string, string>> s_themes =
+    [
+        new("system", "System"),
+        new("light", "Light"),
+        new("dark", "Dark"),
+    ];
+
+    private int _interval;
+    private int _history;
+    private string _theme = "system";
+    private bool _saved;
+
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _interval = Store.Settings.IntervalMs;
+        _history = Store.Settings.HistorySize;
+        _theme = Store.Settings.Theme;
+    }
+
+    private async Task SaveAsync()
+    {
+        await Store.UpdateSettingsAsync(Store.Settings with { IntervalMs = _interval, HistorySize = _history, Theme = _theme });
+        await JS.InvokeVoidAsync("n12d.setTheme", _theme);
+        _saved = true;
+    }
+}

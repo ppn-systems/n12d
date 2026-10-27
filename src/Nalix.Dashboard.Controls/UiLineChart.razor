@@ -1,0 +1,200 @@
+<div class="ui-chart @Class">
+    @if (!_hasData)
+    {
+        <div class="ui-chart-empty" style="height: @(Height)px">No data yet</div>
+    }
+    else
+    {
+        <div class="ui-chart-plot" style="height: @(Height)px">
+            <div class="ui-chart-yaxis">
+                @for (int g = 0; g < GridLineCount; g++)
+                {
+                    <span class="ui-chart-ylabel" style="top: @_gridPercent[g]%">@_gridLabel[g]</span>
+                }
+            </div>
+            <div class="ui-chart-canvas">
+                <svg class="ui-chart-svg" viewBox="0 0 1000 1000" preserveAspectRatio="none" role="img" aria-label="Line chart">
+                    @for (int g = 0; g < GridLineCount; g++)
+                    {
+                        <line class="ui-chart-grid" x1="0" x2="1000" y1="@_gridY[g]" y2="@_gridY[g]" />
+                    }
+                    @for (int s = 0; s < Series.Count; s++)
+                    {
+                        if (_seriesPoints[s].Length > 0)
+                        {
+                            <polyline class="ui-chart-line" points="@_seriesPoints[s]" style="stroke: @UiCss.ToneColor(Series[s].Tone)" />
+                        }
+                    }
+                </svg>
+            </div>
+        </div>
+        <div class="ui-chart-xaxis">
+            <span></span>
+            <span class="ui-chart-xlabels">
+                <span>@_startLabel</span>
+                <span>@_middleLabel</span>
+                <span>@_endLabel</span>
+            </span>
+        </div>
+        <ul class="ui-chart-legend">
+            @for (int s = 0; s < Series.Count; s++)
+            {
+                <li class="ui-chart-legend-item">
+                    <span class="ui-chart-swatch" style="background: @UiCss.ToneColor(Series[s].Tone)"></span>
+                    <span>@Series[s].Name</span>
+                    <span class="ui-mono ui-muted">@_latest[s]</span>
+                </li>
+            }
+        </ul>
+    }
+</div>
+
+@code {
+    private const int GridLineCount = 4;
+    private const double ViewSize = 1000d;
+
+    private readonly StringBuilder _points = new();
+    private readonly string[] _gridY = new string[GridLineCount];
+    private readonly string[] _gridPercent = new string[GridLineCount];
+    private readonly string[] _gridLabel = new string[GridLineCount];
+    private string[] _seriesPoints = [];
+    private string[] _latest = [];
+    private string _startLabel = string.Empty;
+    private string _middleLabel = string.Empty;
+    private string _endLabel = string.Empty;
+    private bool _hasData;
+
+    /// <summary>Gets or sets the lines to draw.</summary>
+    [Parameter] public IReadOnlyList<UiChartSeries> Series { get; set; } = [];
+
+    /// <summary>Gets or sets the plot height in pixels.</summary>
+    [Parameter] public int Height { get; set; } = 220;
+
+    /// <summary>Gets or sets the value formatter for the axis and legend. Defaults to <see cref="UiFormat.Number(double)"/>.</summary>
+    [Parameter] public Func<double, string>? Formatter { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+
+    /// <inheritdoc />
+    protected override void OnParametersSet()
+    {
+        Build();
+    }
+
+    private static string FormatDefault(double value) => UiFormat.Number(value);
+
+    private void Build()
+    {
+        Func<double, string> format = Formatter ?? FormatDefault;
+        int seriesCount = Series.Count;
+        _seriesPoints = new string[seriesCount];
+        _latest = new string[seriesCount];
+
+        double min = double.PositiveInfinity;
+        double max = double.NegativeInfinity;
+        long minTime = long.MaxValue;
+        long maxTime = long.MinValue;
+        bool any = false;
+        for (int s = 0; s < seriesCount; s++)
+        {
+            UiChartSeries series = Series[s];
+            int count = Math.Min(series.Times.Count, series.Values.Count);
+            for (int i = 0; i < count; i++)
+            {
+                double value = series.Values[i];
+                if (!double.IsFinite(value))
+                {
+                    continue;
+                }
+
+                long time = series.Times[i];
+                any = true;
+                if (value < min)
+                {
+                    min = value;
+                }
+
+                if (value > max)
+                {
+                    max = value;
+                }
+
+                if (time < minTime)
+                {
+                    minTime = time;
+                }
+
+                if (time > maxTime)
+                {
+                    maxTime = time;
+                }
+            }
+        }
+
+        _hasData = any;
+        if (!any)
+        {
+            for (int s = 0; s < seriesCount; s++)
+            {
+                _seriesPoints[s] = string.Empty;
+                _latest[s] = UiFormat.Dash;
+            }
+
+            return;
+        }
+
+        double range = max - min;
+        double pad = range > 0 ? range * 0.05 : Math.Max(Math.Abs(max) * 0.05, 1d);
+        // Non-negative metrics (bytes, counts, percentages) never get an axis below zero.
+        double low = min >= 0 ? Math.Max(0d, min - pad) : min - pad;
+        double high = max + pad;
+        double span = high - low;
+        double timeSpan = maxTime - minTime;
+
+        for (int g = 0; g < GridLineCount; g++)
+        {
+            double fraction = (double)g / (GridLineCount - 1);
+            _gridY[g] = (fraction * ViewSize).ToString("0.0", CultureInfo.InvariantCulture);
+            _gridPercent[g] = (fraction * 100d).ToString("0.0", CultureInfo.InvariantCulture);
+            _gridLabel[g] = format(high - fraction * span);
+        }
+
+        for (int s = 0; s < seriesCount; s++)
+        {
+            UiChartSeries series = Series[s];
+            int count = Math.Min(series.Times.Count, series.Values.Count);
+            bool hasLast = false;
+            double lastValue = 0d;
+
+            _points.Clear();
+            for (int i = 0; i < count; i++)
+            {
+                double value = series.Values[i];
+                if (!double.IsFinite(value))
+                {
+                    continue;
+                }
+
+                double x = timeSpan > 0 ? (series.Times[i] - minTime) / timeSpan * ViewSize : ViewSize / 2;
+                double y = (high - value) / span * ViewSize;
+
+                if (_points.Length > 0)
+                {
+                    _points.Append(' ');
+                }
+
+                UiSvg.AppendPoint(_points, x, y);
+                hasLast = true;
+                lastValue = value;
+            }
+
+            _seriesPoints[s] = _points.ToString();
+            _latest[s] = hasLast ? format(lastValue) : UiFormat.Dash;
+        }
+
+        _startLabel = UiFormat.Time(minTime);
+        _middleLabel = UiFormat.Time(minTime + (maxTime - minTime) / 2);
+        _endLabel = UiFormat.Time(maxTime);
+    }
+}

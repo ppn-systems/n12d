@@ -1,0 +1,17 @@
+.ui-sparkline {
+    display: block;
+    width: 100%;
+    overflow: visible;
+}
+
+.ui-sparkline-line {
+    fill: none;
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.ui-sparkline-area {
+    fill-opacity: 0.15;
+}

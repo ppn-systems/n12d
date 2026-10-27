@@ -1,66 +1,22 @@
 // Copyright (c) 2026 PPN Corporation. All rights reserved.
 // Licensed under the Apache License, Version 2.0.
 
+using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using MudBlazor.Services;
-using Nalix.Dashboard.Application.Abstractions;
-using Nalix.Dashboard.Application.Reports;
-using Nalix.Dashboard.Application.Reports.Buffers;
-using Nalix.Dashboard.Application.Reports.ConnectionGuard;
-using Nalix.Dashboard.Application.Reports.Connections;
-using Nalix.Dashboard.Application.Reports.Dispatch;
-using Nalix.Dashboard.Application.Reports.Instances;
-using Nalix.Dashboard.Application.Reports.Listeners;
-using Nalix.Dashboard.Application.Reports.ObjectPools;
-using Nalix.Dashboard.Application.Reports.PolicyRateLimiter;
-using Nalix.Dashboard.Application.Reports.Protocols;
-using Nalix.Dashboard.Application.Reports.Sessions;
-using Nalix.Dashboard.Application.Reports.Tasks;
-using Nalix.Dashboard.Application.Reports.TokenBucketLimiter;
-using Nalix.Dashboard.Application.Services;
-using Nalix.Dashboard.Application.State;
-using Nalix.Dashboard.Infrastructure.BrowserStorage;
-using Nalix.Dashboard.Infrastructure.Nalix;
-using Nalix.Dashboard.Infrastructure.Options;
+using Nalix.Dashboard;
+using Nalix.Dashboard.Abstractions.Connection;
+using Nalix.Dashboard.Abstractions.Settings;
+using Nalix.Dashboard.Infrastructure.Browser;
+using Nalix.Dashboard.State;
+using Nalix.Dashboard.Transport;
 
-internal class Program
-{
-    private static async Task Main(string[] args)
-    {
-        WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
-        builder.RootComponents.Add<Nalix.Dashboard.Components.App>("#app");
-        builder.RootComponents.Add<Microsoft.AspNetCore.Components.Web.HeadOutlet>("head::after");
+WebAssemblyHostBuilder builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
 
-        _ = builder.Services.Configure<AdminClientOptions>(builder.Configuration.GetSection("AdminClient"));
+_ = builder.Services.AddSingleton<IObservabilityClient, NalixObservabilityClient>();
+_ = builder.Services.AddSingleton<ISettingsStore, BrowserSettingsStore>();
+_ = builder.Services.AddSingleton<IFileSaver, BrowserFileSaver>();
+_ = builder.Services.AddSingleton<DashboardStore>();
 
-        _ = builder.Services.AddSingleton<DashboardState>();
-        _ = builder.Services.AddSingleton<IDashboardStateReader>(sp => sp.GetRequiredService<DashboardState>());
-        _ = builder.Services.AddSingleton<IDashboardStateWriter>(sp => sp.GetRequiredService<DashboardState>());
-
-        _ = builder.Services.AddSingleton<IAdminSettingsStore, BrowserAdminSettingsStore>();
-        _ = builder.Services.AddSingleton<IAdminClient, WebSocketAdminClient>();
-        _ = builder.Services.AddSingleton<IReportPollingController, ReportPollingController>();
-        _ = builder.Services.AddSingleton<PingKeepAliveService>();
-        _ = builder.Services.AddSingleton<MetricRecordingService>();
-
-        _ = builder.Services.AddSingleton<IReportParser, DispatchReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, TasksReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, BuffersReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, ConnectionsReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, InstancesReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, ObjectPoolsReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, ConnectionGuardReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, ListenersReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, ProtocolsReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, SessionsReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, PolicyRateLimiterReportParser>();
-        _ = builder.Services.AddSingleton<IReportParser, TokenBucketLimiterReportParser>();
-        _ = builder.Services.AddSingleton<ReportParserRegistry>();
-
-        _ = builder.Services.AddMudServices();
-
-        WebAssemblyHost host = builder.Build();
-        _ = host.Services.GetRequiredService<PingKeepAliveService>();
-        await host.RunAsync().ConfigureAwait(false);
-    }
-}
+await builder.Build().RunAsync();

@@ -1,0 +1,138 @@
+/* Copyright (c) 2026 PPN Corporation. All rights reserved. Licensed under the Apache License, Version 2.0. */
+
+/* Base reset, layout utilities and shared form controls. Load after tokens.css. */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, p, ul, ol, figure {
+  margin: 0;
+}
+
+ul, ol {
+  padding: 0;
+  list-style: none;
+}
+
+button, input, select, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Layout */
+
+.ui-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(190px, 100%), 1fr));
+  gap: var(--gap);
+}
+
+.ui-grid-wide {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(360px, 100%), 1fr));
+  gap: var(--gap);
+}
+
+.ui-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.ui-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--gap);
+  min-width: 0;
+}
+
+.ui-spacer {
+  flex: 1;
+}
+
+/* Text */
+
+.ui-muted {
+  color: var(--text-muted);
+}
+
+.ui-mono {
+  font-family: var(--mono);
+  font-size: 0.95em;
+}
+
+.ui-tone-accent {
+  color: var(--accent);
+}
+
+.ui-tone-ok {
+  color: var(--ok);
+}
+
+.ui-tone-warn {
+  color: var(--warn);
+}
+
+.ui-tone-danger {
+  color: var(--danger);
+}
+
+/* Form controls (shared by UiTextInput, UiNumberInput and UiSelect) */
+
+.ui-input,
+.ui-select {
+  width: 100%;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.ui-input::placeholder {
+  color: var(--text-muted);
+}
+
+.ui-input:disabled,
+.ui-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 360px) {
+  body {
+    font-size: 13px;
+  }
+}
+
+/* Phones: two stats per row instead of one tall column. */
+@media (max-width: 520px) {
+  .ui-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}

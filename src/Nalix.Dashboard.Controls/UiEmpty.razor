@@ -1,0 +1,25 @@
+<div class="ui-empty @Class">
+    @if (Title is not null)
+    {
+        <p class="ui-empty-title">@Title</p>
+    }
+    @if (Message is not null)
+    {
+        <p class="ui-empty-message">@Message</p>
+    }
+    @ChildContent
+</div>
+
+@code {
+    /// <summary>Gets or sets the heading.</summary>
+    [Parameter] public string? Title { get; set; }
+
+    /// <summary>Gets or sets the explanation.</summary>
+    [Parameter] public string? Message { get; set; }
+
+    /// <summary>Gets or sets extra content such as a call to action.</summary>
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>Gets or sets extra CSS classes for the root element.</summary>
+    [Parameter] public string? Class { get; set; }
+}

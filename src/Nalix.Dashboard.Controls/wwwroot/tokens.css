@@ -1,0 +1,59 @@
+/* Copyright (c) 2026 PPN Corporation. All rights reserved. Licensed under the Apache License, Version 2.0. */
+
+/* Design tokens. Light by default; dark values apply when the OS prefers dark,
+   unless the page sets data-theme="light", or whenever data-theme="dark" is set. */
+
+:root {
+  color-scheme: light;
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --surface-2: #eef1f5;
+  --border: #d9dee6;
+  --text: #17202d;
+  --text-muted: #5a6575;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --ok: #15783a;
+  --warn: #92500a;
+  --danger: #b42318;
+  --radius: 8px;
+  --radius-sm: 4px;
+  --gap: 16px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 1px 3px rgba(16, 24, 40, 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #0e131a;
+    --surface: #161c25;
+    --surface-2: #1d2530;
+    --border: #2b3441;
+    --text: #e5e9f0;
+    --text-muted: #9aa5b4;
+    --accent: #6ea8fe;
+    --accent-contrast: #0b1220;
+    --ok: #4ade80;
+    --warn: #fbbf24;
+    --danger: #f87171;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #0e131a;
+  --surface: #161c25;
+  --surface-2: #1d2530;
+  --border: #2b3441;
+  --text: #e5e9f0;
+  --text-muted: #9aa5b4;
+  --accent: #6ea8fe;
+  --accent-contrast: #0b1220;
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --danger: #f87171;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 3px rgba(0, 0, 0, 0.3);
+}

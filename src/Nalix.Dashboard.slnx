@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="Nalix.Dashboard.Abstractions/Nalix.Dashboard.Abstractions.csproj" />
+    <Project Path="Nalix.Dashboard.Infrastructure/Nalix.Dashboard.Infrastructure.csproj" />
+    <Project Path="Nalix.Dashboard.Transport/Nalix.Dashboard.Transport.csproj" />
+    <Project Path="Nalix.Dashboard.State/Nalix.Dashboard.State.csproj" />
+    <Project Path="Nalix.Dashboard.Controls/Nalix.Dashboard.Controls.csproj" />
+    <Project Path="Nalix.Dashboard.Pages/Nalix.Dashboard.Pages.csproj" />
+    <Project Path="Nalix.Dashboard/Nalix.Dashboard.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="../tests/Nalix.Dashboard.Tests/Nalix.Dashboard.Tests.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,86 @@
+.connect {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px 16px;
+}
+
+.connect-card {
+  width: min(560px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.connect-head {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.connect-head h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.connect-head p {
+  margin: 2px 0 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--accent-contrast);
+  font-weight: 700;
+  font-size: 22px;
+}
+
+.connect-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+::deep .span-2 {
+  grid-column: span 2;
+}
+
+::deep .span-3 {
+  grid-column: span 3;
+}
+
+.connect-error {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--surface));
+}
+
+::deep .connect-submit {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (max-width: 520px) {
+  .connect-grid {
+    grid-template-columns: 1fr;
+  }
+
+  ::deep .span-2,
+  ::deep .span-3 {
+    grid-column: auto;
+  }
+}

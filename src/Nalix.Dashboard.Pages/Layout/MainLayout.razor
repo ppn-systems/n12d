@@ -1,0 +1,117 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject DashboardStore Store
+@inject IJSRuntime JS
+
+@if (ShowApp)
+{
+    <div class="shell @(_navOpen ? "nav-open" : null)">
+        <aside class="rail" aria-label="Navigation">
+            <a class="brand" href="">
+                <span class="brand-mark">n</span>
+                <span class="brand-text">Nalix<small>observability</small></span>
+            </a>
+            <nav @onclick="CloseNav">
+                <NavLink class="rail-link" href="" Match="NavLinkMatch.All"><UiIcon Name="overview" /><span>Overview</span></NavLink>
+                <div class="rail-group">Runtime</div>
+                @foreach (SectionInfo section in Sections.All)
+                {
+                    <NavLink class="rail-link" href="@("section/" + section.Slug)"><UiIcon Name="@SectionIcons.Of(section)" /><span>@section.Title</span></NavLink>
+                }
+                <div class="rail-group">Analysis</div>
+                <NavLink class="rail-link" href="diagnostics"><UiIcon Name="diagnostics" /><span>Diagnostics</span></NavLink>
+                <NavLink class="rail-link" href="recordings"><UiIcon Name="recordings" /><span>Recordings</span>@if (Store.Recorder.IsRecording) {<span class="rec-dot" title="Recording"></span>}</NavLink>
+                <NavLink class="rail-link" href="log"><UiIcon Name="log" /><span>Event log</span></NavLink>
+                <NavLink class="rail-link" href="settings"><UiIcon Name="settings" /><span>Settings</span></NavLink>
+            </nav>
+        </aside>
+
+        <div class="main">
+            <header class="topbar">
+                <button class="icon-btn nav-toggle" type="button" title="Menu" @onclick="ToggleNav"><UiIcon Name="menu" /></button>
+                <StatusPill />
+                <span class="endpoint ui-mono ui-muted">@Store.Settings.Endpoint</span>
+                <span class="ui-spacer"></span>
+                @if (Store.Latest is { } latest)
+                {
+                    <span class="ui-muted topbar-meta" title="Round-trip of the last sample">@UiFormat.Duration(latest.RoundTripMs)</span>
+                }
+                <button class="icon-btn" type="button" title="@(Store.IsPaused ? "Resume sampling" : "Pause sampling")" @onclick="TogglePause">
+                    <UiIcon Name="@(Store.IsPaused ? "play" : "pause")" />
+                </button>
+                <button class="icon-btn @(Store.Recorder.IsRecording ? "recording" : null)" type="button"
+                        title="@(Store.Recorder.IsRecording ? "Stop recording" : "Start recording")" @onclick="ToggleRecording">
+                    <UiIcon Name="@(Store.Recorder.IsRecording ? "stop" : "record")" />
+                </button>
+                <button class="icon-btn" type="button" title="Toggle theme" @onclick="ToggleTheme"><UiIcon Name="@(IsDark ? "sun" : "moon")" /></button>
+                <button class="icon-btn" type="button" title="Disconnect" @onclick="Disconnect"><UiIcon Name="unplug" /></button>
+            </header>
+            @if (Store.Error is { } error && Store.Status != ConnectionStatus.Connected)
+            {
+                <div class="banner" role="status"><UiIcon Name="alert" /> @error @(Store.IsReconnecting ? " — reconnecting…" : null)</div>
+            }
+            <main class="content">
+                @Body
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    <ConnectPanel />
+}
+
+@code {
+    private bool _navOpen;
+    private bool _themeApplied;
+
+    private bool ShowApp => Store.Status == ConnectionStatus.Connected || Store.IsReconnecting;
+
+    private bool IsDark => Store.Settings.Theme == "dark";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Store.Changed += OnChanged;
+        await Store.InitializeAsync();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_themeApplied)
+        {
+            _themeApplied = true;
+            await JS.InvokeVoidAsync("n12d.setTheme", Store.Settings.Theme);
+        }
+    }
+
+    public void Dispose() => Store.Changed -= OnChanged;
+
+    private void OnChanged() => _ = InvokeAsync(StateHasChanged);
+
+    private void ToggleNav() => _navOpen = !_navOpen;
+
+    private void CloseNav() => _navOpen = false;
+
+    private void TogglePause() => Store.SetPaused(!Store.IsPaused);
+
+    private void ToggleRecording()
+    {
+        if (Store.Recorder.IsRecording)
+        {
+            Store.StopRecording();
+        }
+        else
+        {
+            Store.StartRecording();
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        string theme = IsDark ? "light" : "dark";
+        await Store.UpdateSettingsAsync(Store.Settings with { Theme = theme });
+        await JS.InvokeVoidAsync("n12d.setTheme", theme);
+    }
+
+    private Task Disconnect() => Store.DisconnectAsync();
+}
