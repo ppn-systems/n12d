@@ -1,0 +1,46 @@
+# Cloudflare Pages headers for n12d (Nalix Dashboard).
+# Cloudflare compresses (Brotli/gzip) at the edge automatically.
+
+/*
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Content-Security-Policy: frame-ancestors 'none'; base-uri 'self'; object-src 'none'
+
+# .NET 10 content-fingerprints all published framework assets (blazor.webassembly.<hash>.js,
+# dotnet.<hash>.js, and *.wasm). Every URL under /_framework/ changes when its bytes change.
+/_framework/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Unfingerprinted import-map aliases do not exist as physical files and fall through to the SPA
+# index.html fallback; detach the inherited immutable rule so the fallback is never cached.
+/_framework/dotnet.js
+  ! Cache-Control
+  Cache-Control: no-cache
+/_framework/dotnet.runtime.js
+  ! Cache-Control
+  Cache-Control: no-cache
+/_framework/dotnet.native.js
+  ! Cache-Control
+  Cache-Control: no-cache
+/_framework/blazor.webassembly.js
+  ! Cache-Control
+  Cache-Control: no-cache
+
+# Always revalidate the HTML shell and un-fingerprinted static assets on deploy.
+/index.html
+  Cache-Control: no-cache
+/Nalix.Dashboard.styles.css
+  Cache-Control: no-cache
+/css/*
+  Cache-Control: no-cache
+/js/*
+  Cache-Control: no-cache
+/_content/*
+  Cache-Control: no-cache
+
+# Self-hosted font files are immutable.
+/_content/Nalix.Dashboard.Controls/fonts/*
+  ! Cache-Control
+  Cache-Control: public, max-age=31536000, immutable
