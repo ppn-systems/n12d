@@ -3,30 +3,17 @@
 
 using System.Text;
 using Nalix.Dashboard.Infrastructure.Export;
+using Nalix.Dashboard.Tests.TestSupport;
 
-namespace Nalix.Dashboard.Tests;
+namespace Nalix.Dashboard.Tests.Infrastructure.Export;
 
 /// <summary>
 /// Tests for <see cref="CsvBuilder"/>.
 /// </summary>
-internal static class CsvTests
+public sealed class CsvBuilderTests
 {
-    /// <summary>
-    /// Registers every CSV test with the runner.
-    /// </summary>
-    /// <param name="tests">The runner's test list.</param>
-    public static void Register(List<(string Name, Action Body)> tests)
-    {
-        tests.Add(("Csv_HeaderAndRow_AreWrittenInOrder", Csv_HeaderAndRow_AreWrittenInOrder));
-        tests.Add(("Csv_HeaderCellsWithSpecialCharacters_AreQuoted", Csv_HeaderCellsWithSpecialCharacters_AreQuoted));
-        tests.Add(("Csv_NaNValue_IsEmptyCell", Csv_NaNValue_IsEmptyCell));
-        tests.Add(("Csv_Timestamp_IsIsoUtcWithMilliseconds", Csv_Timestamp_IsIsoUtcWithMilliseconds));
-        tests.Add(("Csv_ColumnCountMismatch_Throws", Csv_ColumnCountMismatch_Throws));
-        tests.Add(("Csv_Output_HasNoByteOrderMark", Csv_Output_HasNoByteOrderMark));
-        tests.Add(("Csv_EmptyBuilder_WritesHeaderOnly", Csv_EmptyBuilder_WritesHeaderOnly));
-    }
-
-    private static void Csv_HeaderAndRow_AreWrittenInOrder()
+    [Test]
+    public void AddRow_OneRow_WritesHeaderAndRowInOrder()
     {
         CsvBuilder builder = new(["cpu", "memory"]);
         builder.AddRow(0L, [1.5, 2.0]);
@@ -35,14 +22,16 @@ internal static class CsvTests
         Check.Equal(1, builder.RowCount);
     }
 
-    private static void Csv_HeaderCellsWithSpecialCharacters_AreQuoted()
+    [Test]
+    public void ToUtf8_HeaderWithSpecialCharacters_QuotesCells()
     {
         CsvBuilder builder = new(["a,b", "say \"hi\"", "line\nbreak"]);
 
         Check.Equal("timestamp_utc,\"a,b\",\"say \"\"hi\"\"\",\"line\nbreak\"\n", Text(builder));
     }
 
-    private static void Csv_NaNValue_IsEmptyCell()
+    [Test]
+    public void AddRow_NaNValue_WritesEmptyCell()
     {
         CsvBuilder builder = new(["a", "b", "c"]);
         builder.AddRow(0L, [double.NaN, 2.5, double.NaN]);
@@ -50,7 +39,8 @@ internal static class CsvTests
         Check.Equal("timestamp_utc,a,b,c\n1970-01-01T00:00:00.000Z,,2.5,\n", Text(builder));
     }
 
-    private static void Csv_Timestamp_IsIsoUtcWithMilliseconds()
+    [Test]
+    public void AddRow_UnixTimestamp_WritesIsoUtcWithMilliseconds()
     {
         long unixMs = new DateTimeOffset(2026, 10, 27, 1, 2, 3, 456, TimeSpan.Zero).ToUnixTimeMilliseconds();
         CsvBuilder builder = new(["v"]);
@@ -60,7 +50,8 @@ internal static class CsvTests
         Check.True(text.EndsWith("2026-10-27T01:02:03.456Z,1\n", StringComparison.Ordinal), $"unexpected row: {text}");
     }
 
-    private static void Csv_ColumnCountMismatch_Throws()
+    [Test]
+    public void AddRow_ColumnCountMismatch_ThrowsArgumentException()
     {
         CsvBuilder builder = new(["a", "b"]);
         Check.Throws<ArgumentException>(() => builder.AddRow(0L, [1.0]));
@@ -68,7 +59,8 @@ internal static class CsvTests
         Check.Equal(0, builder.RowCount);
     }
 
-    private static void Csv_Output_HasNoByteOrderMark()
+    [Test]
+    public void ToUtf8_AnyRows_HasNoByteOrderMark()
     {
         CsvBuilder builder = new(["a"]);
         byte[] bytes = builder.ToUtf8();
@@ -76,7 +68,8 @@ internal static class CsvTests
         Check.True(bytes.Length > 0 && bytes[0] == (byte)'t', "output must start with the header, not a BOM");
     }
 
-    private static void Csv_EmptyBuilder_WritesHeaderOnly()
+    [Test]
+    public void ToUtf8_EmptyBuilder_WritesHeaderOnly()
     {
         CsvBuilder builder = new(["a"]);
 
