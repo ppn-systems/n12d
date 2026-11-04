@@ -3,22 +3,7 @@
 
 using System.Globalization;
 
-namespace Nalix.Dashboard.Tests;
-
-/// <summary>
-/// Thrown by <see cref="Check"/> helpers when an assertion does not hold.
-/// </summary>
-internal sealed class CheckFailedException : Exception
-{
-    /// <summary>
-    /// Initializes a new instance with a failure message.
-    /// </summary>
-    /// <param name="message">The failure description.</param>
-    public CheckFailedException(string message)
-        : base(message)
-    {
-    }
-}
+namespace Nalix.Dashboard.Tests.TestSupport;
 
 /// <summary>
 /// Minimal assertion helpers for the dependency-free test runner.

@@ -102,3 +102,14 @@
     grid-column: auto;
   }
 }
+
+.connect-url {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: -4px 0 0;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}

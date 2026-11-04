@@ -29,6 +29,27 @@ else
         }
         else
         {
+            @if (HasHighlightSeries(Section.Key))
+            {
+                <UiStatGroup>
+                    @foreach ((string label, string path, int slot) in SectionHighlights.For(Section.Key))
+                    {
+                        if (Series(path) is { } series)
+                        {
+                            <UiStat Slot="@slot" Label="@label" Value="@Show(path)" Series="@series.Values" OnClick="@(() => Open(path))" />
+                        }
+                    }
+                </UiStatGroup>
+            }
+
+            @if (IsTruncated(node))
+            {
+                <div class="sp-banner" role="note">
+                    <span class="sp-banner__icon" aria-hidden="true"><UiIcon Name="alert" Size="16" /></span>
+                    <span>Long lists were shortened to fit one response. Totals above are exact; open Raw JSON for what was sent.</span>
+                </div>
+            }
+
             <UiReportView Node="@node" PathPrefix="@Section.Key" OnMetricClick="Open" />
         }
     </div>
@@ -48,6 +69,22 @@ else
     protected override RuntimeObservationTargets WatchedTargets => Section?.Target ?? RuntimeObservationTargets.NONE;
 
     private void ToggleRaw() => _raw = !_raw;
+
+    private bool HasHighlightSeries(string sectionKey)
+    {
+        IReadOnlyList<(string Label, string Path, int Slot)> highlights = SectionHighlights.For(sectionKey);
+        for (int i = 0; i < highlights.Count; i++)
+        {
+            if (Series(highlights[i].Path) is not null)
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static bool IsTruncated(ReportNode node) => node.Get("_truncated") is { Kind: ReportNodeKind.Boolean, Number: not 0 };
 
     private void Open(string path) => Navigation.NavigateTo(MetricUrl(path));
 

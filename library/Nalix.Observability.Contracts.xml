@@ -93,6 +93,10 @@
             A request selects one or more <see cref="T:Nalix.Observability.Contracts.RuntimeObservationTargets"/>. A response echoes the targets it
             actually wrote and carries a single UTF-8 JSON object keyed by <see cref="T:Nalix.Observability.Contracts.RuntimeObservationSections"/>,
             or a <see cref="T:Nalix.Abstractions.Networking.Protocols.ProtocolReason"/> when the request cannot be served.
+            <para>A response never exceeds the server's payload budget (96 KiB by default, below the 128 KiB frame limit):
+            a larger snapshot is streamed as several chunks (see <see cref="P:Nalix.Observability.Contracts.RuntimeObservation.IsEndOfStream"/>), each with the sections it
+            carries in <see cref="P:Nalix.Observability.Contracts.RuntimeObservation.Targets"/>. A section too large on its own has its arrays capped and carries
+            <c>"_truncated": true</c>.</para>
             </remarks>
         </member>
         <member name="P:Nalix.Observability.Contracts.RuntimeObservation.StaticOpCode">
@@ -117,6 +121,16 @@
             <summary>
             Gets or sets the server wall-clock time, in Unix milliseconds, at which the payload was sampled.
             </summary>
+        </member>
+        <member name="P:Nalix.Observability.Contracts.RuntimeObservation.IsEndOfStream">
+            <summary>
+            Gets or sets a value indicating whether this response is the last chunk of the reply.
+            </summary>
+            <remarks>
+            A live snapshot larger than the server's payload budget is streamed as several responses that share the
+            request's sequence id, each carrying a subset of the sections; consume them with the SDK's
+            <c>StreamAsync</c>. A reply that fits in one response is a single chunk with this flag set.
+            </remarks>
         </member>
         <member name="P:Nalix.Observability.Contracts.RuntimeObservation.ObservationData">
             <summary>
@@ -171,10 +185,12 @@
             <para>Request: <c>{"from":ms,"to":ms,"points":600,"metrics":["Process.WorkingSetBytes", …]}</c>, times in Unix
             milliseconds. Omitting <c>metrics</c> (or sending an empty list) asks for the catalog instead.</para>
             <para>Catalog response: <c>{"interval":ms,"days":[{"date":"2026-10-27","from":ms,"to":ms,"samples":n,"bytes":n}],
-            "metrics":["…"]}</c> — the recorded days overlapping the range and every metric name recorded in them.</para>
+            "metrics":["…"],"truncated":true?}</c> — the recorded days overlapping the range and the metric names recorded in
+            them; <c>truncated</c> is present when the names were cut to fit the payload budget.</para>
             <para>Series response: <c>{"from":ms,"to":ms,"step":ms,"t":[ms,…],"series":{"name":{"avg":[v|null,…],
             "max":[v|null,…]}}}</c>. The range is cut into at most <c>points</c> buckets of <c>step</c> milliseconds;
-            <c>t</c> holds each bucket's start and a bucket without samples is <c>null</c>.</para>
+            <c>t</c> holds each bucket's start and a bucket without samples is <c>null</c>. The server lowers <c>points</c>
+            when needed so the response fits its payload budget; read the actual count from <c>t</c>.</para>
             <para>Metric names are dot paths of numeric report fields (<c>Connections.TotalConnections</c>) plus the derived
             <c>Process.CpuPercent</c>, <c>Process.AllocationBytesPerSecond</c> and <c>Process.GcPerSecond</c>.</para>
             </remarks>

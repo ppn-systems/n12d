@@ -11,7 +11,7 @@ else
                 @for (int i = 0; i < Node.Children.Count; i++)
                 {
                     ReportNode child = Node.Children[i];
-                    if (!child.IsContainer)
+                    if (!child.IsContainer && !IsHidden(child))
                     {
                         string path = JoinPath(PathPrefix, child.Name);
                         <div class="ui-report__def">
@@ -47,7 +47,7 @@ else
         @for (int i = 0; i < Node.Children.Count; i++)
         {
             ReportNode child = Node.Children[i];
-            if (child.Kind == ReportNodeKind.Object)
+            if (child.Kind == ReportNodeKind.Object && !IsHidden(child))
             {
                 <details class="ui-report__section" open>
                     <summary class="ui-report__summary">
@@ -57,7 +57,7 @@ else
                     <UiReportView Node="child" PathPrefix="@JoinPath(PathPrefix, child.Name)" Depth="Depth + 1" OnMetricClick="OnMetricClick" />
                 </details>
             }
-            else if (child.Kind == ReportNodeKind.Array)
+            else if (child.Kind == ReportNodeKind.Array && !IsHidden(child))
             {
                 <div class="ui-report__array">
                     <h4 class="ui-report__array-title">@UiFormat.Humanize(child.Name)</h4>
@@ -107,7 +107,7 @@ else
         int count = 0;
         for (int i = 0; i < Node.Children.Count; i++)
         {
-            if (!Node.Children[i].IsContainer)
+            if (!Node.Children[i].IsContainer && !IsHidden(Node.Children[i]))
             {
                 count++;
             }
@@ -115,6 +115,9 @@ else
 
         _tileCount = count;
     }
+
+    // Names starting with an underscore are metadata (for example "_truncated"), not report content.
+    private static bool IsHidden(ReportNode child) => child.Name.StartsWith('_');
 
     private static string JoinPath(string prefix, string name)
     {

@@ -4,6 +4,8 @@
     <OutputType>Exe</OutputType>
     <RootNamespace>Nalix.Dashboard.Tests</RootNamespace>
     <IsTrimmable>false</IsTrimmable>
+    <!-- Test classes and [Test] methods are public but not documented; XML docs are not required on test types. -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

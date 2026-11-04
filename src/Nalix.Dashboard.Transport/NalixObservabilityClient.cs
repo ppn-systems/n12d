@@ -131,25 +131,44 @@ public sealed class NalixObservabilityClient : IObservabilityClient
                 ? _session
                 : throw new ObservabilityException("Not connected.");
 
+            // One request; a snapshot larger than the server's payload budget (≈96 KiB, under the 128 KiB frame
+            // limit) arrives as several chunks sharing the request's sequence id, each holding some sections.
             using RuntimeObservation request = RuntimeObservation.Create();
             request.Initialize(RuntimeObservationStage.REQUEST, targets);
 
+            RuntimeObservationTargets received = RuntimeObservationTargets.NONE;
+            List<ReportNode> sections = [];
+            long sampledAt = 0;
+            int payloadBytes = 0;
             long started = Stopwatch.GetTimestamp();
-            using RuntimeObservation response = await session.RequestAsync<RuntimeObservation>(
+
+            await foreach (RuntimeObservation chunk in session.StreamAsync<RuntimeObservation>(
                 request,
                 RequestOptions.Default.WithTimeout(_timeoutMs).WithEncrypt(),
-                predicate: static p => p.Stage == RuntimeObservationStage.RESPONSE,
-                ct);
-            double roundTripMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
-
-            if (response.Reason is not ProtocolReason.NONE and not ProtocolReason.NOT_FOUND)
+                ct,
+                inactivityTimeoutMs: _timeoutMs))
             {
-                throw new ObservabilityException($"Sampling failed ({response.Reason}).", response.Reason);
+                using (chunk)
+                {
+                    if (chunk.Reason is not ProtocolReason.NONE and not ProtocolReason.NOT_FOUND)
+                    {
+                        throw new ObservabilityException($"Sampling failed ({chunk.Reason}).", chunk.Reason);
+                    }
+
+                    ReadOnlySpan<byte> payload = chunk.ObservationData.Span;
+                    sampledAt = sampledAt == 0 ? chunk.SampledAt : sampledAt;
+                    payloadBytes += payload.Length;
+                    sections.AddRange(_reader.Parse(payload).Children);
+                    if (chunk.Reason == ProtocolReason.NONE)
+                    {
+                        received |= chunk.Targets;
+                    }
+                }
             }
 
-            ReadOnlySpan<byte> payload = response.ObservationData.Span;
-            ReportNode root = _reader.Parse(payload);
-            return new ObservationSnapshot(response.SampledAt, response.Targets, root, payload.Length, roundTripMs);
+            double roundTripMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds;
+            ReportNode root = ReportNode.CreateObject(string.Empty, [.. sections]);
+            return new ObservationSnapshot(sampledAt, received, root, payloadBytes, roundTripMs);
         }
         finally
         {

@@ -19,12 +19,14 @@
                 <UiTextInput Id="path" @bind-Value="_path" Monospace="true" />
             </UiField>
             <UiField Label="Secure" For="tls">
-                <UiSwitch @bind-Value="_tls" Label="wss://" />
+                <UiSwitch Value="_tls" ValueChanged="SetTls" Label="wss://" />
             </UiField>
             <UiField Label="Access key" For="key" Class="span-3" Hint="The 64-character hex key from the server's observability.private file." Error="@KeyError">
                 <UiTextInput Id="key" @bind-Value="_key" Type="password" Monospace="true" AutoComplete="off" Placeholder="0123…cdef" />
             </UiField>
         </div>
+
+        <p class="connect-url" aria-live="polite"><UiIcon Name="plug" Size="14" /> <span>@PreviewUrl</span></p>
 
         <UiSwitch @bind-Value="_remember" Label="Remember the key on this device" />
 
@@ -41,9 +43,9 @@
 
 @code {
     private string _host = "localhost";
-    private int _port = 57207;
+    private int _port = 443;
     private string _path = "/ws/";
-    private bool _tls;
+    private bool _tls = true;
     private string _key = string.Empty;
     private bool _remember;
     private bool _touched;
@@ -70,6 +72,20 @@
             _tls = endpoint.UseTls;
             _remember = Store.Settings.RememberKey;
         }
+    }
+
+    private string PreviewUrl => $"{(_tls ? "wss" : "ws")}://{(string.IsNullOrWhiteSpace(_host) ? "localhost" : _host.Trim())}:{_port}{(string.IsNullOrWhiteSpace(_path) ? "/" : _path.Trim())}";
+
+    // Flipping Secure moves the port between the standard 443 and 80 when it is still on the other standard one.
+    private void SetTls(bool value)
+    {
+        _tls = value;
+        _port = (value, _port) switch
+        {
+            (true, 80) => 443,
+            (false, 443) => 80,
+            _ => _port,
+        };
     }
 
     private async Task ConnectAsync()

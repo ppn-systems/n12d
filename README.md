@@ -52,8 +52,10 @@ The published build is a static site (`dotnet publish src/Nalix.Dashboard -c Rel
 ```bash
 dotnet build src/Nalix.Dashboard.slnx -c Release
 dotnet run --project tests/Nalix.Dashboard.Tests -c Release
+dotnet run --project tests/Nalix.Dashboard.Tests -c Release -- <filter>
 ```
 
-The test runner is dependency-free; exit code 0 means every test passed.
+The test runner is dependency-free and discovers tests by reflection; exit code 0 means every test passed or was skipped.
+The optional `<filter>` is a substring of the full test name (`Namespace.Class.Method`).
 
 See [ARCHITECTURE.md](ARCHITECTURE.md) for the project layout and data flow.
