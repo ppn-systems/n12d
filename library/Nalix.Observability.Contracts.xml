@@ -93,9 +93,10 @@
             A request selects one or more <see cref="T:Nalix.Observability.Contracts.RuntimeObservationTargets"/>. A response echoes the targets it
             actually wrote and carries a single UTF-8 JSON object keyed by <see cref="T:Nalix.Observability.Contracts.RuntimeObservationSections"/>,
             or a <see cref="T:Nalix.Abstractions.Networking.Protocols.ProtocolReason"/> when the request cannot be served.
-            <para>A response never exceeds the server's payload budget (96 KiB by default, below the 128 KiB frame limit).
-            Sections that did not fit are absent from <see cref="P:Nalix.Observability.Contracts.RuntimeObservation.Targets"/>; clients request the missing targets again.
-            A section too large on its own has its arrays capped and carries <c>"_truncated": true</c>.</para>
+            <para>A response never exceeds the server's payload budget (96 KiB by default, below the 128 KiB frame limit):
+            a larger snapshot is streamed as several chunks (see <see cref="P:Nalix.Observability.Contracts.RuntimeObservation.IsEndOfStream"/>), each with the sections it
+            carries in <see cref="P:Nalix.Observability.Contracts.RuntimeObservation.Targets"/>. A section too large on its own has its arrays capped and carries
+            <c>"_truncated": true</c>.</para>
             </remarks>
         </member>
         <member name="P:Nalix.Observability.Contracts.RuntimeObservation.StaticOpCode">
@@ -120,6 +121,16 @@
             <summary>
             Gets or sets the server wall-clock time, in Unix milliseconds, at which the payload was sampled.
             </summary>
+        </member>
+        <member name="P:Nalix.Observability.Contracts.RuntimeObservation.IsEndOfStream">
+            <summary>
+            Gets or sets a value indicating whether this response is the last chunk of the reply.
+            </summary>
+            <remarks>
+            A live snapshot larger than the server's payload budget is streamed as several responses that share the
+            request's sequence id, each carrying a subset of the sections; consume them with the SDK's
+            <c>StreamAsync</c>. A reply that fits in one response is a single chunk with this flag set.
+            </remarks>
         </member>
         <member name="P:Nalix.Observability.Contracts.RuntimeObservation.ObservationData">
             <summary>

@@ -28,9 +28,6 @@ public sealed class NalixObservabilityClient : IObservabilityClient
 {
     private const int MaxMessageBytes = 8 * 1024 * 1024;
 
-    // Enough for every section to arrive even when each one needs its own response.
-    private const int MaxSampleRounds = 16;
-
     private readonly SemaphoreSlim _gate = new(1, 1);
     private readonly ReportJsonReader _reader = new();
     private WebSocketSession? _session;
@@ -134,44 +131,39 @@ public sealed class NalixObservabilityClient : IObservabilityClient
                 ? _session
                 : throw new ObservabilityException("Not connected.");
 
-            // The server caps each response (≈96 KiB, under the 128 KiB frame limit) and leaves out sections that did
-            // not fit; ask again for what is missing and merge, stopping when a round brings nothing new.
-            RuntimeObservationTargets remaining = targets;
+            // One request; a snapshot larger than the server's payload budget (≈96 KiB, under the 128 KiB frame
+            // limit) arrives as several chunks sharing the request's sequence id, each holding some sections.
+            using RuntimeObservation request = RuntimeObservation.Create();
+            request.Initialize(RuntimeObservationStage.REQUEST, targets);
+
             RuntimeObservationTargets received = RuntimeObservationTargets.NONE;
             List<ReportNode> sections = [];
             long sampledAt = 0;
             int payloadBytes = 0;
             long started = Stopwatch.GetTimestamp();
 
-            for (int round = 0; round < MaxSampleRounds && remaining != RuntimeObservationTargets.NONE; round++)
+            await foreach (RuntimeObservation chunk in session.StreamAsync<RuntimeObservation>(
+                request,
+                RequestOptions.Default.WithTimeout(_timeoutMs).WithEncrypt(),
+                ct,
+                inactivityTimeoutMs: _timeoutMs))
             {
-                using RuntimeObservation request = RuntimeObservation.Create();
-                request.Initialize(RuntimeObservationStage.REQUEST, remaining);
-
-                using RuntimeObservation response = await session.RequestAsync<RuntimeObservation>(
-                    request,
-                    RequestOptions.Default.WithTimeout(_timeoutMs).WithEncrypt(),
-                    predicate: static p => p.Stage == RuntimeObservationStage.RESPONSE,
-                    ct);
-
-                if (response.Reason is not ProtocolReason.NONE and not ProtocolReason.NOT_FOUND)
+                using (chunk)
                 {
-                    throw new ObservabilityException($"Sampling failed ({response.Reason}).", response.Reason);
+                    if (chunk.Reason is not ProtocolReason.NONE and not ProtocolReason.NOT_FOUND)
+                    {
+                        throw new ObservabilityException($"Sampling failed ({chunk.Reason}).", chunk.Reason);
+                    }
+
+                    ReadOnlySpan<byte> payload = chunk.ObservationData.Span;
+                    sampledAt = sampledAt == 0 ? chunk.SampledAt : sampledAt;
+                    payloadBytes += payload.Length;
+                    sections.AddRange(_reader.Parse(payload).Children);
+                    if (chunk.Reason == ProtocolReason.NONE)
+                    {
+                        received |= chunk.Targets;
+                    }
                 }
-
-                ReadOnlySpan<byte> payload = response.ObservationData.Span;
-                sampledAt = sampledAt == 0 ? response.SampledAt : sampledAt;
-                payloadBytes += payload.Length;
-                sections.AddRange(_reader.Parse(payload).Children);
-
-                RuntimeObservationTargets written = response.Targets & remaining;
-                if (written == RuntimeObservationTargets.NONE)
-                {
-                    break;
-                }
-
-                received |= written;
-                remaining &= ~written;
             }
 
             double roundTripMs = Stopwatch.GetElapsedTime(started).TotalMilliseconds;

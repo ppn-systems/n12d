@@ -5,3 +5,23 @@
   white-space: pre;
   font-size: 12.5px;
 }
+
+/* Info banner: the AtmosOS info tone, a soft tint with the info icon colour. */
+.sp-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: var(--radius);
+  background: var(--info-soft);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+.sp-banner__icon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 0.1rem;
+  color: var(--info);
+}

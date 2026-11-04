@@ -12,13 +12,13 @@ public sealed record ServerEndpoint
     public string Host { get; init; } = "localhost";
 
     /// <summary>Gets the TCP port.</summary>
-    public ushort Port { get; init; } = 57207;
+    public ushort Port { get; init; } = 443;
 
     /// <summary>Gets the WebSocket path.</summary>
     public string Path { get; init; } = "/ws/";
 
     /// <summary>Gets a value indicating whether to use <c>wss://</c>.</summary>
-    public bool UseTls { get; init; }
+    public bool UseTls { get; init; } = true;
 
     /// <summary>Gets the connect and request timeout in milliseconds.</summary>
     public int TimeoutMs { get; init; } = 5000;

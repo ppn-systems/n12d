@@ -9,6 +9,6 @@
     <PackageVersion Include="Microsoft.AspNetCore.Components.Web" Version="10.0.14" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly" Version="10.0.14" />
     <PackageVersion Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="10.0.14" />
-    <PackageVersion Include="Nalix.SDK" Version="14.3.8" />
+    <PackageVersion Include="Nalix.SDK" Version="14.3.9" />
   </ItemGroup>
 </Project>

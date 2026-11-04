@@ -10,3 +10,7 @@ Refresh after a contract change:
 dotnet build <nalix>/extensions/Nalix.Observability.Contracts -c Release
 cp <nalix>/extensions/Nalix.Observability.Contracts/bin/Release/net10.0/Nalix.Observability.Contracts.{dll,xml} library/
 ```
+
+**Keep versions in lockstep.** The DLL references the Nalix assemblies of the nalix commit it was built from
+(`src/Version.props`). Set `Nalix.SDK` in `Directory.Packages.props` to that same version, or the dashboard fails at
+start-up with `Could not load file or assembly 'Nalix.Abstractions, Version=…'`.
