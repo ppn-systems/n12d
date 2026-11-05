@@ -12,5 +12,6 @@
     <ProjectReference Include="..\..\src\Nalix.Dashboard.Infrastructure\Nalix.Dashboard.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Nalix.Dashboard.Transport\Nalix.Dashboard.Transport.csproj" />
     <ProjectReference Include="..\..\src\Nalix.Dashboard.State\Nalix.Dashboard.State.csproj" />
+    <ProjectReference Include="..\..\src\Nalix.Dashboard.Controls\Nalix.Dashboard.Controls.csproj" />
   </ItemGroup>
 </Project>

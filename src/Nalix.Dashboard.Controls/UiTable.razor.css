@@ -121,3 +121,10 @@
 .ui-table-more {
     margin-top: 0.5rem;
 }
+
+.ui-table-key {
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--text-primary);
+}
