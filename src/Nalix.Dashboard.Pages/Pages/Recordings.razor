@@ -30,6 +30,13 @@
         }
         <UiButton Variant="UiButtonVariant.Secondary" Disabled="@(Recorder.RowCount == 0)" Busy="@_exporting" OnClick="ExportAsync"><UiIcon Name="download" /> Export CSV</UiButton>
     </div>
+
+    @if (Recorder.RowCount == 0 && !Recorder.IsRecording)
+    {
+        <UiCard>
+            <UiEmpty Title="No recording yet" Message="Start a recording before reproducing an issue, stop it afterwards and export the CSV. Every section is sampled at full detail while it runs, so keep recordings focused." />
+        </UiCard>
+    }
 </div>
 
 @code {

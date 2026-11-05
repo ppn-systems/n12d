@@ -148,6 +148,12 @@ public static class UiFormat
     /// <returns>The formatted text.</returns>
     public static string Auto(string name, double value)
     {
+        // "AllocationBytesPerSecond", "IngressBytesPerSecond": a byte rate, not a bare count per second.
+        if (name.EndsWith("PerSecond", StringComparison.Ordinal) && name.Contains("Bytes", StringComparison.Ordinal))
+        {
+            return Bytes(value) + "/s";
+        }
+
         if (name.EndsWith("Bytes", StringComparison.Ordinal))
         {
             return Bytes(value);
@@ -199,6 +205,36 @@ public static class UiFormat
         return DateTimeOffset.FromUnixTimeMilliseconds(unixMilliseconds)
             .ToLocalTime()
             .ToString("HH:mm:ss", CultureInfo.InvariantCulture);
+    }
+
+    /// <summary>
+    /// Formats a report string for display: ISO-8601 timestamps become local time ("14:02:31" today, otherwise
+    /// "2026-11-04 14:02:31"), the default timestamp (year 1) becomes "—", anything else is returned unchanged.
+    /// </summary>
+    /// <param name="text">The raw string.</param>
+    /// <returns>The display text.</returns>
+    public static string Text(string? text)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return Dash;
+        }
+
+        if (text.Length >= 19 && text[4] == '-' && text[10] == 'T' &&
+            DateTimeOffset.TryParse(text, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out DateTimeOffset at))
+        {
+            if (at.Year <= 1)
+            {
+                return Dash;
+            }
+
+            DateTimeOffset local = at.ToLocalTime();
+            return local.Date == DateTimeOffset.Now.Date
+                ? local.ToString("HH:mm:ss", CultureInfo.InvariantCulture)
+                : local.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        }
+
+        return text;
     }
 
     /// <summary>
@@ -269,7 +305,7 @@ public static class UiFormat
 
     private static readonly HashSet<string> s_unitSuffixes = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Ms", "Bytes", "MB", "Seconds", "Days", "Percent",
+        "Ms", "Bytes", "MB", "Seconds", "Days", "Percent", "Utc",
     };
 
     private static readonly HashSet<string> s_acronyms = new(StringComparer.OrdinalIgnoreCase)

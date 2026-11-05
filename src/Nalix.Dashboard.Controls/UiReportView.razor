@@ -27,7 +27,7 @@ else
                                 }
                                 else if (child.Kind == ReportNodeKind.String)
                                 {
-                                    <span class="ui-report__text">@child.Text</span>
+                                    <span class="ui-report__text" title="@child.Text">@UiFormat.Text(child.Text)</span>
                                 }
                                 else if (child.Kind == ReportNodeKind.Number)
                                 {
@@ -47,7 +47,14 @@ else
         @for (int i = 0; i < Node.Children.Count; i++)
         {
             ReportNode child = Node.Children[i];
-            if (child.Kind == ReportNodeKind.Object && !IsHidden(child))
+            if (child.Kind == ReportNodeKind.Object && !IsHidden(child) && IsUniformGroup(child))
+            {
+                <div class="ui-report__array">
+                    <h4 class="ui-report__array-title">@UiFormat.Humanize(child.Name)</h4>
+                    <UiTable Rows="child.Children" KeyColumn="Name" PathPrefix="@JoinPath(PathPrefix, child.Name)" OnMetricClick="OnMetricClick" />
+                </div>
+            }
+            else if (child.Kind == ReportNodeKind.Object && !IsHidden(child))
             {
                 <details class="ui-report__section" open>
                     <summary class="ui-report__summary">
@@ -118,6 +125,34 @@ else
 
     // Names starting with an underscore are metadata (for example "_truncated"), not report content.
     private static bool IsHidden(ReportNode child) => child.Name.StartsWith('_');
+
+    // An object whose properties are all flat objects ("WorkersByGroup": { "cleanup": {…}, "net": {…} }) reads far
+    // better as one table, one row per property, than as a stack of near-empty cards.
+    private static bool IsUniformGroup(ReportNode node)
+    {
+        if (node.Children.Count < 2)
+        {
+            return false;
+        }
+
+        foreach (ReportNode row in node.Children)
+        {
+            if (row.Kind != ReportNodeKind.Object || row.Children.Count == 0)
+            {
+                return false;
+            }
+
+            foreach (ReportNode cell in row.Children)
+            {
+                if (cell.IsContainer)
+                {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 
     private static string JoinPath(string prefix, string name)
     {

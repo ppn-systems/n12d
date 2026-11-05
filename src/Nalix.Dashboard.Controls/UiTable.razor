@@ -8,6 +8,10 @@ else
         <table class="ui-table">
             <thead>
                 <tr>
+                    @if (KeyColumn is not null)
+                    {
+                        <th scope="col">@KeyColumn</th>
+                    }
                     @for (int c = 0; c < _columns.Count; c++)
                     {
                         string column = _columns[c];
@@ -28,6 +32,10 @@ else
                 {
                     ReportNode row = Rows[_order[r]];
                     <tr>
+                        @if (KeyColumn is not null)
+                        {
+                            <th scope="row" class="ui-table-key">@row.Name</th>
+                        }
                         @for (int c = 0; c < _columns.Count; c++)
                         {
                             string column = _columns[c];
@@ -55,7 +63,7 @@ else
                                 }
                                 else
                                 {
-                                    <span class="ui-table-text">@cell.Text</span>
+                                    <span class="ui-table-text" title="@cell.Text">@UiFormat.Text(cell.Text)</span>
                                 }
                             </td>
                         }
@@ -94,6 +102,12 @@ else
     private static readonly string[] s_itemKeys = ["Name", "Type", "Id", "Key"];
 
     [Parameter] public string? PathPrefix { get; set; }
+
+    /// <summary>
+    /// Gets or sets the header of a leading column showing each row's property name. Set it when the rows are the
+    /// properties of an object (not array items); metric paths then use dots (<c>Prefix.Row.Column</c>).
+    /// </summary>
+    [Parameter] public string? KeyColumn { get; set; }
 
     /// <summary>Gets or sets the callback invoked with the metric path when a numeric cell is clicked.</summary>
     [Parameter] public EventCallback<string>? OnMetricClick { get; set; }
@@ -224,6 +238,11 @@ else
     // when present (stable across samples), otherwise by index — "Prefix[Auth].TotalExecutions".
     private string MetricPath(ReportNode row, string column)
     {
+        if (KeyColumn is not null)
+        {
+            return (PathPrefix ?? string.Empty) + "." + row.Name + "." + column;
+        }
+
         string item = (PathPrefix ?? string.Empty) + "[" + ItemKey(row) + "]";
         return _scalarMode ? item : item + "." + column;
     }
